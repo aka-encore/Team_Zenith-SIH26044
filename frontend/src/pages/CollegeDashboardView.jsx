@@ -73,19 +73,15 @@ export default function CollegeDashboardView({ collegeName = "IIT Bombay / Zenit
             </h3>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              SIH Intelligence identified that 18 partner companies have active openings requiring AWS + Docker, while 61% of 3rd-year IT students lack containerization credentials.
+              SkillBridge Intelligence identified that 18 partner companies have active openings requiring AWS + Docker, while 61% of 3rd-year IT students lack containerization credentials.
             </p>
-
-            <div className="p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-xs text-indigo-300 space-y-1">
-              <span className="font-semibold block">Predicted Impact:</span>
-              <span>+18% increase in 3rd-year internship placement rate within 45 days.</span>
-            </div>
           </div>
 
-          <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-3 rounded-xl transition flex items-center justify-center space-x-2 cursor-pointer shadow-md">
-            <BookOpen className="h-4 w-4" />
-            <span>Approve & Deploy Micro-Credential Track</span>
-          </button>
+          <div className="flex items-center space-x-3 shrink-0">
+            <button className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition shadow-md shadow-amber-500/20">
+              Generate Syllabus Advisory
+            </button>
+          </div>
         </div>
 
         {/* SKILL GAP HEATMAP (2 Cols) */}
@@ -95,7 +91,7 @@ export default function CollegeDashboardView({ collegeName = "IIT Bombay / Zenit
               <BarChart3 className="h-5 w-5 text-indigo-400" />
               <span>Institution Skill Gap Heatmap</span>
             </h3>
-            <span className="text-xs text-slate-400">SIH Diagnostic Vector</span>
+            <span className="text-xs text-slate-400">SkillBridge Diagnostic Vector</span>
           </div>
 
           <div className="space-y-3">

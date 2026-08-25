@@ -1,20 +1,24 @@
 import React from 'react';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
+
 export function Toast({
   type = 'info',
   message,
   onClose,
   className = ''
 }) {
+
   const styles = {
     info: { icon: Info, color: "text-blue-400 border-blue-500/20 bg-blue-500/10" },
     success: { icon: CheckCircle2, color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10" },
     error: { icon: AlertCircle, color: "text-rose-400 border-rose-500/20 bg-rose-500/10" }
   };
 
+
   const current = styles[type] || styles.info;
   const IconComponent = current.icon;
+
 
   return (
     <div className={`sb-glass-card p-4 rounded-xl border flex items-center space-x-3 text-xs text-slate-200 shadow-lg ${current.color} ${className}`}>
@@ -29,6 +33,7 @@ export function Toast({
   );
 }
 
+
 export function Tooltip({ text, children }) {
   return (
     <div className="relative group inline-block">
@@ -39,6 +44,7 @@ export function Tooltip({ text, children }) {
     </div>
   );
 }
+
 
 export function Breadcrumbs({ items = [] }) {
   return (

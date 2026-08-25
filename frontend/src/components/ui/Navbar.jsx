@@ -35,7 +35,7 @@ export function Navbar({ user, onLogout }) {
               <span className="text-xl font-extrabold text-white tracking-tight flex items-center space-x-1.5">
                 <span>SkillBridge</span>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono uppercase">
-                  SIH26044
+                  Platform
                 </span>
               </span>
               <span className="text-[10px] text-slate-400 block font-medium">Connecting student potential with industry demand</span>

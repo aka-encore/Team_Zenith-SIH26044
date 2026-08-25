@@ -3,8 +3,10 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
+
 const ProtectedRoute = ({ allowedRoles }) => {
   const { user, loading } = useAuth();
+
 
   if (loading) {
     return (
@@ -15,18 +17,22 @@ const ProtectedRoute = ({ allowedRoles }) => {
     );
   }
 
+
   // Redirect to login if user is not authenticated
   if (!user) {
     return <Navigate to="/login" replace />;
   }
+
 
   // Check if role is authorized
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to="/" replace />;
   }
 
+
   // Render children components (represented by Outlet in react-router-dom)
   return <Outlet />;
 };
+
 
 export default ProtectedRoute;
