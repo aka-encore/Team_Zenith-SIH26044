@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import User from '../models/User.js';
 
 
-const JWT_SECRET = process.env.JWT_SECRET || 'sih26044_jwt_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'skillnexus_ai_jwt_secret_key_2026';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 const VALID_ROLES = ['student', 'company', 'academician', 'institution', 'admin'];

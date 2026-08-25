@@ -4,12 +4,12 @@ import { Sparkles, GraduationCap, Building2, BookOpen, Leaf } from 'lucide-react
 
 export function OrbitingSkills({ selectedRole }) {
 
-  // Static visual configurations per role — AYUSH context
+  // Static visual configurations per role — SkillNexus AI context
   const roleVisuals = {
     student: {
-      badge: "AYUSH Student Portal",
+      badge: "SkillNexus AI Student Portal",
       headline: "Assess Skills. Discover Opportunities.",
-      subtext: "Build a verified AYUSH competency profile and get matched with the right career path.",
+      subtext: "Build a verified competency profile and get matched with the right career path.",
       nodes: [
         { name: "Ayurveda", icon: "🌿", pos: "top-2 left-6" },
         { name: "Yoga", icon: "🧘", pos: "top-4 right-4" },
@@ -22,8 +22,8 @@ export function OrbitingSkills({ selectedRole }) {
     },
 
     company: {
-      badge: "AYUSH Industry Hub",
-      headline: "Find Verified AYUSH Talent.",
+      badge: "SkillNexus AI Industry Hub",
+      headline: "Find Verified Talent.",
       subtext: "Access competency-verified candidates for healthcare, manufacturing, and research roles.",
       nodes: [
         { name: "GMP", icon: "🏭", pos: "top-2 left-6" },
@@ -36,9 +36,9 @@ export function OrbitingSkills({ selectedRole }) {
     },
 
     institution: {
-      badge: "AYUSH Academic Intelligence",
+      badge: "SkillNexus AI Academic Intelligence",
       headline: "Build an Industry-Ready Campus.",
-      subtext: "Align AYUSH curriculum with real industry demands and strengthen student outcomes.",
+      subtext: "Align curriculum with real industry demands and strengthen student outcomes.",
       nodes: [
         { name: "Students", icon: "🎓", pos: "top-2 left-6" },
         { name: "Faculty", icon: "📚", pos: "top-4 right-4" },

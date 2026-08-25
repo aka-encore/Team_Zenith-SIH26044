@@ -28,10 +28,10 @@ export default function HomePage({ onSelectTab }) {
   // ─── ROLE TAB DATA ───────────────────────────────────────────
   const roleTabData = {
     student: {
-      title: "For AYUSH Students & Graduates",
+      title: "For Students & Graduates",
       description: "Build a verified competency profile, identify skill gaps against real industry requirements, and get matched with opportunities that align with your strengths.",
       features: [
-        "AI-powered skill assessment across 60+ AYUSH competency domains",
+        "AI-powered skill assessment across 60+ competency domains",
         "Personalized learning roadmaps to bridge career-role mismatches",
         "Verified Skill Passport with mentor-backed evaluations",
         "Smart matching with internships, live projects, and placements"
@@ -42,7 +42,7 @@ export default function HomePage({ onSelectTab }) {
     },
 
     industry: {
-      title: "For AYUSH Healthcare Industries",
+      title: "For Industry Partners",
       description: "Access a pipeline of pre-assessed, competency-verified talent. Reduce hiring risk with explainable match scores backed by real skill verification.",
       features: [
         "Post opportunities with granular competency requirements",
@@ -110,7 +110,7 @@ export default function HomePage({ onSelectTab }) {
           ═══════════════════════════════════════════════════════════ */}
       <section className="relative pt-6 pb-12 overflow-hidden">
 
-        {/* Background glow effects — AYUSH green palette */}
+        {/* Background glow effects */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-emerald-600/8 blur-[120px] pointer-events-none rounded-full" />
         <div className="absolute top-1/3 right-10 w-72 h-72 bg-teal-600/8 blur-[100px] pointer-events-none rounded-full" />
         <div className="absolute bottom-0 left-10 w-60 h-60 bg-amber-500/6 blur-[80px] pointer-events-none rounded-full" />
@@ -120,15 +120,15 @@ export default function HomePage({ onSelectTab }) {
           {/* Top badge */}
           <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs sm:text-sm font-medium backdrop-blur-md">
             <Leaf className="h-4 w-4 text-emerald-400 animate-pulse" />
-            <span>SIH 2026 — Problem Statement ID: SIH26044</span>
+            <span>Competency Intelligence Platform</span>
             <span className="hidden sm:inline text-emerald-500/60">•</span>
-            <span className="hidden sm:inline text-amber-400 font-semibold">Team Zenith</span>
+            <span className="hidden sm:inline text-amber-400 font-semibold">SkillNexus AI</span>
           </div>
 
 
           {/* Hero headline */}
           <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1]">
-            Bridging AYUSH Education,{' '}
+            Bridging Education,{' '}
             <br className="hidden sm:block" />
             <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400 bg-clip-text text-transparent">
               Skill Competencies,
@@ -165,7 +165,7 @@ export default function HomePage({ onSelectTab }) {
           </div>
 
 
-          {/* Hero Interactive Preview — AYUSH Skill Passport Score */}
+          {/* Hero Interactive Preview — Skill Passport Score */}
           <div className="pt-8 max-w-2xl mx-auto">
             <div className="glass-card p-6 sm:p-8 rounded-2xl border border-slate-800 text-left relative overflow-hidden">
 
@@ -227,7 +227,7 @@ export default function HomePage({ onSelectTab }) {
       <section className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Verified Industries", value: "50+", icon: Building2, sub: "AYUSH Healthcare Partners" },
+            { label: "Verified Industries", value: "50+", icon: Building2, sub: "Industry Partners" },
             { label: "Active Internships", value: "100+", icon: Briefcase, sub: "Live Projects & Placements" },
             { label: "Student Assessments", value: "1,200+", icon: ClipboardCheck, sub: "Skill Verifications Done" },
             { label: "Academic Institutions", value: "20+", icon: GraduationCap, sub: "Partnered Colleges & Universities" }
@@ -252,10 +252,10 @@ export default function HomePage({ onSelectTab }) {
         <div className="text-center max-w-3xl mx-auto mb-12">
           <h2 className="text-xs uppercase tracking-widest text-emerald-400 font-bold mb-2">Core Capabilities</h2>
           <h3 className="text-3xl sm:text-4xl font-bold text-white">
-            Four Pillars of the AYUSH Competency Ecosystem
+            Four Pillars of the SkillNexus AI Ecosystem
           </h3>
           <p className="text-slate-400 text-sm sm:text-base mt-3">
-            A closed-loop intelligence engine driving synergy between AYUSH academic curriculum, verified student competencies, and real healthcare industry demand.
+            A closed-loop intelligence engine connecting academic curriculum, verified student competencies, and real industry demand.
           </p>
         </div>
 
@@ -280,7 +280,7 @@ export default function HomePage({ onSelectTab }) {
             },
             {
               num: "03",
-              title: "Verified AYUSH Skill Passport",
+              title: "Verified Skill Passport",
               desc: "A dynamic, tamper-evident competency portfolio built from assessment scores, mentor evaluations, project artifacts, and institutional certifications. Replaces static resumes with a living skills document.",
               icon: BadgeCheck,
               badge: "Verified Portfolio",
@@ -492,7 +492,7 @@ export default function HomePage({ onSelectTab }) {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <h2 className="text-xs uppercase tracking-widest text-emerald-400 font-bold mb-2">Live Opportunities</h2>
-            <h3 className="text-3xl font-bold text-white">Featured AYUSH Opportunities</h3>
+            <h3 className="text-3xl font-bold text-white">Featured Opportunities</h3>
           </div>
           <button
             onClick={() => handleCTA('opportunities')}
@@ -573,11 +573,11 @@ export default function HomePage({ onSelectTab }) {
             </div>
 
             <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Ready to Bridge Your AYUSH Skill Gap?
+              Ready to Bridge Your Skill Gap?
             </h3>
 
             <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
-              Join 1,200+ students, 50+ industry partners, and 20+ academic institutions building the future of competency-driven AYUSH healthcare workforce development.
+              Join 1,200+ students, 50+ industry partners, and 20+ academic institutions building the future of competency-driven workforce development.
             </p>
 
             <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
@@ -595,7 +595,7 @@ export default function HomePage({ onSelectTab }) {
             <div className="pt-6 border-t border-slate-800 mt-6">
               <div className="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-4">Aligned With</div>
               <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-                {["Ministry of AYUSH", "CCIM", "CCH", "NABH", "SIH 2026"].map((partner, p) => (
+                {["Industry Partners", "Academic Institutions", "Mentor Network", "Verified Assessments", "SkillNexus AI"].map((partner, p) => (
                   <div key={p} className="px-4 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-400 font-semibold text-xs flex items-center space-x-2">
                     <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
                     <span>{partner}</span>
@@ -621,12 +621,12 @@ export default function HomePage({ onSelectTab }) {
                 <Leaf className="h-5 w-5" />
               </div>
               <div>
-                <span className="text-sm font-extrabold text-white block">AYUSH Portal</span>
-                <span className="text-[10px] text-slate-400 font-semibold block">Team Zenith — SIH26044</span>
+                <span className="text-sm font-extrabold text-white block">SkillNexus AI</span>
+                <span className="text-[10px] text-slate-400 font-semibold block">Competency Intelligence Platform</span>
               </div>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Competency-driven intelligence ecosystem connecting AYUSH students, academicians, and healthcare industries.
+              Competency-driven intelligence ecosystem connecting students, institutions, and industry.
             </p>
           </div>
 
@@ -666,8 +666,8 @@ export default function HomePage({ onSelectTab }) {
 
         {/* Bottom bar */}
         <div className="border-t border-slate-800 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
-          <span>© 2026 AYUSH Academia-Industry Collaboration Portal — Team Zenith. Built for Smart India Hackathon 2026 (SIH26044).</span>
-          <span className="text-slate-600">Developed under the guidance of Ministry of AYUSH, Government of India.</span>
+          <span>© 2026 SkillNexus AI. All rights reserved.</span>
+          <span className="text-slate-600">Connecting student potential with industry demand.</span>
         </div>
       </footer>
 

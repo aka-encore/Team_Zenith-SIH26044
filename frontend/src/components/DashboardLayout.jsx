@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { 
-  Leaf, LayoutDashboard, Cpu, Award, Target, Compass, BookOpen, Briefcase, 
+  Dna, Leaf, LayoutDashboard, Cpu, Award, Target, Compass, BookOpen, Briefcase,
   FileText, Bookmark, Folder, User, Settings, LogOut, Sun, Moon, 
   Users, Building2, TrendingUp, Layers, Sparkles, ChevronLeft, ChevronRight, Menu, X
 } from 'lucide-react';

@@ -12,7 +12,7 @@ const runApplicationTests = async () => {
   console.log('--- Starting Placements Application Integration Tests ---\n');
 
   try {
-    const dbUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/sih26044';
+    const dbUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/skillnexus_ai';
     await mongoose.connect(dbUri);
     console.log('[1/6] Connected to MongoDB database successfully.');
 
