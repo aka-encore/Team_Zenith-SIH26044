@@ -1,11 +1,13 @@
 # Project Summary (brain.md)
 
 ## Project Overview
-- **Name**: Academia-Industry Collaboration Portal (Team Zenith-SIH26044)
-- **Purpose**: Connect students with companies for internships, projects, and job opportunities.
+- **Name**: AYUSH Academia-Industry Collaboration Portal (Team Zenith — SIH26044)
+- **Purpose**: A competency-driven intelligence ecosystem connecting AYUSH students, academicians, and healthcare industries for placements, live projects, research, and skill verification.
+- **Domain**: AYUSH (Ayurveda, Yoga, Unani, Siddha, Homeopathy) healthcare & education.
+- **Branding**: "AYUSH Portal" (formerly "SkillBridge"). Primary color: Emerald green (`emerald-600`). Accent: Amber/Gold (`amber-500`).
 - **Stack**:
   - **Backend**: Node.js, Express, Mongoose (MongoDB), ES Modules (`"type": "module"`).
-  - **Frontend**: Vite, React / Web framework.
+  - **Frontend**: Vite, React, Tailwind CSS v4.
 
 
 ## Architecture Diagram

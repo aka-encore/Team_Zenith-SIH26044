@@ -5,7 +5,7 @@ import { OrbitingSkills } from '../components/OrbitingSkills';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
 import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
 import { 
-  Dna, Eye, EyeOff, Lock, Mail, User, Loader2, ArrowRight, ArrowLeft,
+  Leaf, Eye, EyeOff, Lock, Mail, User, Loader2, ArrowRight, ArrowLeft,
   GraduationCap, Building2, BookOpen, CheckCircle2, ShieldCheck, Globe, MapPin, RefreshCw
 } from 'lucide-react';
 import { Toast } from '../components/ui/Toast';
@@ -63,6 +63,17 @@ export default function AuthPage({ initialMode = 'login' }) {
       setMode('login');
     }
   }, [location.pathname]);
+
+
+  useEffect(() => {
+    const requestedRole = new URLSearchParams(location.search).get('role');
+    const roleMap = { student: 'student', industry: 'company', faculty: 'institution' };
+
+    if (roleMap[requestedRole]) {
+      setSelectedRole(roleMap[requestedRole]);
+      setRegStep(1);
+    }
+  }, [location.search]);
 
 
   // Switch between login and register modes
@@ -188,12 +199,12 @@ export default function AuthPage({ initialMode = 'login' }) {
           {/* Header Brand & SSL Badge */}
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center space-x-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-600/20 group-hover:scale-105 transition-transform">
-                <Dna className="h-5 w-5" />
+              <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform">
+                <Leaf className="h-5 w-5" />
               </div>
               <div>
-                <span className="text-lg font-black text-slate-900 dark:text-white tracking-tight block">SkillBridge</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block">SkillBridge Workspace</span>
+                <span className="text-lg font-black text-slate-900 dark:text-white tracking-tight block">AYUSH Portal</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block">Team Zenith — SIH26044</span>
               </div>
             </Link>
 
@@ -212,7 +223,7 @@ export default function AuthPage({ initialMode = 'login' }) {
                 <div className="space-y-1">
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Welcome back</h2>
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">
-                    Sign in to continue to your SkillBridge workspace.
+                    Sign in to continue to your AYUSH Portal workspace.
                   </p>
                 </div>
 

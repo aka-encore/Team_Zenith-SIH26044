@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { 
-  Dna, LayoutDashboard, Cpu, Award, Target, Compass, BookOpen, Briefcase, 
+  Leaf, LayoutDashboard, Cpu, Award, Target, Compass, BookOpen, Briefcase, 
   FileText, Bookmark, Folder, User, Settings, LogOut, Sun, Moon, 
   Users, Building2, TrendingUp, Layers, Sparkles, ChevronLeft, ChevronRight, Menu, X
 } from 'lucide-react';
@@ -112,13 +112,13 @@ export function DashboardLayout({ children }) {
           {/* Logo Brand Header */}
           <div className="p-4 border-b border-slate-300 dark:border-slate-800 flex items-center justify-between">
             <Link to="/" className="flex items-center space-x-2.5 overflow-hidden">
-              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-600/20">
-                <Dna className="h-5 w-5" />
+              <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-emerald-600/20">
+                <Leaf className="h-5 w-5" />
               </div>
               {!collapsed && (
                 <div className="text-left">
-                  <span className="text-base font-black text-slate-900 dark:text-white tracking-tight block">SkillBridge</span>
-                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono block uppercase font-bold">{role} Workspace</span>
+                  <span className="text-base font-black text-slate-900 dark:text-white tracking-tight block">AYUSH Portal</span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono block uppercase font-bold">{role} Workspace</span>
                 </div>
               )}
             </Link>
@@ -203,7 +203,7 @@ export function DashboardLayout({ children }) {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden flex">
           <div className="w-64 bg-white dark:bg-slate-950 p-4 space-y-4 text-left border-r border-slate-300 dark:border-slate-800 h-full overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-300 dark:border-slate-800">
-              <span className="font-extrabold text-slate-900 dark:text-white">SkillBridge Dashboard</span>
+              <span className="font-extrabold text-slate-900 dark:text-white">AYUSH Dashboard</span>
               <button onClick={() => setMobileDrawerOpen(false)} className="p-1 text-slate-500">
                 <X className="h-5 w-5" />
               </button>
