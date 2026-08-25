@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const CertificationSchema = new mongoose.Schema({
   title: {
@@ -103,4 +103,4 @@ const StudentProfileSchema = new mongoose.Schema({
   timestamps: true // Automatically create createdAt and updatedAt
 });
 
-module.exports = mongoose.model('StudentProfile', StudentProfileSchema);
+export default mongoose.model('StudentProfile', StudentProfileSchema);

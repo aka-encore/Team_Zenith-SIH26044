@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const ApplicationSchema = new mongoose.Schema({
   opportunityId: {
@@ -33,4 +33,4 @@ const ApplicationSchema = new mongoose.Schema({
 // Enforce compound unique constraint so a student can only apply once to any opportunity
 ApplicationSchema.index({ studentId: 1, opportunityId: 1 }, { unique: true });
 
-module.exports = mongoose.model('Application', ApplicationSchema);
+export default mongoose.model('Application', ApplicationSchema);

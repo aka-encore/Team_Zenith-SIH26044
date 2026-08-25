@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const OpportunitySchema = new mongoose.Schema({
   companyId: {
@@ -55,4 +55,4 @@ const OpportunitySchema = new mongoose.Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('Opportunity', OpportunitySchema);
+export default mongoose.model('Opportunity', OpportunitySchema);

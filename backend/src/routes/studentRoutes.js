@@ -1,11 +1,8 @@
-const express = require('express');
-const { getProfile, updateProfile } = require('../controllers/studentController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+import express from 'express';
+import { getProfile, updateProfile } from '../controllers/studentController.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
-
-// Protected profile routes restricted to authenticated student users
 router.get('/profile', protect, authorize('student'), getProfile);
 router.put('/profile', protect, authorize('student'), updateProfile);
-
-module.exports = router;
+export default router;

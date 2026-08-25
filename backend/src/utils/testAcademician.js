@@ -1,11 +1,10 @@
-const mongoose = require('mongoose');
-const User = require('../models/User');
-const Company = require('../models/Company');
-const Opportunity = require('../models/Opportunity');
-const dotenv = require('dotenv');
-const path = require('path');
+import mongoose from 'mongoose';
+import User from '../models/User.js';
+import Company from '../models/Company.js';
+import Opportunity from '../models/Opportunity.js';
+import { loadEnv } from './loadEnv.js';
 
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+loadEnv(import.meta.url);
 
 const runAcademicianTests = async () => {
   console.log('--- Starting Academician Collaboration Integration Tests ---\n');

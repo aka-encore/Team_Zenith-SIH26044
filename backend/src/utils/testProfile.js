@@ -1,10 +1,9 @@
-const mongoose = require('mongoose');
-const User = require('../models/User');
-const StudentProfile = require('../models/StudentProfile');
-const dotenv = require('dotenv');
-const path = require('path');
+import mongoose from 'mongoose';
+import User from '../models/User.js';
+import StudentProfile from '../models/StudentProfile.js';
+import { loadEnv } from './loadEnv.js';
 
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+loadEnv(import.meta.url);
 
 const runProfileTests = async () => {
   console.log('--- Starting Student Profile Integration Tests ---\n');

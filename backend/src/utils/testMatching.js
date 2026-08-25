@@ -1,4 +1,4 @@
-const { calculateCompatibility } = require('./matchingEngine');
+import { calculateCompatibility } from './matchingEngine.js';
 
 const runMatchEngineTests = () => {
   console.log('--- Starting Weighted Compatibility Matching Engine Tests ---\n');

@@ -1,10 +1,8 @@
-const mongoose = require('mongoose');
-const User = require('../models/User');
-const dotenv = require('dotenv');
-const path = require('path');
+import mongoose from 'mongoose';
+import User from '../models/User.js';
+import { loadEnv } from './loadEnv.js';
 
-// Load environment variables from backend/.env
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+loadEnv(import.meta.url);
 
 const runTests = async () => {
   console.log('--- Starting Authentication Integration Tests ---\n');

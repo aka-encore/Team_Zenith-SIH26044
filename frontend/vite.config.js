@@ -2,16 +2,22 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// https://vite.dev/config/
+/**
+ * Vite Configuration for SkillBridge Frontend
+ * Configures React plugin, Tailwind CSS v4, and API proxy forwarding
+ * to the Node.js/Express backend running on port 5000.
+ */
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
   ],
   server: {
+    port: 5173,
     proxy: {
+      // Forward all '/api' requests from React frontend to Express backend at http://localhost:5000
       '/api': {
-        target: 'http://localhost:5050',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
       }

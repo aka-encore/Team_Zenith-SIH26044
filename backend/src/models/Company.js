@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const CompanySchema = new mongoose.Schema({
   userId: {
@@ -51,4 +51,4 @@ const CompanySchema = new mongoose.Schema({
   timestamps: true // Automatically create createdAt and updatedAt
 });
 
-module.exports = mongoose.model('Company', CompanySchema);
+export default mongoose.model('Company', CompanySchema);
