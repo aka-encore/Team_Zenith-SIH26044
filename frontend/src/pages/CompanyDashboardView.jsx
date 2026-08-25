@@ -58,7 +58,7 @@ export default function CompanyDashboardView({ companyName = "TechNova Solutions
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white">Find the skills you need.</h1>
           <p className="text-slate-400 text-sm max-w-2xl">
-            Recruit pre-assessed candidates matched against your exact tech stack specifications using SkillBridge AI Skill Intelligence.
+            Recruit pre-assessed candidates matched against your exact tech stack specifications using SkillNexus AI Skill Intelligence.
           </p>
         </div>
 

@@ -138,7 +138,7 @@ export default function IndustryDemandPage() {
             <BarChart3 className="h-5 w-5 text-indigo-400" />
             <span>Student Supply vs Industry Demand Heatmap</span>
           </h3>
-          <span className="text-xs text-slate-400">SkillBridge Real-Time Index</span>
+          <span className="text-xs text-slate-400">SkillNexus AI Real-Time Index</span>
         </div>
 
         <div className="space-y-3">

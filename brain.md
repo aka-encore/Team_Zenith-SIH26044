@@ -1,11 +1,16 @@
 # Project Summary (brain.md)
 
 ## Project Overview
-- **Name**: Academia-Industry Collaboration Portal (Team Zenith-SIH26044)
-- **Purpose**: Connect students with companies for internships, projects, and job opportunities.
+- **Project**: SkillNexus AI
+- **SIH Problem Statement**: SIH26044 (Academia-Industry Collaboration Portal)
+- **Team**: Team Zenith
+- **Purpose**: Connect students with companies for internships, projects, and job opportunities through competency-driven skill mapping.
 - **Stack**:
   - **Backend**: Node.js, Express, Mongoose (MongoDB), ES Modules (`"type": "module"`).
-  - **Frontend**: Vite, React / Web framework.
+  - **Frontend**: Vite, React / Tailwind CSS.
+
+> [!NOTE]
+> **Branding Note**: "SkillBridge" was a temporary working name for this SIH project and has been replaced by the final working brand name **SkillNexus AI**. Do not confuse this project with the team's previous separate project named SkillBridge. All user-facing UI, documentation, and communications use **SkillNexus AI**.
 
 
 ## Architecture Diagram
@@ -129,3 +134,84 @@ const MyComponent = () => {
 
 ---
 *This file serves as a quick documentation guide for AI agents and developers.*
+
+
+---
+
+
+## 🔐 Authentication System
+
+### Email / Password — ✅ COMPLETED
+- `POST /api/auth/register` — creates a new user, hashes password with bcrypt
+- `POST /api/auth/login` — validates credentials, returns JWT (30-day)
+- JWT stored in `localStorage`, read back by `AuthContext`
+- Role-based: `student`, `company`, `institution`, `academician`, `admin`
+- Company accounts start as `status: 'pending'`
+
+### Testing Accounts (seeded)
+| Email | Password | Role |
+|---|---|---|
+| `student@test.com` | `password123` | student |
+| `company@test.com` | `password123` | company |
+| `institution@test.com` | `password123` | institution |
+
+Reseed anytime: `node src/utils/seedUsers.js` (from `backend/`)
+
+
+### Login UI — ✅ COMPLETED (redesigned)
+- **Left illustration panel removed** — page is now a fully-centered card
+- Card: `max-w-480px`, dark navy, `bg-slate-900`, `border-slate-800`, `rounded-2xl`
+- Role selector (Student / Company / Institution) at the top
+- Email + Password fields, Forgot Password modal
+- **Microsoft button REMOVED**
+- Google + LinkedIn OAuth buttons wired to real backend endpoints
+- Responsive: full-width on mobile, centered on desktop
+- Signup page uses same `AuthPage` component with `initialMode="register"`
+
+### Google OAuth — ✅ IMPLEMENTED / ⚙️ NEEDS CREDENTIALS
+- Flow: `GET /api/auth/google` → Google → `GET /api/auth/google/callback` → `http://localhost:5173/auth/callback`
+- Handles: new user → role picker → account creation
+- Handles: existing user → account linking by provider ID + verified email
+- **Status: NEEDS CONFIGURATION**
+  - Get credentials: https://console.cloud.google.com → APIs & Services → Credentials → OAuth 2.0 Client ID
+  - Authorized redirect URI to register: `http://localhost:5000/api/auth/google/callback`
+  - Add to `backend/.env`: `GOOGLE_CLIENT_ID=`, `GOOGLE_CLIENT_SECRET=`
+
+### LinkedIn OIDC — ✅ IMPLEMENTED / ⚙️ NEEDS CREDENTIALS
+- Flow: `GET /api/auth/linkedin` → LinkedIn → `GET /api/auth/linkedin/callback` → `http://localhost:5173/auth/callback`
+- Uses LinkedIn's OpenID Connect (OIDC) flow — **NOT the deprecated legacy API**
+- Scopes requested: `openid profile email`
+- **Status: NEEDS CONFIGURATION**
+  - Get credentials: https://www.linkedin.com/developers/apps → Create App
+  - Authorized redirect URL to register: `http://localhost:5000/api/auth/linkedin/callback`
+  - Add to `backend/.env`: `LINKEDIN_CLIENT_ID=`, `LINKEDIN_CLIENT_SECRET=`
+
+### Microsoft Auth — ✅ REMOVED
+- Microsoft OAuth button removed from Login and Register pages
+- No Microsoft-related auth code exists anywhere in the project
+
+### OAuth Callback Pages (Frontend)
+| Route | File | Purpose |
+|---|---|---|
+| `/auth/callback` | `OAuthCallback.jsx` | Receives `?token=&user=` from backend, stores in localStorage, redirects to dashboard |
+| `/auth/oauth/role` | `OAuthRoleSelect.jsx` | New OAuth users pick a role before account creation |
+
+### User Model (updated)
+New fields added (non-breaking — existing users unaffected):
+- `passwordHash` — now **optional** (OAuth-only accounts have no password)
+- `authProviders[]` — stores `{ provider, providerId }` pairs (google / linkedin)
+- `avatarUrl` — profile picture URL from OAuth provider
+- `emailVerified` — boolean, set from provider's claim
+
+### Environment Variables Required
+```bash
+# Add to backend/.env
+FRONTEND_URL=http://localhost:5173
+GOOGLE_CLIENT_ID=<from Google Cloud Console>
+GOOGLE_CLIENT_SECRET=<from Google Cloud Console>
+GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
+LINKEDIN_CLIENT_ID=<from LinkedIn Developer Portal>
+LINKEDIN_CLIENT_SECRET=<from LinkedIn Developer Portal>
+LINKEDIN_CALLBACK_URL=http://localhost:5000/api/auth/linkedin/callback
+```
+

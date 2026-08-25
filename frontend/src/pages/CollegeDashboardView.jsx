@@ -73,7 +73,7 @@ export default function CollegeDashboardView({ collegeName = "IIT Bombay / Zenit
             </h3>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              SkillBridge Intelligence identified that 18 partner companies have active openings requiring AWS + Docker, while 61% of 3rd-year IT students lack containerization credentials.
+              SkillNexus AI Intelligence identified that 18 partner companies have active openings requiring AWS + Docker, while 61% of 3rd-year IT students lack containerization credentials.
             </p>
           </div>
 
@@ -91,7 +91,7 @@ export default function CollegeDashboardView({ collegeName = "IIT Bombay / Zenit
               <BarChart3 className="h-5 w-5 text-indigo-400" />
               <span>Institution Skill Gap Heatmap</span>
             </h3>
-            <span className="text-xs text-slate-400">SkillBridge Diagnostic Vector</span>
+            <span className="text-xs text-slate-400">SkillNexus AI Diagnostic Vector</span>
           </div>
 
           <div className="space-y-3">

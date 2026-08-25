@@ -24,7 +24,7 @@ export function Navbar({ user, onLogout }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* SkillBridge Brand */}
+          {/* SkillNexus AI Brand */}
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-purple-600 to-blue-400 p-0.5 shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
@@ -33,7 +33,7 @@ export function Navbar({ user, onLogout }) {
             </div>
             <div>
               <span className="text-xl font-extrabold text-white tracking-tight flex items-center space-x-1.5">
-                <span>SkillBridge</span>
+                <span>SkillNexus AI</span>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono uppercase">
                   Platform
                 </span>

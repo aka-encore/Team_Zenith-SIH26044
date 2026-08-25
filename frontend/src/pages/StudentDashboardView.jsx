@@ -48,7 +48,7 @@ export default function StudentDashboardView({ studentName = "Alex Chen", onNavi
   ];
 
   const upcomingAssessments = [
-    { title: "Advanced Data Structures & Algorithms", date: "Tomorrow, 4:00 PM", duration: "60 mins", provider: "SkillBridge Skill Diagnostic" },
+    { title: "Advanced Data Structures & Algorithms", date: "Tomorrow, 4:00 PM", duration: "60 mins", provider: "SkillNexus AI Skill Diagnostic" },
     { title: "Cloud Architecture Micro-Assessment", date: "Friday, 10:00 AM", duration: "45 mins", provider: "AWS Academic" }
   ];
 

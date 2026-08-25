@@ -70,7 +70,7 @@ export default function HomePage({ onSelectTab }) {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-white">Live Intelligence Pipeline</h3>
-                    <p className="text-xs text-slate-400">SkillBridge Automated Mapping Engine</p>
+                    <p className="text-xs text-slate-400">SkillNexus AI Automated Mapping Engine</p>
                   </div>
                 </div>
                 <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium flex items-center space-x-1.5">

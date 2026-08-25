@@ -117,6 +117,19 @@ export const AuthProvider = ({ children }) => {
   };
 
 
+  // loginWithToken — used by OAuth callback page to establish session directly
+  const loginWithToken = (jwtToken, userData) => {
+    try {
+      localStorage.setItem('token', jwtToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setToken(jwtToken);
+      setUser(userData);
+    } catch (error) {
+      console.error('loginWithToken error:', error.message);
+    }
+  };
+
+
   // Logout handler - Clears all stored auth data
   const logout = () => {
     localStorage.removeItem('token');
@@ -127,7 +140,7 @@ export const AuthProvider = ({ children }) => {
 
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, loginWithToken, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -21,7 +21,7 @@ export function PublicNavbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* SkillBridge Logo Brand */}
+          {/* SkillNexus AI Logo Brand */}
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-purple-600 to-blue-400 p-0.5 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-white dark:bg-slate-950 rounded-[10px] flex items-center justify-center">
@@ -30,9 +30,9 @@ export function PublicNavbar() {
             </div>
             <div className="text-left">
               <span className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight block">
-                SkillBridge
+                SkillNexus AI
               </span>
-              <span className="text-[10px] text-slate-600 dark:text-slate-400 block font-semibold">SkillBridge Platform</span>
+              <span className="text-[10px] text-slate-600 dark:text-slate-400 block font-semibold">SkillNexus AI Platform</span>
             </div>
           </Link>
 
