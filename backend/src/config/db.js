@@ -71,7 +71,7 @@ export async function seedDefaultUsersIfEmpty() {
 
 const connectDB = async () => {
   const atlasUri = process.env.MONGO_URL || process.env.MONGODB_URI;
-  const localUri = "mongodb://127.0.0.1:27017/sih26044";
+  const localUri = "mongodb://127.0.0.1:27017/skillnexus_ai";
 
   console.log("Connecting to MongoDB...");
 

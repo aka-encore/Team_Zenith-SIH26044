@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'sih26044_jwt_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'skillnexus_ai_jwt_secret_key_2026';
 
 export const protect = async (req, res, next) => {
   const header = req.headers.authorization;

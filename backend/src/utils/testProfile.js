@@ -9,7 +9,7 @@ const runProfileTests = async () => {
   console.log('--- Starting Student Profile Integration Tests ---\n');
 
   try {
-    const dbUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/sih26044';
+    const dbUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/skillnexus_ai';
     await mongoose.connect(dbUri);
     console.log('[1/5] Connected to MongoDB database successfully.');
 

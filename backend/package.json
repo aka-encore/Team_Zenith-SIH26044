@@ -1,5 +1,5 @@
 {
-  "name": "sih26044-backend",
+  "name": "skillnexus-ai-backend",
   "version": "1.0.0",
   "description": "Backend for Academia-Industry Collaboration Portal",
   "main": "src/index.js",
