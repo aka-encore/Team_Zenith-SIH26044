@@ -22,6 +22,8 @@ import CompanyDashboardView from './pages/CompanyDashboardView';
 import CollegeDashboardView from './pages/CollegeDashboardView';
 import AcademiaIndustryLab from './pages/AcademiaIndustryLab';
 import DesignSystemShowcase from './pages/DesignSystemShowcase';
+import OAuthCallback from './pages/OAuthCallback';
+import OAuthRoleSelect from './pages/OAuthRoleSelect';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
@@ -56,6 +58,17 @@ function AppContent() {
   }
 
 
+  // OAuth callback pages — full viewport, no navbar/footer
+  if (location.pathname === '/auth/callback' || location.pathname === '/auth/oauth/role') {
+    return (
+      <Routes>
+        <Route path="/auth/callback" element={<OAuthCallback />} />
+        <Route path="/auth/oauth/role" element={<OAuthRoleSelect />} />
+      </Routes>
+    );
+  }
+
+
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col justify-between transition-colors selection:bg-blue-600 selection:text-white">
       <PublicNavbar />
@@ -72,7 +85,6 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/design-system" element={<DesignSystemShowcase />} />
-
           {/* Fallback to Login */}
           <Route path="*" element={<Login />} />
         </Routes>
@@ -81,11 +93,11 @@ function AppContent() {
       <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-6 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-slate-800 dark:text-slate-300 font-bold">AYUSH Portal • Bridging AYUSH education, skills, and industry</span>
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+            <span className="text-slate-800 dark:text-slate-300 font-bold">SkillNexus AI • Connecting student potential with industry demand</span>
           </div>
-          <div className="text-center sm:text-right">
-            <span className="font-semibold text-slate-700 dark:text-slate-400">Team Zenith — SIH26044</span>
+          <div>
+            <span className="font-semibold text-slate-700 dark:text-slate-400">SkillNexus AI Platform</span>
           </div>
         </div>
       </footer>

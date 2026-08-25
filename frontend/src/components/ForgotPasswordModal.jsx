@@ -62,7 +62,7 @@ export function ForgotPasswordModal({ isOpen, onClose }) {
         <div className="space-y-1">
           <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">Reset Password</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Follow the steps to recover your SkillBridge account.
+            Follow the steps to recover your SkillNexus AI account.
           </p>
         </div>
 

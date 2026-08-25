@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 /**
- * Vite Configuration for SkillBridge Frontend
+ * Vite Configuration for SkillNexus AI Frontend
  * Configures React plugin, Tailwind CSS v4, and API proxy forwarding
  * to the Node.js/Express backend running on port 5000.
  */

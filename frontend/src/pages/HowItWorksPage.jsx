@@ -11,7 +11,7 @@ export default function HowItWorksPage() {
           Platform Architecture
         </span>
         <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-          How SkillBridge Works
+          How SkillNexus AI Works
         </h1>
         <p className="text-slate-600 dark:text-slate-300 text-base max-w-2xl mx-auto">
           A closed-loop intelligence engine connecting Student Skills ↔ College Curriculum ↔ Industry Opportunities.
@@ -90,7 +90,7 @@ export default function HowItWorksPage() {
           to="/register"
           className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl text-sm transition shadow-lg shadow-blue-600/20"
         >
-          <span>Get Started on SkillBridge</span>
+          <span>Get Started on SkillNexus AI</span>
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>

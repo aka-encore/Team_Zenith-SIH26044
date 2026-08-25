@@ -21,9 +21,10 @@ const UserSchema = new mongoose.Schema({
     ]
   },
 
+  // Optional — not required for OAuth-only accounts
   passwordHash: {
     type: String,
-    required: [true, 'Please add a password'],
+    required: false,
     minlength: 6,
     select: false // By default, do not return password in queries
   },
@@ -40,6 +41,34 @@ const UserSchema = new mongoose.Schema({
     default: 'active'
   },
 
+  // OAuth provider identities (Google, LinkedIn, etc.)
+  authProviders: [
+    {
+      provider: {
+        type: String,
+        enum: ['google', 'linkedin'],
+        required: true
+      },
+      providerId: {
+        type: String,
+        required: true
+      },
+      _id: false
+    }
+  ],
+
+  // Profile avatar URL (from OAuth provider or uploaded)
+  avatarUrl: {
+    type: String,
+    default: null
+  },
+
+  // Whether the user's email has been verified
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+
   createdAt: {
     type: Date,
     default: Date.now
@@ -50,8 +79,13 @@ const UserSchema = new mongoose.Schema({
 // Encrypt password using bcrypt before saving user
 UserSchema.pre('save', async function(next) {
 
-  // Only hash password if it has been modified (or is new)
-  if (!this.isModified('passwordHash')) {
+  // Only hash if passwordHash is present AND has been modified (or is new)
+  if (!this.passwordHash || !this.isModified('passwordHash')) {
+    return next();
+  }
+
+  // Skip if already hashed (60-char bcrypt hash starts with $2b$)
+  if (this.passwordHash.startsWith('$2b$') || this.passwordHash.startsWith('$2a$')) {
     return next();
   }
 
@@ -67,6 +101,7 @@ UserSchema.pre('save', async function(next) {
 
 // Method to compare entered password with hashed password
 UserSchema.methods.matchPassword = async function(enteredPassword) {
+  if (!this.passwordHash) return false;
   return await bcrypt.compare(enteredPassword, this.passwordHash);
 };
 

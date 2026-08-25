@@ -176,8 +176,8 @@ export default function HomePage({ onSelectTab }) {
                     <BadgeCheck className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-white">AYUSH Skill Passport — Preview</h3>
-                    <p className="text-xs text-slate-400">Competency Profile Snapshot</p>
+                    <h3 className="text-sm font-semibold text-white">Live Intelligence Pipeline</h3>
+                    <p className="text-xs text-slate-400">SkillNexus AI Automated Mapping Engine</p>
                   </div>
                 </div>
                 <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium flex items-center space-x-1.5">

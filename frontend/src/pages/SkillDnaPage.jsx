@@ -136,7 +136,7 @@ export default function SkillDnaPage() {
           <div className="flex items-center space-x-2">
             <span className="text-xs px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 font-medium flex items-center space-x-1.5">
               <Dna className="h-3.5 w-3.5 text-purple-400" />
-              <span>SkillBridge Skill DNA Engine</span>
+              <span>SkillNexus AI Skill DNA Engine</span>
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white">Interactive Skill DNA Matrix</h1>

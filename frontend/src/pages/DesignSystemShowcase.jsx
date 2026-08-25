@@ -39,12 +39,12 @@ export default function DesignSystemShowcase() {
           <div className="flex items-center space-x-2">
             <span className="text-xs px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-extrabold uppercase tracking-wider flex items-center space-x-1.5 font-mono">
               <Dna className="h-3.5 w-3.5" />
-              <span>SkillBridge Component Library</span>
+              <span>SkillNexus AI Component Library</span>
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white">Design System & Component Library</h1>
           <p className="text-slate-400 text-sm max-w-2xl">
-            Official design language for **SkillBridge** (*"Connecting student potential with industry demand"*). Supports 4 strict data states with zero fake metrics.
+            Official design language for **SkillNexus AI** (*"Connecting student potential with industry demand"*). Supports 4 strict data states with zero fake metrics.
           </p>
         </div>
 
@@ -229,7 +229,7 @@ export default function DesignSystemShowcase() {
               Open Test Modal Dialog
             </Button>
 
-            <Button variant="violet" onClick={() => setToastMessage("SkillBridge API successfully synced!")}>
+            <Button variant="violet" onClick={() => setToastMessage("SkillNexus AI API successfully synced!")}>
               Trigger Toast Notification
             </Button>
           </div>
@@ -243,7 +243,7 @@ export default function DesignSystemShowcase() {
           <Modal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            title="SkillBridge System Dialog"
+            title="SkillNexus AI System Dialog"
             subtitle="Accessible overlay component demo"
           >
             <p className="text-xs text-slate-300 leading-relaxed">

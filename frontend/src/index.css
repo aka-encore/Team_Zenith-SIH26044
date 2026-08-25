@@ -73,10 +73,7 @@
   background: #1e293b;
 }
 
-
-/* ─────────────────────────────────────────────────────────────
-   THEME-AWARE GLASS CARDS — Used throughout the portal
-   ───────────────────────────────────────────────────────────── */
+/* SkillNexus AI Theme-Aware Cards & Utilities */
 .sb-glass-card {
   background: var(--sb-card-bg);
   border: 1px solid var(--sb-card-border);

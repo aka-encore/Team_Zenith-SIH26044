@@ -104,8 +104,8 @@ export function OrbitingSkills({ selectedRole }) {
                 <BookOpen className="h-7 w-7 text-emerald-300" />
               )}
             </div>
-            <span className="text-[11px] font-bold text-white tracking-wide">AYUSH Portal</span>
-            <span className="text-[9px] text-emerald-300 font-mono font-medium">SIH26044</span>
+            <span className="text-[11px] font-bold text-white tracking-wide">SkillNexus AI</span>
+            <span className="text-[9px] text-blue-300 font-mono font-medium">SkillNexus AI Platform</span>
           </div>
 
 
@@ -126,7 +126,7 @@ export function OrbitingSkills({ selectedRole }) {
 
       {/* BOTTOM BRAND FOOTER */}
       <div className="relative z-10 pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
-        <span className="font-semibold text-slate-300">AYUSH Ecosystem</span>
+        <span className="font-semibold text-slate-300">SkillNexus AI Ecosystem</span>
         <span>Students ↔ Academia ↔ Industry</span>
       </div>
 
