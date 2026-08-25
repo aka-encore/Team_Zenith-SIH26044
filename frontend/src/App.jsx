@@ -78,6 +78,10 @@ function AppContent() {
           <Route path="/" element={<HomePage onSelectTab={(tab) => navigate(`/${tab}`)} />} />
           <Route path="/how-it-works" element={<HowItWorksPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/opportunities" element={<OpportunityDiscoveryPage />} />
+          <Route path="/skill-dna" element={<SkillDnaPage />} />
+          <Route path="/academia-lab" element={<AcademiaIndustryLab />} />
+          <Route path="/industry-demand" element={<IndustryDemandPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/design-system" element={<DesignSystemShowcase />} />
@@ -86,14 +90,14 @@ function AppContent() {
         </Routes>
       </main>
 
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-8 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-6 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-            <span className="text-slate-800 dark:text-slate-300 font-bold">SkillNexus AI • Connecting student potential with industry demand</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-slate-800 dark:text-slate-300 font-bold">SkillNexus AI • Connecting AYUSH student potential with industry demand</span>
           </div>
-          <div>
-            <span className="font-semibold text-slate-700 dark:text-slate-400">SkillNexus AI Platform</span>
+          <div className="text-center sm:text-right">
+            <span className="font-semibold text-slate-700 dark:text-slate-400">Team Zenith — SIH26044</span>
           </div>
         </div>
       </footer>
