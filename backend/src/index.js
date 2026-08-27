@@ -15,6 +15,16 @@ import companyRoutes from './routes/companyRoutes.js';
 import opportunityRoutes from './routes/opportunityRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
 import institutionRoutes from './routes/institutionRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import assessmentRoutes from './routes/assessmentRoutes.js';
+import questionRoutes from './routes/questionRoutes.js';
+
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 // 3. Load environment variables from .env file
@@ -40,6 +50,10 @@ app.use(cors({
 app.use(express.json());
 
 
+// 7b. Serve static uploaded files (Profile Photos, Resumes, etc.)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+
 // 8. Register API route handlers
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
@@ -47,6 +61,9 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/opportunities', opportunityRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/institutions', institutionRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/assessment', assessmentRoutes);
+app.use('/api/questions', questionRoutes);
 
 
 // 9. Simple Health Check endpoint to test backend status

@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
       setToken(data.token);
       setUser(data.user);
 
-      return { success: true, message: data.message };
+      return { success: true, message: data.message, user: data.user, token: data.token };
 
     } catch (error) {
       console.error('Login action error:', error.message);
@@ -130,6 +130,17 @@ export const AuthProvider = ({ children }) => {
   };
 
 
+  // updateUser — updates current authenticated user data in state and storage
+  const updateUser = (userData) => {
+    try {
+      const merged = { ...user, ...userData };
+      localStorage.setItem('user', JSON.stringify(merged));
+      setUser(merged);
+    } catch (error) {
+      console.error('updateUser error:', error.message);
+    }
+  };
+
   // Logout handler - Clears all stored auth data
   const logout = () => {
     localStorage.removeItem('token');
@@ -140,7 +151,7 @@ export const AuthProvider = ({ children }) => {
 
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, loginWithToken, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, loginWithToken, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

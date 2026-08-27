@@ -1,52 +1,148 @@
 import mongoose from 'mongoose';
 
+
+const SkillItemSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Skill name is required'],
+    trim: true
+  },
+  category: {
+    type: String,
+    required: [true, 'Category is required'],
+    default: 'Frontend',
+    trim: true
+  },
+  proficiency: {
+    type: String,
+    required: [true, 'Proficiency level is required'],
+    enum: ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
+    default: 'Intermediate'
+  }
+}, {
+  timestamps: true
+});
+
+
 const CertificationSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true,
+    required: [true, 'Certificate name is required'],
     trim: true
   },
   issuer: {
     type: String,
-    required: true,
+    required: [true, 'Issuing organization is required'],
     trim: true
   },
+  issueDate: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   date: {
-    type: String, // String to support formats like "MM/YYYY" or "YYYY"
-    trim: true
+    type: String,
+    trim: true,
+    default: ''
+  },
+  credentialId: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  credentialUrl: {
+    type: String,
+    trim: true,
+    default: ''
   }
+}, {
+  timestamps: true
 });
+
 
 const ProjectSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true,
+    required: [true, 'Project title is required'],
     trim: true
   },
   description: {
     type: String,
-    required: true,
+    required: [true, 'Project description is required'],
     trim: true
   },
   technologies: {
     type: [String],
     default: []
   },
+  githubUrl: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  liveUrl: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   link: {
     type: String,
-    trim: true
+    trim: true,
+    default: ''
+  },
+  duration: {
+    type: String,
+    trim: true,
+    default: ''
   }
+}, {
+  timestamps: true
 });
+
 
 const StudentProfileSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true // One-to-one relationship between User and StudentProfile
+    unique: true
   },
+
+  // Personal Information
+  phone: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  dateOfBirth: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  profilePhoto: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  bio: {
+    type: String,
+    default: '',
+    trim: true
+  },
+
+  // Academic Information
   academicInformation: {
     college: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    department: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    course: {
       type: String,
       default: '',
       trim: true
@@ -62,45 +158,92 @@ const StudentProfileSchema = new mongoose.Schema({
       trim: true
     },
     year: {
-      type: Number,
-      default: null
+      type: String,
+      default: '',
+      trim: true
     },
     cgpa: {
       type: Number,
       default: null
     }
   },
+
+  // Structured Skills with Category and Proficiency
+  skillsList: {
+    type: [SkillItemSchema],
+    default: []
+  },
+
+  // Flat string array of skills (for backward compatibility)
   skills: {
-    type: [String], // Technical skills
+    type: [String],
     default: []
   },
   softSkills: {
     type: [String],
     default: []
   },
-  careerInterests: {
-    type: [String],
-    default: []
-  },
-  certifications: {
-    type: [CertificationSchema],
-    default: []
-  },
+
+  // Projects
   projects: {
     type: [ProjectSchema],
     default: []
   },
-  achievements: {
-    type: [String],
+
+  // Certifications
+  certifications: {
+    type: [CertificationSchema],
     default: []
   },
+
+  // Resume PDF Storage
   resumeUrl: {
     type: String,
     default: '',
     trim: true
+  },
+  resumeName: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  resumeUploadDate: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  resumeSize: {
+    type: String,
+    default: '',
+    trim: true
+  },
+
+  // Social Links
+  socialLinks: {
+    github: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    linkedin: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    portfolio: {
+      type: String,
+      default: '',
+      trim: true
+    }
+  },
+
+  achievements: {
+    type: [String],
+    default: []
   }
 }, {
-  timestamps: true // Automatically create createdAt and updatedAt
+  timestamps: true
 });
+
 
 export default mongoose.model('StudentProfile', StudentProfileSchema);

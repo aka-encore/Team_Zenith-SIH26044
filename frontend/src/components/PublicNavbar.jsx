@@ -13,10 +13,8 @@ export function PublicNavbar() {
 
   const publicLinks = [
     { label: "Home", path: "/" },
-    { label: "Opportunities", path: "/opportunities" },
-    { label: "Skill Assessment", path: "/skill-dna" },
-    { label: "Collaborations", path: "/academia-lab" },
-    { label: "Analytics", path: "/industry-demand" }
+    { label: "How It Works", path: "/how-it-works" },
+    { label: "About", path: "/about" }
   ];
 
 

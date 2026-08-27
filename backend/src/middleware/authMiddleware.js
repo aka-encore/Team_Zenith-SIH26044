@@ -1,8 +1,13 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
+
 const JWT_SECRET = process.env.JWT_SECRET || 'skillnexus_ai_jwt_secret_key_2026';
 
+
+/**
+ * Protect middleware: Verifies JWT token and attaches authenticated user
+ */
 export const protect = async (req, res, next) => {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) {
@@ -26,12 +31,37 @@ export const protect = async (req, res, next) => {
   }
 };
 
+
+/**
+ * Authorize middleware: Strict role-based backend verification
+ * Supports aliases (faculty / institution / academician)
+ */
 export const authorize = (...roles) => (req, res, next) => {
-  if (!req.user || !roles.includes(req.user.role)) {
-    return res.status(403).json({
+  if (!req.user) {
+    return res.status(401).json({
       success: false,
-      message: `Role (${req.user ? req.user.role : 'guest'}) is not authorized to access this route`
+      message: 'Not authenticated, please sign in'
     });
   }
-  next();
+
+  const userRole = (req.user.role || '').toLowerCase();
+
+  // Expand role aliases
+  const allowed = roles.flatMap(r => {
+    const roleLower = r.toLowerCase();
+    if (roleLower === 'faculty' || roleLower === 'institution' || roleLower === 'academician') {
+      return ['faculty', 'institution', 'academician'];
+    }
+    return [roleLower];
+  });
+
+  // Always allow admin or matching role
+  if (userRole === 'admin' || allowed.includes(userRole)) {
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    message: `Role '${req.user.role}' is not authorized to access this resource`
+  });
 };

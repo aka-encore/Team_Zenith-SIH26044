@@ -7,73 +7,72 @@ import Company from '../models/Company.js';
 dotenv.config();
 
 /**
- * Seeds default ready-to-use user accounts for testing login.
+ * Seeds default ready-to-use user accounts for testing all 4 roles:
+ * 1. Student
+ * 2. Faculty
+ * 3. Company
+ * 4. Admin
  */
 async function seedUsers() {
   try {
     await connectDB();
 
-    console.log('Seeding demo accounts into MongoDB...');
+    console.log('Seeding demo accounts into MongoDB for all 4 roles...');
 
-    // Clear existing test accounts if needed
-    await User.deleteMany({ email: { $in: ['student@test.com', 'company@test.com', 'institution@test.com', 'admin@test.com'] } });
+    // Clear existing test accounts
+    await User.deleteMany({
+      email: { $in: ['student@test.com', 'faculty@test.com', 'company@test.com', 'admin@test.com', 'institution@test.com'] }
+    });
 
-    // 1. Create Demo Student Account
+    // 1. Student Account
     const studentUser = new User({
       name: 'Alex Chen',
       email: 'student@test.com',
       passwordHash: 'password123',
       role: 'student',
-      status: 'active'
+      status: 'active',
+      emailVerified: true
     });
     await studentUser.save();
     console.log('✅ Created Student Account: student@test.com / password123');
 
-    // Update student profile skills
-    await StudentProfile.findOneAndUpdate(
-      { userId: studentUser._id },
-      {
-        skills: ['React', 'Node.js', 'MongoDB', 'Java', 'Data Structures'],
-        bio: '3rd Year Computer Science Student passionate about Fullstack Development.',
-        education: { institutionName: 'Zenith Institute of Technology', degree: 'B.Tech', fieldOfStudy: 'Computer Science', graduationYear: 2026 }
-      },
-      { upsert: true, new: true }
-    );
+    // 2. Faculty Account
+    const facultyUser = new User({
+      name: 'Dr. Rajesh Sharma (Faculty HOD)',
+      email: 'faculty@test.com',
+      passwordHash: 'password123',
+      role: 'faculty',
+      status: 'active',
+      emailVerified: true
+    });
+    await facultyUser.save();
+    console.log('✅ Created Faculty Account: faculty@test.com / password123');
 
-    // 2. Create Demo Company Account
+    // 3. Company Account
     const companyUser = new User({
       name: 'TechNova Solutions',
       email: 'company@test.com',
       passwordHash: 'password123',
       role: 'company',
-      status: 'active'
+      status: 'active',
+      emailVerified: true
     });
     await companyUser.save();
     console.log('✅ Created Company Account: company@test.com / password123');
 
-    await Company.findOneAndUpdate(
-      { userId: companyUser._id },
-      {
-        companyName: 'TechNova Solutions',
-        industry: 'Enterprise Software & Cloud',
-        location: 'Bengaluru / Remote',
-        description: 'Building cloud-native microservices platforms.'
-      },
-      { upsert: true, new: true }
-    );
-
-    // 3. Create Demo Institution / Admin Account
-    const instUser = new User({
-      name: 'Zenith Institute Admin',
-      email: 'institution@test.com',
+    // 4. Admin Account
+    const adminUser = new User({
+      name: 'Team Zenith System Administrator',
+      email: 'admin@test.com',
       passwordHash: 'password123',
-      role: 'institution',
-      status: 'active'
+      role: 'admin',
+      status: 'active',
+      emailVerified: true
     });
-    await instUser.save();
-    console.log('✅ Created Institution Account: institution@test.com / password123');
+    await adminUser.save();
+    console.log('✅ Created Admin Account: admin@test.com / password123');
 
-    console.log('\n🎉 Seed process complete! All demo accounts are active and ready for login.');
+    console.log('\n🎉 Seed process complete! All 4 demo accounts are active in MongoDB.');
     process.exit(0);
   } catch (error) {
     console.error('❌ Error seeding users:', error.message);
