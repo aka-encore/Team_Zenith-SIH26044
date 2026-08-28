@@ -56,7 +56,7 @@ export function OrbitingSkills({ selectedRole }) {
 
   return (
     <div className={`w-full h-full bg-gradient-to-br ${current.color} p-6 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden transition-all duration-300 rounded-3xl lg:rounded-r-none border-b lg:border-b-0 lg:border-r border-slate-800`}>
-      
+
       {/* Background Radial Grid Pattern */}
       <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:18px_18px] pointer-events-none" />
 
@@ -81,7 +81,7 @@ export function OrbitingSkills({ selectedRole }) {
       {/* CENTER STATIC SKILL NETWORK GRAPHIC */}
       <div className="relative z-10 my-4 flex items-center justify-center py-6">
         <div className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
-          
+
           {/* Static SVG Connecting Network Lines */}
           <svg className="absolute inset-0 w-full h-full text-emerald-500/20" viewBox="0 0 288 288">
             <circle cx="144" cy="144" r="110" stroke="currentColor" strokeWidth="1.5" strokeDasharray="6 6" fill="none" />

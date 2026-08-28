@@ -1,220 +1,964 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Users, Briefcase, Plus, Sparkles, Search, Filter, 
-  CheckCircle2, ChevronRight, Award, Target, FileText, ArrowRight
+  CheckCircle2, ChevronRight, Award, Target, FileText, ArrowRight,
+  Clock, MapPin, DollarSign, Calendar, ExternalLink, RefreshCw,
+  AlertCircle, Check, X, ShieldCheck, TrendingUp, BarChart3,
+  GraduationCap, Mail, Video, UserCheck, Layers, Eye
 } from 'lucide-react';
 
-export default function CompanyDashboardView({ companyName = "TechNova Solutions" }) {
+export default function CompanyDashboardView() {
+  const { token, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Dashboard Data State
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // Quick Action Modal State (Post Job / Internship)
   const [showPostModal, setShowPostModal] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newType, setNewType] = useState('Internship');
+  const [postType, setPostType] = useState('job'); // 'job' | 'internship'
+  const [postTitle, setPostTitle] = useState('');
+  const [postDescription, setPostDescription] = useState('');
+  const [postLocation, setPostLocation] = useState('Remote');
+  const [postStipend, setPostStipend] = useState('Competitive');
+  const [postDuration, setPostDuration] = useState('');
+  const [postSkills, setPostSkills] = useState('');
+  const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState('');
+  const [postSuccess, setPostSuccess] = useState('');
 
-  const candidates = [
-    {
-      id: 1,
-      name: "Alex Chen",
-      college: "IIT Bombay • CS 3rd Year",
-      matchScore: 95,
-      readiness: "Immediate Placement Ready",
-      strongestSkills: ["Node.js", "Express", "React", "MongoDB"],
-      matchReason: "100% stack match on backend Node.js + Express; verified Github capstone project with Redis caching.",
-      github: "github.com/alexchen-dev",
-      status: "Shortlisted"
-    },
-    {
-      id: 2,
-      name: "Priya Sharma",
-      college: "NIT Surathkal • IT 4th Year",
-      matchScore: 91,
-      readiness: "Placement Ready",
-      strongestSkills: ["Node.js", "Java", "Docker", "PostgreSQL"],
-      matchReason: "Exceeds backend requirement; strong DSA credentials (LeetCode Top 5%).",
-      github: "github.com/priyasharma",
-      status: "Interview Scheduled"
-    },
-    {
-      id: 3,
-      name: "Rohan Varma",
-      college: "BITS Pilani • ECE 3rd Year",
-      matchScore: 88,
-      readiness: "Skill Mapped",
-      strongestSkills: ["Python", "FastAPI", "Docker", "AWS Basics"],
-      matchReason: "High algorithmic score; completed Microservices track.",
-      github: "github.com/rohanv",
-      status: "Under Review"
+  // Opportunities tab filter
+  const [oppFilter, setOppFilter] = useState('all'); // 'all' | 'job' | 'internship'
+
+  // Fetch live company dashboard statistics from MongoDB
+  const fetchDashboardData = async (isManualRefresh = false) => {
+    if (isManualRefresh) setRefreshing(true);
+    else setLoading(true);
+    setErrorMsg('');
+
+    try {
+      const response = await fetch('/api/companies/dashboard-stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const resData = await response.json();
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.message || 'Failed to retrieve company dashboard data.');
+      }
+
+      setData(resData);
+    } catch (err) {
+      console.error('Error loading company dashboard:', err);
+      setErrorMsg(err.message || 'Unable to connect to database. Please verify your connection.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  ];
+  };
 
-  return (
-    <div className="space-y-8 pb-16">
-      {/* HEADER BAR */}
-      <div className="glass-card p-6 sm:p-8 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <span className="text-xs px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 font-medium flex items-center space-x-1.5">
-              <Building2 className="h-3.5 w-3.5 text-purple-400" />
-              <span>Corporate Talent Portal</span>
-            </span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white">Find the skills you need.</h1>
-          <p className="text-slate-400 text-sm max-w-2xl">
-            Recruit pre-assessed candidates matched against your exact tech stack specifications using SkillNexus AI Skill Intelligence.
-          </p>
+  useEffect(() => {
+    if (token) {
+      fetchDashboardData();
+    }
+  }, [token]);
+
+  // Handle Quick Action: Create New Opportunity
+  const handleCreateOpportunity = async (e) => {
+    e.preventDefault();
+    if (!postTitle.trim() || !postDescription.trim() || !postSkills.trim()) {
+      setPostError('Title, description, and required skills are required.');
+      return;
+    }
+
+    setPosting(true);
+    setPostError('');
+    setPostSuccess('');
+
+    const skillsArray = postSkills
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    const payload = {
+      title: postTitle.trim(),
+      type: postType,
+      description: postDescription.trim(),
+      location: postLocation.trim() || 'Remote',
+      stipend: postStipend.trim() || 'Competitive',
+      duration: postType === 'internship' ? postDuration.trim() : '',
+      requiredSkills: skillsArray
+    };
+
+    try {
+      const response = await fetch('/api/opportunities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const resData = await response.json();
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.message || 'Failed to create opportunity posting.');
+      }
+
+      setPostSuccess(`${postType === 'internship' ? 'Internship' : 'Job'} posted successfully!`);
+      // Reset form
+      setPostTitle('');
+      setPostDescription('');
+      setPostSkills('');
+      setPostDuration('');
+      
+      // Refresh dashboard data
+      fetchDashboardData(true);
+
+      setTimeout(() => {
+        setPostSuccess('');
+        setShowPostModal(false);
+      }, 1200);
+    } catch (err) {
+      console.error('Error creating opportunity:', err);
+      setPostError(err.message || 'Failed to post opportunity.');
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  const openPostModal = (type) => {
+    setPostType(type);
+    setPostError('');
+    setPostSuccess('');
+    setShowPostModal(true);
+  };
+
+  // 1. Loading State
+  if (loading) {
+    return (
+      <div className="space-y-8 pb-16 text-left max-w-7xl mx-auto">
+        <div className="glass-card p-8 rounded-3xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-4">
+          <div className="h-6 w-48 bg-slate-300 dark:bg-slate-800 rounded-lg" />
+          <div className="h-10 w-96 bg-slate-200 dark:bg-slate-800/60 rounded-xl" />
+          <div className="h-4 w-72 bg-slate-200 dark:bg-slate-800/40 rounded-lg" />
         </div>
-
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={() => setShowPostModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold px-5 py-3 rounded-xl transition flex items-center space-x-2 cursor-pointer shadow-md shadow-indigo-600/20"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Create New Opening</span>
-          </button>
-        </div>
-      </div>
-
-      {/* QUICK STATS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "Active Openings", val: "6 Positions", sub: "3 Internships, 2 Jobs, 1 Project" },
-          { label: "Total Applicants", val: "184 Candidates", sub: "Pre-filtered by AI Score" },
-          { label: "Top AI Matches", val: "24 Candidates", sub: ">85% Skill Compatibility" },
-          { label: "Avg Time-to-Shortlist", val: "1.4 Days", sub: "68% faster hiring cycle" }
-        ].map((st, s) => (
-          <div key={s} className="glass-card p-5 rounded-xl border border-slate-800">
-            <span className="text-xs text-slate-400 font-medium block">{st.label}</span>
-            <div className="text-2xl font-extrabold text-white mt-1 font-mono">{st.val}</div>
-            <div className="text-[11px] text-slate-500 mt-1">{st.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* AI CANDIDATE MATCHING LIST */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-white flex items-center space-x-2">
-            <Sparkles className="h-5 w-5 text-indigo-400" />
-            <span>AI Candidate Matching Engine</span>
-          </h3>
-          <span className="text-xs text-slate-400">Ranked by Stack Fit</span>
-        </div>
-
-        <div className="space-y-4">
-          {candidates.map((cand) => (
-            <div key={cand.id} className="glass-card p-6 rounded-2xl border border-slate-800 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <div className="flex items-center space-x-3">
-                    <h4 className="text-lg font-bold text-white">{cand.name}</h4>
-                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                      {cand.status}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-0.5">{cand.college} • <span className="text-emerald-400">{cand.readiness}</span></p>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <div className="text-right">
-                    <span className="text-xs font-mono font-bold px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20 block">
-                      {cand.matchScore}% Match Score
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Match Rationale */}
-              <div className="p-3.5 bg-slate-900/90 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-1">
-                <span className="text-indigo-400 font-semibold block">💡 Why this candidate matches your opening:</span>
-                <p className="leading-relaxed">{cand.matchReason}</p>
-              </div>
-
-              {/* Skills and Actions */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-800/80">
-                <div className="flex items-center space-x-1.5 flex-wrap gap-y-1 text-xs">
-                  <span className="text-slate-400">Strongest Stack:</span>
-                  {cand.strongestSkills.map((sk, k) => (
-                    <span key={k} className="px-2 py-0.5 bg-slate-800 text-slate-200 rounded border border-slate-700 font-mono text-[11px]">
-                      {sk}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition">
-                    View Verified Skill DNA
-                  </button>
-                  <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shadow-md">
-                    Shortlist Candidate
-                  </button>
-                </div>
-              </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-3">
+              <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
+              <div className="h-8 w-16 bg-slate-300 dark:bg-slate-700 rounded-lg" />
             </div>
           ))}
         </div>
+        <div className="flex items-center justify-center p-12 text-slate-500">
+          <RefreshCw className="h-6 w-6 animate-spin text-emerald-500 mr-3" />
+          <span className="text-xs font-mono font-bold uppercase tracking-wider">Loading Real-Time Corporate Workspace...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Error State
+  if (errorMsg && !data) {
+    return (
+      <div className="max-w-xl mx-auto my-12 p-8 glass-card border border-rose-500/30 rounded-3xl text-center space-y-4 shadow-xl">
+        <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto">
+          <AlertCircle className="h-7 w-7" />
+        </div>
+        <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Failed to Load Dashboard</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{errorMsg}</p>
+        <button
+          onClick={() => fetchDashboardData()}
+          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition shadow-md shadow-emerald-600/20 cursor-pointer"
+        >
+          Retry Loading
+        </button>
+      </div>
+    );
+  }
+
+  const company = data?.company || {};
+  const stats = data?.stats || {
+    activeJobs: 0,
+    activeInternships: 0,
+    totalApplicants: 0,
+    shortlistedCount: 0,
+    interviewCount: 0
+  };
+  const opportunities = data?.opportunities || [];
+  const recentApplicants = data?.recentApplicants || [];
+  const upcomingInterviews = data?.upcomingInterviews || [];
+  const insights = data?.insights || {
+    commonSkills: [],
+    stageBreakdown: { applied: 0, reviewed: 0, shortlisted: 0, accepted: 0, rejected: 0 },
+    applicantsByOpportunity: []
+  };
+
+  const filteredOpportunities = opportunities.filter(opp => {
+    if (oppFilter === 'job') return opp.type === 'job';
+    if (oppFilter === 'internship') return opp.type === 'internship';
+    return true;
+  });
+
+  return (
+    <div className="space-y-8 pb-20 text-left max-w-7xl mx-auto">
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ HEADER BAR & COMPANY OVERVIEW ━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white via-slate-50/60 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-[#0b1120] shadow-xl relative overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-extrabold flex items-center space-x-1.5 uppercase tracking-wider font-mono">
+                <Building2 className="h-3.5 w-3.5" />
+                <span>Corporate Talent Workspace</span>
+              </span>
+              <span className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
+                company.verificationStatus === 'verified'
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                  : 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
+              }`}>
+                {company.verificationStatus === 'verified' ? '✓ Verified Partner' : '⏳ Pending Verification'}
+              </span>
+            </div>
+
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              {company.companyName || user?.name || "Corporate Recruiter Portal"}
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-2xl leading-relaxed">
+              {company.industry ? `${company.industry} • ` : ''}{company.location || 'Remote'} — Skill-driven recruitment, applicant screening, interview pipeline, and AI compatibility matching.
+            </p>
+          </div>
+
+          {/* Top Actions: Refresh & Post */}
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => fetchDashboardData(true)}
+              disabled={refreshing}
+              className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer shadow-xs disabled:opacity-50"
+              title="Refresh Dashboard Data"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-emerald-500' : ''}`} />
+            </button>
+            <button
+              onClick={() => openPostModal('job')}
+              className="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-extrabold px-5 py-3 rounded-xl transition flex items-center space-x-2 cursor-pointer shadow-md shadow-emerald-600/25"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Post New Role</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* CREATE OPENING MODAL */}
+      {/* ━━━━━━━━━━━━━━━━━━━━ 1. OVERVIEW METRICS (REAL DATA) ━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex items-center space-x-2">
+            <Layers className="h-4 w-4 text-emerald-500" />
+            <span>Hiring Pipeline Overview</span>
+          </h2>
+          <span className="text-[11px] font-mono text-slate-400">Live MongoDB Synced</span>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { 
+              label: "Active Jobs", 
+              val: stats.activeJobs, 
+              sub: `${opportunities.filter(o => o.type === 'job').length} total posted`,
+              icon: Briefcase,
+              color: "emerald"
+            },
+            { 
+              label: "Active Internships", 
+              val: stats.activeInternships, 
+              sub: `${opportunities.filter(o => o.type === 'internship').length} total posted`,
+              icon: GraduationCap,
+              color: "teal"
+            },
+            { 
+              label: "Total Applicants", 
+              val: stats.totalApplicants, 
+              sub: "Across all active openings",
+              icon: Users,
+              color: "indigo"
+            },
+            { 
+              label: "Shortlisted Students", 
+              val: stats.shortlistedCount, 
+              sub: `${stats.interviewCount} scheduled rounds`,
+              icon: UserCheck,
+              color: "purple"
+            }
+          ].map((card, idx) => {
+            const Icon = card.icon;
+            return (
+              <div 
+                key={idx} 
+                className="glass-card p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{card.label}</span>
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                </div>
+                <div className="text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
+                  {card.val}
+                </div>
+                <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
+                  {card.sub}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ 5. QUICK ACTIONS ━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="glass-card p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 space-y-4">
+        <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex items-center space-x-2">
+          <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
+          <span>Quick Actions</span>
+        </h3>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <button
+            onClick={() => openPostModal('job')}
+            className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-500/30 transition text-left space-y-1.5 cursor-pointer group shadow-xs"
+          >
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Briefcase className="h-4 w-4" />
+            </div>
+            <p className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400">Post Job</p>
+            <p className="text-[10px] text-slate-400">Full-time hiring role</p>
+          </button>
+
+          <button
+            onClick={() => openPostModal('internship')}
+            className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 hover:bg-teal-50 dark:hover:bg-teal-500/10 hover:border-teal-300 dark:hover:border-teal-500/30 transition text-left space-y-1.5 cursor-pointer group shadow-xs"
+          >
+            <div className="w-8 h-8 rounded-lg bg-teal-500/15 text-teal-600 dark:text-teal-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <GraduationCap className="h-4 w-4" />
+            </div>
+            <p className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400">Post Internship</p>
+            <p className="text-[10px] text-slate-400">Summer & winter tracks</p>
+          </button>
+
+          <button
+            onClick={() => navigate('/opportunities')}
+            className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:border-indigo-300 dark:hover:border-indigo-500/30 transition text-left space-y-1.5 cursor-pointer group shadow-xs"
+          >
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Search className="h-4 w-4" />
+            </div>
+            <p className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">Find Students</p>
+            <p className="text-[10px] text-slate-400">Discover verified talent</p>
+          </button>
+
+          <button
+            onClick={() => {
+              const el = document.getElementById('recent-applicants-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 hover:bg-purple-50 dark:hover:bg-purple-500/10 hover:border-purple-300 dark:hover:border-purple-500/30 transition text-left space-y-1.5 cursor-pointer group shadow-xs"
+          >
+            <div className="w-8 h-8 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Users className="h-4 w-4" />
+            </div>
+            <p className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400">View Applicants</p>
+            <p className="text-[10px] text-slate-400">{stats.totalApplicants} received</p>
+          </button>
+        </div>
+      </section>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ 2. MY OPPORTUNITIES ━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+              <Briefcase className="h-5 w-5 text-emerald-500" />
+              <span>My Opportunities</span>
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Live job and internship openings published by {company.companyName || 'your company'}.
+            </p>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex items-center space-x-1.5 bg-slate-200/60 dark:bg-slate-900 p-1 rounded-xl border border-slate-300/40 dark:border-slate-800 text-xs">
+            {['all', 'job', 'internship'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => setOppFilter(tab)}
+                className={`px-3 py-1.5 rounded-lg font-bold capitalize transition cursor-pointer ${
+                  oppFilter === tab
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {tab === 'all' ? 'All Roles' : `${tab}s`}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {filteredOpportunities.length === 0 ? (
+          <div className="glass-card p-10 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-3">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 mx-auto">
+              <Briefcase className="h-6 w-6" />
+            </div>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No opportunities found in this category.</p>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              Create your first opening to attract candidates matched with SkillNexus AI Skill Intelligence.
+            </p>
+            <button
+              onClick={() => openPostModal('job')}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+            >
+              Post Opportunity Now
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredOpportunities.map(opp => (
+              <div 
+                key={opp._id} 
+                className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 hover:border-emerald-400/40 dark:hover:border-emerald-500/30 transition shadow-sm space-y-3 flex flex-col justify-between"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md border ${
+                      opp.type === 'internship'
+                        ? 'bg-teal-500/10 border-teal-500/20 text-teal-600 dark:text-teal-400'
+                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                    }`}>
+                      {opp.type}
+                    </span>
+
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                      opp.status === 'open' 
+                        ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                        : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                    }`}>
+                      ● {opp.status === 'open' ? 'Active' : 'Closed'}
+                    </span>
+                  </div>
+
+                  <h4 className="text-base font-extrabold text-slate-900 dark:text-white line-clamp-1">{opp.title}</h4>
+
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    <span className="flex items-center space-x-1">
+                      <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                      <span>{opp.location || 'Remote'}</span>
+                    </span>
+                    <span className="flex items-center space-x-1">
+                      <DollarSign className="h-3.5 w-3.5 text-slate-400" />
+                      <span>{opp.stipend || 'Competitive'}</span>
+                    </span>
+                  </div>
+
+                  {/* Required Skills */}
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {(opp.requiredSkills || []).slice(0, 4).map((sk, sidx) => (
+                      <span key={sidx} className="text-[10px] font-mono px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded">
+                        {sk}
+                      </span>
+                    ))}
+                    {(opp.requiredSkills || []).length > 4 && (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 text-slate-400">
+                        +{opp.requiredSkills.length - 4} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card Footer */}
+                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center space-x-1.5">
+                    <Users className="h-3.5 w-3.5 text-emerald-500" />
+                    <span>{opp.applicantCount} {opp.applicantCount === 1 ? 'Applicant' : 'Applicants'}</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {new Date(opp.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ 3. RECENT APPLICANTS ━━━━━━━━━━━━━━━━━━━━ */}
+      <section id="recent-applicants-section" className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+              <Users className="h-5 w-5 text-indigo-500" />
+              <span>Recent Applicants</span>
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Live candidate applications received across your openings.
+            </p>
+          </div>
+          <span className="text-xs font-mono text-slate-400">{stats.totalApplicants} Total</span>
+        </div>
+
+        {recentApplicants.length === 0 ? (
+          <div className="glass-card p-10 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
+            <Users className="h-8 w-8 text-slate-400 mx-auto" />
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No applicants yet.</p>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              As students submit their applications and resumes, they will be listed here in real-time.
+            </p>
+          </div>
+        ) : (
+          <div className="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-md">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                    <th className="p-4">Candidate</th>
+                    <th className="p-4">College & Degree</th>
+                    <th className="p-4">Applied Role</th>
+                    <th className="p-4">Skills Stack</th>
+                    <th className="p-4">Applied Date</th>
+                    <th className="p-4 text-right">Recruitment Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                  {recentApplicants.map(app => (
+                    <tr key={app._id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                      <td className="p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center text-xs shrink-0">
+                            {app.studentName.charAt(0)}
+                          </div>
+                          <div>
+                            <span className="font-bold text-slate-900 dark:text-white block">{app.studentName}</span>
+                            <span className="text-[11px] text-slate-400">{app.studentEmail}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span className="text-slate-800 dark:text-slate-200 font-medium block">{app.college}</span>
+                        {app.cgpa && (
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">CGPA: {app.cgpa}/10</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <span className="font-semibold text-slate-900 dark:text-white block">{app.positionTitle}</span>
+                        <span className="text-[10px] uppercase font-bold text-slate-400">{app.positionType}</span>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {app.skills.map((sk, kidx) => (
+                            <span key={kidx} className="text-[9px] font-mono px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700">
+                              {sk}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="p-4 text-slate-500 font-mono text-[11px]">
+                        {new Date(app.appliedAt).toLocaleDateString()}
+                      </td>
+                      <td className="p-4 text-right">
+                        <span className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border ${
+                          app.status === 'accepted'
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                            : app.status === 'shortlisted'
+                            ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
+                            : app.status === 'reviewed'
+                            ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400'
+                            : app.status === 'rejected'
+                            ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+                            : 'bg-slate-500/10 border-slate-500/20 text-slate-600 dark:text-slate-300'
+                        }`}>
+                          {app.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ 4. UPCOMING INTERVIEWS ━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+              <Award className="h-5 w-5 text-purple-500" />
+              <span>Upcoming Interviews</span>
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Live scheduled interview rounds for shortlisted & accepted candidates.
+            </p>
+          </div>
+          <span className="text-xs font-mono text-slate-400">{upcomingInterviews.length} Scheduled</span>
+        </div>
+
+        {upcomingInterviews.length === 0 ? (
+          <div className="glass-card p-10 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
+            <Video className="h-8 w-8 text-slate-400 mx-auto" />
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No scheduled interviews yet.</p>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              When candidates are shortlisted or moved to the interview stage, their interview schedules and meeting links will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {upcomingInterviews.map(intv => (
+              <div 
+                key={intv._id} 
+                className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 space-y-3 shadow-sm hover:border-purple-400/40 transition"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                    {intv.round}
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                    ● {intv.status}
+                  </span>
+                </div>
+
+                <div>
+                  <h4 className="text-base font-extrabold text-slate-900 dark:text-white">{intv.studentName}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{intv.positionTitle} ({intv.positionType})</p>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-950/80 p-3 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-3.5 w-3.5 text-purple-500" />
+                    <span>{intv.date}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-3.5 w-3.5 text-purple-500" />
+                    <span>{intv.time}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Video className="h-3.5 w-3.5 text-purple-500" />
+                    <span>{intv.mode}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-400 font-mono">{intv.studentEmail}</span>
+                  <a
+                    href={intv.meetingLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
+                  >
+                    <span>Launch Meet</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ 6. HIRING INSIGHTS (REAL MONGODB METRICS) ━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+            <BarChart3 className="h-5 w-5 text-emerald-500" />
+            <span>Hiring & Talent Insights</span>
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Real data metrics computed from applicants who applied to your corporate postings.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          
+          {/* A. Most Common Skills among Applicants */}
+          <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Top Applicant Skills
+              </h3>
+              <span className="text-[10px] font-mono text-emerald-500">Frequency</span>
+            </div>
+
+            {insights.commonSkills.length === 0 ? (
+              <div className="text-center py-8 text-slate-400 text-xs">
+                No applicant skill data available yet.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {insights.commonSkills.map((item, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs font-medium">
+                      <span className="text-slate-800 dark:text-slate-200 font-bold">{item.skill}</span>
+                      <span className="font-mono text-slate-400">{item.count} {item.count === 1 ? 'student' : 'students'}</span>
+                    </div>
+                    <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full"
+                        style={{ width: `${Math.min(100, (item.count / Math.max(1, stats.totalApplicants)) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* B. Applicants by Opportunity */}
+          <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Applicants per Role
+              </h3>
+              <span className="text-[10px] font-mono text-emerald-500">{opportunities.length} Postings</span>
+            </div>
+
+            {insights.applicantsByOpportunity.length === 0 ? (
+              <div className="text-center py-8 text-slate-400 text-xs">
+                No opportunities created yet.
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                {insights.applicantsByOpportunity.map((opp, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 text-xs">
+                    <div className="min-w-0 pr-2">
+                      <p className="font-bold text-slate-900 dark:text-white truncate">{opp.title}</p>
+                      <p className="text-[10px] text-slate-400 uppercase">{opp.type}</p>
+                    </div>
+                    <div className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold shrink-0">
+                      {opp.count} apps
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* C. Recruitment Stage Funnel */}
+          <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Recruitment Funnel
+              </h3>
+              <span className="text-[10px] font-mono text-slate-400">Conversion</span>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              {[
+                { stage: "Applied", count: insights.stageBreakdown.applied, color: "bg-slate-500" },
+                { stage: "Reviewed", count: insights.stageBreakdown.reviewed, color: "bg-blue-500" },
+                { stage: "Shortlisted", count: insights.stageBreakdown.shortlisted, color: "bg-indigo-500" },
+                { stage: "Accepted / Offer", count: insights.stageBreakdown.accepted, color: "bg-emerald-500" },
+                { stage: "Rejected", count: insights.stageBreakdown.rejected, color: "bg-rose-500" }
+              ].map((stg, sidx) => (
+                <div key={sidx} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80">
+                  <div className="flex items-center space-x-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${stg.color}`} />
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{stg.stage}</span>
+                  </div>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">{stg.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ MODAL: CREATE OPPORTUNITY ━━━━━━━━━━━━━━━━━━━━ */}
       {showPostModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-card max-w-lg w-full p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6 bg-slate-950">
-            <h3 className="text-xl font-bold text-white">Create New Opportunity</h3>
-            
-            <div className="space-y-4 text-xs">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="glass-card max-w-lg w-full p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Opportunity Title</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Backend Developer Intern"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 p-3 rounded-xl outline-none"
-                />
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  Post New {postType === 'internship' ? 'Internship' : 'Job Opening'}
+                </h3>
+                <p className="text-xs text-slate-400">Publish role to SkillNexus candidate talent network</p>
               </div>
-
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">Opportunity Type</label>
-                <select
-                  value={newType}
-                  onChange={(e) => setNewType(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 p-3 rounded-xl outline-none"
-                >
-                  <option>Internship</option>
-                  <option>Job</option>
-                  <option>Industry Project</option>
-                  <option>Live Project</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">Required Tech Stack Skills</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Node.js, Express, MongoDB, Docker"
-                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 p-3 rounded-xl outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800">
-              <button
+              <button 
                 onClick={() => setShowPostModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 bg-slate-900 border border-slate-800"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-200 cursor-pointer"
               >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  alert("Opportunity created successfully!");
-                  setShowPostModal(false);
-                }}
-                className="px-6 py-2.5 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500"
-              >
-                Publish Opening
+                <X className="h-5 w-5" />
               </button>
             </div>
+
+            {postError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold">
+                {postError}
+              </div>
+            )}
+            {postSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                {postSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateOpportunity} className="space-y-4 text-xs">
+              {/* Type Switcher */}
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                  Opportunity Type
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPostType('job')}
+                    className={`py-2 rounded-xl font-bold border transition cursor-pointer ${
+                      postType === 'job'
+                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                        : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    Full-time Job
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPostType('internship')}
+                    className={`py-2 rounded-xl font-bold border transition cursor-pointer ${
+                      postType === 'internship'
+                        ? 'bg-teal-600 border-teal-600 text-white shadow-xs'
+                        : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    Internship
+                  </button>
+                </div>
+              </div>
+
+              {/* Title */}
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                  Role Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Backend Node.js Developer"
+                  value={postTitle}
+                  onChange={(e) => setPostTitle(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 p-3 rounded-xl outline-none focus:border-emerald-500 transition"
+                />
+              </div>
+
+              {/* Required Skills */}
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                  Required Skills (Comma separated) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Node.js, Express, MongoDB, Docker, React"
+                  value={postSkills}
+                  onChange={(e) => setPostSkills(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 p-3 rounded-xl outline-none focus:border-emerald-500 transition"
+                />
+                <p className="text-[10px] text-slate-400 mt-0.5">Used by AI matching engine to rank applicant compatibility.</p>
+              </div>
+
+              {/* Location & Stipend */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Bengaluru / Remote"
+                    value={postLocation}
+                    onChange={(e) => setPostLocation(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl outline-none focus:border-emerald-500 transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                    Compensation / Stipend
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. ₹25,000 / month"
+                    value={postStipend}
+                    onChange={(e) => setPostStipend(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl outline-none focus:border-emerald-500 transition"
+                  />
+                </div>
+              </div>
+
+              {postType === 'internship' && (
+                <div>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                    Internship Duration
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 6 Months"
+                    value={postDuration}
+                    onChange={(e) => setPostDuration(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl outline-none focus:border-emerald-500 transition"
+                  />
+                </div>
+              )}
+
+              {/* Description */}
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                  Role Description *
+                </label>
+                <textarea
+                  required
+                  rows="3"
+                  placeholder="Outline core responsibilities, key deliverables, and ideal candidate background..."
+                  value={postDescription}
+                  onChange={(e) => setPostDescription(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 p-3 rounded-xl outline-none focus:border-emerald-500 transition"
+                />
+              </div>
+
+              {/* Form Buttons */}
+              <div className="flex justify-end space-x-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowPostModal(false)}
+                  className="px-4 py-2.5 rounded-xl font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={posting}
+                  className="px-6 py-2.5 rounded-xl font-extrabold text-white bg-emerald-600 hover:bg-emerald-500 transition shadow-md shadow-emerald-600/20 disabled:opacity-50 cursor-pointer flex items-center space-x-2"
+                >
+                  {posting ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      <span>Publishing...</span>
+                    </>
+                  ) : (
+                    <span>Publish Role</span>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
+
     </div>
   );
 }

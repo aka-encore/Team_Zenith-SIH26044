@@ -3,10 +3,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { 
-  Dna, LayoutDashboard, Cpu, Award, Target, Compass, BookOpen, Briefcase, 
-  FileText, Bookmark, Folder, User, Settings, LogOut, Sun, Moon, 
-  Users, Building2, TrendingUp, Layers, Sparkles, ChevronLeft, ChevronRight, Menu, X
+  Leaf, LayoutDashboard, Cpu, Target, BookOpen, Briefcase,
+  User, LogOut, Sun, Moon, TrendingUp, Sparkles, X, Menu,
+  Building2, GraduationCap, School, Settings, Code2, FolderGit2,
+  FileText, Award, Bell, Video, Users, Search, BarChart3
 } from 'lucide-react';
+import { UserProfileModal } from './UserProfileModal';
+
 
 export function DashboardLayout({ children }) {
   const { user, logout } = useAuth();
@@ -14,268 +17,247 @@ export function DashboardLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  // Sidebar visibility state
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
-  const role = user?.role || 'student';
+  const rawRole = (user?.role || 'student').toLowerCase();
+  const isFaculty = ['faculty', 'institution', 'academician'].includes(rawRole);
+  const role = isFaculty ? 'faculty' : rawRole;
 
+  // Final 9-Item Consolidated Navigation for Students
   const studentNav = [
     { label: "Dashboard", path: "/student", icon: LayoutDashboard },
-    { 
-      group: "My Skills",
-      items: [
-        { label: "Skill DNA", path: "/skill-dna", icon: Dna },
-        { label: "Skill Assessment", path: "/skill-dna", icon: Target },
-        { label: "Skill Gap", path: "/industry-demand", icon: Cpu }
-      ]
-    },
-    { 
-      group: "Career",
-      items: [
-        { label: "Career Roadmap", path: "/student", icon: Compass },
-        { label: "Learning", path: "/student", icon: BookOpen }
-      ]
-    },
-    { 
-      group: "Opportunities",
-      items: [
-        { label: "Explore", path: "/opportunities", icon: Briefcase },
-        { label: "Applications", path: "/opportunities", icon: FileText },
-        { label: "Saved", path: "/opportunities", icon: Bookmark }
-      ]
-    },
-    { 
-      group: "Projects",
-      items: [
-        { label: "My Portfolio", path: "/student", icon: Folder }
-      ]
-    },
-    { label: "Profile", path: "/student", icon: User }
+    { label: "My Profile", path: "/profile", icon: User },
+    { label: "Skills & Assessment", path: "/skills", icon: Target },
+    { label: "Skill Gap", path: "/skill-gap", icon: Cpu },
+    { label: "Opportunities", path: "/opportunities", icon: Briefcase },
+    { label: "Applications", path: "/applications", icon: FileText },
+    { label: "Interviews & Placement", path: "/interviews", icon: Award },
+    { label: "Notifications", path: "/notifications", icon: Bell },
+    { label: "Settings", path: "/settings", icon: Settings }
+  ];
+
+  const facultyNav = [
+    { label: "Dashboard", path: "/faculty", icon: LayoutDashboard },
+    { label: "Students", path: "/faculty/students", icon: Users },
+    { label: "Skill Analytics", path: "/faculty/skills", icon: BarChart3 },
+    { label: "Skill Gap", path: "/faculty/skill-gap", icon: Target },
+    { label: "Opportunities", path: "/faculty/opportunities", icon: Briefcase },
+    { label: "Placement", path: "/faculty/placement", icon: Award },
+    { label: "Notifications", path: "/faculty/notifications", icon: Bell }
   ];
 
   const companyNav = [
     { label: "Dashboard", path: "/company", icon: LayoutDashboard },
-    { 
-      group: "Talent",
-      items: [
-        { label: "Find Students", path: "/company", icon: Users },
-        { label: "Candidates", path: "/company", icon: User },
-        { label: "Shortlisted", path: "/company", icon: Award }
-      ]
-    },
-    { 
-      group: "Opportunities",
-      items: [
-        { label: "My Opportunities", path: "/opportunities", icon: Briefcase },
-        { label: "Create Opportunity", path: "/company", icon: Sparkles }
-      ]
-    },
-    { label: "Projects", path: "/company", icon: Folder },
-    { label: "Assessments", path: "/company", icon: Target },
-    { label: "Analytics", path: "/industry-demand", icon: TrendingUp },
-    { label: "Company Profile", path: "/company", icon: Building2 }
+    { label: "Company Profile", path: "/company/profile", icon: Building2 },
+    { label: "Opportunities", path: "/company/opportunities", icon: Briefcase },
+    { label: "Applicants", path: "/company/applicants", icon: Users },
+    { label: "Student Search", path: "/company/students", icon: Search },
+    { label: "Shortlisted", path: "/company/shortlisted", icon: Award },
+    { label: "Interviews", path: "/company/interviews", icon: Video },
+    { label: "Notifications", path: "/company/notifications", icon: Bell }
   ];
 
-  const institutionNav = [
-    { label: "Dashboard", path: "/institution", icon: LayoutDashboard },
-    { label: "Students", path: "/institution", icon: Users },
-    { label: "Skill Intelligence", path: "/institution", icon: Cpu },
-    { label: "Industry Demand", path: "/industry-demand", icon: TrendingUp },
-    { label: "Skill Gap", path: "/institution", icon: Target },
-    { label: "Training", path: "/institution", icon: BookOpen },
-    { label: "Internships", path: "/institution", icon: Briefcase },
-    { label: "Placement", path: "/institution", icon: Award },
-    { label: "Industry Partners", path: "/institution", icon: Building2 },
-    { label: "Analytics", path: "/industry-demand", icon: Layers },
-    { label: "✦ Academia × Industry Lab", path: "/academia-lab", icon: Sparkles, highlight: true }
+  const adminNav = [
+    { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
+    { label: "Users", path: "/admin/users", icon: Users },
+    { label: "Companies", path: "/admin/companies", icon: Building2 },
+    { label: "Opportunities", path: "/admin/opportunities", icon: Briefcase },
+    { label: "Assessments", path: "/admin/assessments", icon: Award },
+    { label: "Applications", path: "/admin/applications", icon: FileText },
+    { label: "Placements", path: "/admin/placements", icon: GraduationCap },
+    { label: "Notifications", path: "/admin/notifications", icon: Bell }
   ];
 
-  const navItems = role === 'company' 
-    ? companyNav 
-    : (role === 'institution' || role === 'admin') 
-      ? institutionNav 
-      : studentNav;
+  const navItems = role === 'admin'
+    ? adminNav
+    : role === 'company'
+      ? companyNav
+      : role === 'faculty'
+        ? facultyNav
+        : studentNav;
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  const getRoleIcon = () => {
+    if (role === 'company') return Building2;
+    if (role === 'faculty') return School;
+    if (role === 'admin') return Settings;
+    return GraduationCap;
+  };
+
+  const RoleIcon = getRoleIcon();
+
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex transition-colors">
       
-      {/* DESKTOP SIDEBAR */}
-      <aside className={`hidden lg:flex flex-col justify-between border-r border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950 transition-all duration-300 sticky top-0 h-screen z-40 ${
-        collapsed ? 'w-20' : 'w-64'
-      }`}>
-        <div>
-          {/* Logo Brand Header */}
-          <div className="p-4 border-b border-slate-300 dark:border-slate-800 flex items-center justify-between">
-            <Link to="/" className="flex items-center space-x-2.5 overflow-hidden">
-              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-600/20">
-                <Dna className="h-5 w-5" />
-              </div>
-              {!collapsed && (
-                <div className="text-left">
-                  <span className="text-base font-black text-slate-900 dark:text-white tracking-tight block">SkillNexus AI</span>
-                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono block uppercase font-bold">{role} Workspace</span>
-                </div>
-              )}
-            </Link>
-
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900"
-            >
-              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </button>
-          </div>
-
-          {/* Sidebar Nav Items */}
-          <div className="p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-140px)] text-left">
-            {navItems.map((item, idx) => {
-              if (item.group) {
-                return (
-                  <div key={idx} className="space-y-1 pt-2">
-                    {!collapsed && (
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 block">
-                        {item.group}
-                      </span>
-                    )}
-                    {item.items.map((sub, sIdx) => {
-                      const isActive = location.pathname === sub.path;
-                      const SubIcon = sub.icon;
-                      return (
-                        <Link
-                          key={sIdx}
-                          to={sub.path}
-                          className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${
-                            isActive
-                              ? 'bg-blue-600 text-white shadow-sm'
-                              : 'text-slate-800 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'
-                          }`}
-                        >
-                          <SubIcon className="h-4 w-4 shrink-0" />
-                          {!collapsed && <span>{sub.label}</span>}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                );
-              }
-
-              const isActive = location.pathname === item.path;
-              const ItemIcon = item.icon;
-
-              return (
-                <Link
-                  key={idx}
-                  to={item.path}
-                  className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition ${
-                    item.highlight
-                      ? 'bg-purple-100 dark:bg-purple-500/10 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-500/20 font-bold'
-                      : isActive
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-800 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'
-                  }`}
-                >
-                  <ItemIcon className="h-4 w-4 shrink-0" />
-                  {!collapsed && <span>{item.label}</span>}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="p-3 border-t border-slate-300 dark:border-slate-800 space-y-1">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition cursor-pointer"
-          >
-            <LogOut className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Logout</span>}
-          </button>
-        </div>
-      </aside>
-
-      {/* MOBILE DRAWER */}
-      {mobileDrawerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden flex">
-          <div className="w-64 bg-white dark:bg-slate-950 p-4 space-y-4 text-left border-r border-slate-300 dark:border-slate-800 h-full overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-300 dark:border-slate-800">
-              <span className="font-extrabold text-slate-900 dark:text-white">SkillNexus AI Dashboard</span>
-              <button onClick={() => setMobileDrawerOpen(false)} className="p-1 text-slate-500">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="space-y-2">
-              {navItems.map((item, idx) => {
-                if (item.group) {
-                  return (
-                    <div key={idx} className="space-y-1">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">{item.group}</span>
-                      {item.items.map((sub, sIdx) => (
-                        <Link
-                          key={sIdx}
-                          to={sub.path}
-                          onClick={() => setMobileDrawerOpen(false)}
-                          className="flex items-center space-x-2 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-300 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900"
-                        >
-                          <sub.icon className="h-4 w-4 text-blue-600" />
-                          <span>{sub.label}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  );
-                }
-                return (
-                  <Link
-                    key={idx}
-                    to={item.path}
-                    onClick={() => setMobileDrawerOpen(false)}
-                    className="flex items-center space-x-2 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-300 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900"
-                  >
-                    <item.icon className="h-4 w-4 text-blue-600" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+      {/* ─── SIDEBAR OVERLAY (Mobile) ─── */}
+      {sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 lg:hidden"
+          aria-hidden="true"
+        />
       )}
 
-      {/* MAIN CONTENT WRAPPER */}
+      {/* ─── SIDEBAR (When closed: completely hidden, 0 icons shown) ─── */}
+      <aside 
+        className={`fixed lg:sticky top-0 left-0 h-screen z-50 flex flex-col justify-between border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 transition-all duration-300 ease-in-out ${
+          sidebarOpen 
+            ? 'w-72 translate-x-0 shadow-2xl lg:shadow-none' 
+            : 'w-0 -translate-x-full lg:translate-x-0 lg:w-0 overflow-hidden border-r-0 p-0 opacity-0 pointer-events-none'
+        }`}
+      >
+        {sidebarOpen && (
+          <div className="flex flex-col h-full justify-between w-72">
+            
+            {/* Top Brand & Close Button */}
+            <div>
+              <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <Link to="/" className="flex items-center space-x-3 group">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform">
+                    <Leaf className="h-5 w-5" />
+                  </div>
+                  <div className="text-left">
+                    <span className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight block">SkillNexus AI</span>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider flex items-center space-x-1">
+                      <RoleIcon className="h-3 w-3 inline" />
+                      <span>{role === 'admin' ? 'Admin Center' : `${role} Workspace`}</span>
+                    </span>
+                  </div>
+                </Link>
+
+                {/* Close Button (Completely closes sidebar) */}
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 transition cursor-pointer"
+                  title="Close Sidebar"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Navigation Items (Single Active Selection) */}
+              <div className="p-3 space-y-1.5 overflow-y-auto max-h-[calc(100vh-160px)] text-left">
+                <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                  Navigation Menu
+                </div>
+
+                {navItems.map((item, idx) => {
+                  const isActive = location.pathname === item.path;
+                  const ItemIcon = item.icon;
+
+                  return (
+                    <Link
+                      key={idx}
+                      to={item.path}
+                      onClick={() => {
+                        if (window.innerWidth < 1024) setSidebarOpen(false);
+                      }}
+                      className={`flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-all duration-200 ${
+                        isActive
+                          ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
+                          : item.highlight
+                            ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20'
+                            : 'text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'
+                      }`}
+                    >
+                      <ItemIcon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Bottom Actions: User Profile Card + Logout */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
+              <button
+                onClick={() => setProfileModalOpen(true)}
+                className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 flex items-center justify-between transition cursor-pointer text-left group"
+              >
+                <div className="flex items-center space-x-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs uppercase shrink-0 overflow-hidden">
+                    {user?.avatarUrl || user?.profilePhoto ? (
+                      <img src={user.avatarUrl || user.profilePhoto} alt={user?.name || "Profile"} className="w-full h-full object-cover" />
+                    ) : (
+                      user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">{user?.name || user?.email}</p>
+                    <p className="text-[10px] text-slate-500 truncate">Edit Profile & Password</p>
+                  </div>
+                </div>
+                <Settings className="h-4 w-4 text-slate-400 group-hover:rotate-45 transition-transform shrink-0" />
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center space-x-2 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition cursor-pointer"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+
+          </div>
+        )}
+      </aside>
+
+      {/* ─── MAIN CONTENT WRAPPER ─── */}
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* DASHBOARD TOP HEADER */}
-        <header className="h-16 border-b border-slate-300 dark:border-slate-800 bg-white/95 dark:bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
           <div className="flex items-center space-x-3">
+            
+            {/* Sidebar Toggle Button (Opens sidebar when closed) */}
             <button
-              onClick={() => setMobileDrawerOpen(true)}
-              className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-300"
+              onClick={() => setSidebarOpen(prev => !prev)}
+              className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer text-xs font-bold shadow-xs"
+              title="Toggle Dashboard Menu"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden sm:inline">{sidebarOpen ? 'Hide Menu' : 'Menu'}</span>
             </button>
-            <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider hidden sm:inline-block">
-              {role.toUpperCase()} WORKSPACE
+
+            <span className="text-xs font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-wider hidden sm:inline-block">
+              {role === 'admin' ? 'Admin Command Center' : `${role} Workspace`}
             </span>
           </div>
 
-          {/* Right Controls: Theme Toggle & User Info */}
+          {/* Right Controls: Theme Toggle & User Profile Button */}
           <div className="flex items-center space-x-3">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer"
+              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer"
               title="Toggle Theme"
             >
-              {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-600" />}
+              {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-emerald-600" />}
             </button>
 
-            <div className="text-right">
-              <span className="text-xs font-extrabold text-slate-900 dark:text-white block">{user?.name || user?.email}</span>
-              <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold uppercase">{user?.status || 'Active'}</span>
-            </div>
+            <button
+              onClick={() => setProfileModalOpen(true)}
+              className="flex items-center space-x-2.5 p-1.5 pl-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 hover:border-emerald-400 dark:hover:border-emerald-500/30 transition cursor-pointer text-right group"
+              title="Click to view & edit profile"
+            >
+              <div>
+                <span className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 block transition truncate max-w-[140px]">{user?.name || user?.email}</span>
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold uppercase">{user?.status || 'Active'}</span>
+              </div>
+              <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center text-xs overflow-hidden shadow-xs">
+                {user?.avatarUrl || user?.profilePhoto ? (
+                  <img src={user.avatarUrl || user.profilePhoto} alt={user?.name || "Profile"} className="w-full h-full object-cover" />
+                ) : (
+                  user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'
+                )}
+              </div>
+            </button>
           </div>
         </header>
 
@@ -284,6 +266,12 @@ export function DashboardLayout({ children }) {
           {children}
         </main>
       </div>
+
+      {/* ─── USER PROFILE & SETTINGS MODAL ─── */}
+      <UserProfileModal 
+        isOpen={profileModalOpen} 
+        onClose={() => setProfileModalOpen(false)} 
+      />
 
     </div>
   );

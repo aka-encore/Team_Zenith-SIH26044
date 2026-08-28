@@ -1,166 +1,410 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { 
   Building2, Users, GraduationCap, Briefcase, Sparkles, BarChart3, 
-  Layers, ArrowUpRight, CheckCircle2, AlertTriangle, BookOpen, ChevronRight
+  Layers, ArrowUpRight, CheckCircle2, AlertTriangle, BookOpen, ChevronRight,
+  RefreshCw, AlertCircle, Award, Target, Clock, ExternalLink, Cpu,
+  CheckCircle, UserCheck, TrendingUp, PieChart, ShieldCheck
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-export default function CollegeDashboardView({ collegeName = "IIT Bombay / Zenith Institute" }) {
-  const stats = [
-    { label: "Total Mapped Students", val: "2,450", icon: Users, sub: "Across 6 Departments" },
-    { label: "Industry Partners", val: "68 Enterprise", icon: Building2, sub: "Active Recruiter Access" },
-    { label: "Active Internships", val: "410 Students", icon: Briefcase, sub: "Current Semester Placements" },
-    { label: "Placement Ready Students", val: "74%", icon: GraduationCap, sub: "Targeting 85% Target" }
-  ];
+export default function CollegeDashboardView() {
+  const { token, user } = useAuth();
 
-  const heatmaps = [
-    { area: "Cloud Computing & AWS", gap: 61, totalStudents: 640, status: "Critical Training Need" },
-    { area: "AI / Machine Learning", gap: 48, totalStudents: 520, status: "High Deficit" },
-    { area: "DevOps & CI/CD Pipelines", gap: 42, totalStudents: 480, status: "High Deficit" },
-    { area: "Cybersecurity & Security Protocols", gap: 34, totalStudents: 310, status: "Moderate Deficit" }
-  ];
+  // Data & Loading State
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const deptReadiness = [
-    { dept: "Computer Science & Eng", readiness: "84%", activePlaced: "92%", topGap: "Cloud Infrastructure" },
-    { dept: "Information Technology", readiness: "76%", activePlaced: "85%", topGap: "DevOps & Docker" },
-    { dept: "Electronics & Comm", readiness: "64%", activePlaced: "71%", topGap: "Fullstack Web" },
-    { dept: "Data Science & AI Track", readiness: "78%", activePlaced: "88%", topGap: "LLM Fine-tuning" }
-  ];
+  const fetchDashboardData = async (isManual = false) => {
+    if (isManual) setRefreshing(true);
+    else setLoading(true);
+    setErrorMsg('');
+
+    try {
+      const response = await fetch('/api/faculty/dashboard-stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const resData = await response.json();
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.message || 'Failed to retrieve institutional analytics.');
+      }
+
+      setData(resData);
+    } catch (err) {
+      console.error('Error loading faculty dashboard:', err);
+      setErrorMsg(err.message || 'Unable to connect to database server.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchDashboardData();
+    }
+  }, [token]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-20 text-slate-500 space-y-4 text-left">
+        <RefreshCw className="h-8 w-8 animate-spin text-emerald-500" />
+        <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400">
+          Loading Institutional Intelligence Dashboard...
+        </span>
+      </div>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <div className="glass-card p-10 rounded-3xl border border-rose-500/30 text-center space-y-4 max-w-xl mx-auto my-12 shadow-sm text-left">
+        <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto">
+          <AlertCircle className="h-6 w-6" />
+        </div>
+        <div className="text-center">
+          <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Unable to Load Dashboard</h3>
+          <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">{errorMsg}</p>
+        </div>
+        <div className="text-center pt-2">
+          <button
+            onClick={() => fetchDashboardData(true)}
+            className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const stats = data?.stats || {
+    totalStudents: 0,
+    completedProfiles: 0,
+    uniqueSkillsCount: 0,
+    totalSkillInstances: 0,
+    activeInternships: 0,
+    activeJobs: 0,
+    totalOpportunities: 0,
+    placementCount: 0,
+    placementRate: 0,
+    activeApplicantsCount: 0,
+    notAppliedCount: 0
+  };
+
+  const topSkills = data?.topSkills || [];
+  const recentActivity = data?.recentActivity || [];
+  const placementBreakdown = data?.placementBreakdown || {
+    placed: 0,
+    activeApplicants: 0,
+    notApplied: 0
+  };
 
   return (
-    <div className="space-y-8 pb-16">
-      {/* HEADER */}
-      <div className="glass-card p-6 sm:p-8 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-8 pb-20 text-left max-w-7xl mx-auto">
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ HEADER BANNER ━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-medium flex items-center space-x-1.5">
-              <GraduationCap className="h-3.5 w-3.5 text-emerald-400" />
-              <span>Institutional Intelligence Command Center</span>
+            <span className="text-[11px] px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold flex items-center space-x-1.5">
+              <GraduationCap className="h-3.5 w-3.5" />
+              <span>Academic & Institutional Command Center</span>
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white">Institution Skill Intelligence</h1>
-          <p className="text-slate-400 text-sm max-w-2xl">
-            {collegeName} dashboard for student skill readiness, industry gap analytics, and automated curriculum upgrade recommendations.
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Institutional Skill & Placement Intelligence
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-2xl">
+            Real-time analytics on student competencies, corporate hiring readiness, and department placement performance.
           </p>
+        </div>
+
+        <div className="flex items-center space-x-3 shrink-0">
+          <button
+            onClick={() => fetchDashboardData(true)}
+            disabled={refreshing}
+            className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer shadow-xs disabled:opacity-50"
+            title="Refresh Intelligence Metrics"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-emerald-500' : ''}`} />
+          </button>
+
+          <Link
+            to="/skill-gap"
+            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-emerald-600/20 flex items-center space-x-2 cursor-pointer"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span>Skill Gap Analysis</span>
+          </Link>
         </div>
       </div>
 
-      {/* STATS ROW */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map((st, i) => (
-          <div key={i} className="glass-card p-5 rounded-2xl border border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-slate-400">
-              <span className="text-xs font-semibold">{st.label}</span>
-              <st.icon className="h-4 w-4 text-emerald-400" />
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-white font-mono">{st.val}</div>
-            <div className="text-[11px] text-slate-500">{st.sub}</div>
+      {/* ━━━━━━━━━━━━━━━━━━━━ 6 CORE STATS CARDS ━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        
+        {/* 1. Total Students */}
+        <div className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Students</span>
+            <Users className="h-4 w-4 text-blue-500" />
           </div>
-        ))}
+          <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
+            {stats.totalStudents}
+          </div>
+          <div className="text-[10px] text-slate-400 font-medium">Enrolled in system</div>
+        </div>
+
+        {/* 2. Completed Profiles */}
+        <div className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Profiles Built</span>
+            <UserCheck className="h-4 w-4 text-emerald-500" />
+          </div>
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+            {stats.completedProfiles}
+          </div>
+          <div className="text-[10px] text-slate-400 font-medium">
+            {stats.totalStudents > 0 ? Math.round((stats.completedProfiles / stats.totalStudents) * 100) : 0}% completion
+          </div>
+        </div>
+
+        {/* 3. Total Skills Recorded */}
+        <div className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Skills DNA</span>
+            <Cpu className="h-4 w-4 text-purple-500" />
+          </div>
+          <div className="text-2xl font-black text-purple-600 dark:text-purple-400 font-mono">
+            {stats.uniqueSkillsCount}
+          </div>
+          <div className="text-[10px] text-slate-400 font-medium">{stats.totalSkillInstances} total tags</div>
+        </div>
+
+        {/* 4. Active Internships */}
+        <div className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Internships</span>
+            <Briefcase className="h-4 w-4 text-amber-500" />
+          </div>
+          <div className="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono">
+            {stats.activeInternships}
+          </div>
+          <div className="text-[10px] text-slate-400 font-medium">Live campus postings</div>
+        </div>
+
+        {/* 5. Active Jobs */}
+        <div className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Job Openings</span>
+            <Building2 className="h-4 w-4 text-indigo-500" />
+          </div>
+          <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-mono">
+            {stats.activeJobs}
+          </div>
+          <div className="text-[10px] text-slate-400 font-medium">Full-time opportunities</div>
+        </div>
+
+        {/* 6. Placement Count & Rate */}
+        <div className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Placements</span>
+            <Award className="h-4 w-4 text-emerald-500" />
+          </div>
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+            {stats.placementCount}
+          </div>
+          <div className="text-[10px] text-emerald-500 font-bold font-mono">{stats.placementRate}% overall rate</div>
+        </div>
+
       </div>
 
-      {/* AI RECOMMENDATION CARD & HEATMAP GRID */}
+      {/* ━━━━━━━━━━━━━━━━━━━━ SKILLS DISTRIBUTION & PLACEMENT STATUS ━━━━━━━━━━━━━━━━━━━━ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* AI ACTION RECOMMENDATION (1 Col) */}
-        <div className="glass-card p-6 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-950 flex flex-col justify-between space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2 text-xs font-bold text-indigo-400 uppercase">
-              <Sparkles className="h-4 w-4 animate-pulse text-indigo-400" />
-              <span>Recommended Action</span>
+
+        {/* TOP SKILLS IN THE DEPARTMENT (2 Cols) */}
+        <div className="lg:col-span-2 glass-card p-6 sm:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 space-y-5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+                <BarChart3 className="h-5 w-5 text-indigo-500" />
+                <span>Top Technical Skills in Department</span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                Most prevalent technologies verified across student profiles
+              </p>
             </div>
+            <span className="text-xs font-mono font-bold text-slate-500">
+              {topSkills.length} Core Areas
+            </span>
+          </div>
 
-            <h3 className="text-xl font-bold text-white leading-tight">
-              Launch a Cloud + DevOps training program for 3rd-year IT students.
+          {topSkills.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-xs">
+              No technical skills recorded yet across students.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {topSkills.map((skill, idx) => (
+                <div 
+                  key={idx}
+                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-2"
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+                      <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                      <span>{skill.name}</span>
+                    </span>
+                    <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                      {skill.count} students ({skill.percentage}%)
+                    </span>
+                  </div>
+
+                  <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div 
+                      className="bg-indigo-500 h-full rounded-full transition-all duration-500" 
+                      style={{ width: `${Math.min(100, skill.percentage || 10)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* CURRENT PLACEMENT BREAKDOWN (1 Col) */}
+        <div className="glass-card p-6 sm:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 flex flex-col justify-between space-y-6 shadow-xs">
+          <div>
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+              <PieChart className="h-5 w-5 text-emerald-500" />
+              <span>Current Placement Status</span>
             </h3>
-
-            <p className="text-xs text-slate-300 leading-relaxed">
-              SkillNexus AI Intelligence identified that 18 partner companies have active openings requiring AWS + Docker, while 61% of 3rd-year IT students lack containerization credentials.
+            <p className="text-xs text-slate-400 mt-1">
+              Distribution of cohort placement stages
             </p>
           </div>
 
-          <div className="flex items-center space-x-3 shrink-0">
-            <button className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition shadow-md shadow-amber-500/20">
-              Generate Syllabus Advisory
-            </button>
-          </div>
-        </div>
-
-        {/* SKILL GAP HEATMAP (2 Cols) */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white flex items-center space-x-2">
-              <BarChart3 className="h-5 w-5 text-indigo-400" />
-              <span>Institution Skill Gap Heatmap</span>
-            </h3>
-            <span className="text-xs text-slate-400">SkillNexus AI Diagnostic Vector</span>
-          </div>
-
-          <div className="space-y-3">
-            {heatmaps.map((hm, h) => (
-              <div key={h} className="glass-card p-5 rounded-2xl border border-slate-800 space-y-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="text-base font-bold text-white">{hm.area}</h4>
-                    <p className="text-xs text-slate-400">{hm.totalStudents} Enrolled Students Analyzed</p>
-                  </div>
-                  <span className="text-xs font-mono font-bold px-3 py-1 bg-rose-500/10 text-rose-400 rounded-full border border-rose-500/20">
-                    {hm.gap}% Identified Skill Gap
-                  </span>
-                </div>
-
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between text-slate-400">
-                    <span>Curriculum Mastery Level</span>
-                    <span className="font-mono text-white font-bold">{100 - hm.gap}%</span>
-                  </div>
-                  <div className="h-2.5 bg-slate-900 rounded-full overflow-hidden flex border border-slate-800">
-                    <div className="h-full bg-emerald-500" style={{ width: `${100 - hm.gap}%` }} />
-                    <div className="h-full bg-rose-500 opacity-80" style={{ width: `${hm.gap}%` }} />
-                  </div>
-                </div>
+          <div className="space-y-3.5">
+            
+            {/* Placed */}
+            <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-2.5">
+                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                <span className="font-extrabold text-slate-900 dark:text-white">Placed Candidates</span>
               </div>
-            ))}
+              <span className="text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
+                {placementBreakdown.placed}
+              </span>
+            </div>
+
+            {/* Active in Pipeline */}
+            <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-2.5">
+                <Target className="h-4 w-4 text-blue-500" />
+                <span className="font-extrabold text-slate-900 dark:text-white">Active in Pipeline</span>
+              </div>
+              <span className="text-base font-black font-mono text-blue-600 dark:text-blue-400">
+                {placementBreakdown.activeApplicants}
+              </span>
+            </div>
+
+            {/* Not Yet Applied */}
+            <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-2.5">
+                <Users className="h-4 w-4 text-slate-400" />
+                <span className="font-extrabold text-slate-700 dark:text-slate-300">Not Applied Yet</span>
+              </div>
+              <span className="text-base font-black font-mono text-slate-600 dark:text-slate-400">
+                {placementBreakdown.notApplied}
+              </span>
+            </div>
+
+          </div>
+
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+            <Link
+              to="/opportunities"
+              className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs"
+            >
+              <span>Explore Active Drives</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
         </div>
+
       </div>
 
-      {/* DEPARTMENT-WISE SKILLS & READINESS TABLE */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold text-white flex items-center space-x-2">
-          <Layers className="h-5 w-5 text-purple-400" />
-          <span>Department-Wise Readiness Matrix</span>
-        </h3>
-
-        <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-900/80 text-slate-400 text-[11px] uppercase font-semibold border-b border-slate-800">
-                <tr>
-                  <th className="p-4">Department Track</th>
-                  <th className="p-4">Placement Readiness</th>
-                  <th className="p-4">Active Placement Rate</th>
-                  <th className="p-4">Top Identified Skill Deficit</th>
-                  <th className="p-4 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/80">
-                {deptReadiness.map((d, i) => (
-                  <tr key={i} className="hover:bg-slate-900/50 transition">
-                    <td className="p-4 font-bold text-white">{d.dept}</td>
-                    <td className="p-4 font-mono text-indigo-400 font-bold">{d.readiness}</td>
-                    <td className="p-4 font-mono text-emerald-400 font-bold">{d.activePlaced}</td>
-                    <td className="p-4 font-mono text-rose-400">{d.topGap}</td>
-                    <td className="p-4 text-right">
-                      <button className="text-xs text-indigo-400 font-semibold hover:underline">
-                        View Department Plan
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* ━━━━━━━━━━━━━━━━━━━━ RECENT STUDENT ACTIVITY STREAM ━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="glass-card p-6 sm:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 space-y-4 shadow-xs">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+              <Clock className="h-5 w-5 text-amber-500" />
+              <span>Recent Student Activity & Applications</span>
+            </h3>
+            <p className="text-xs text-slate-400">
+              Live updates from student applications and corporate recruiter shortlists
+            </p>
           </div>
+          <span className="text-xs font-mono text-slate-500">Live Stream</span>
         </div>
+
+        {recentActivity.length === 0 ? (
+          <div className="p-8 text-center text-slate-400 text-xs">
+            No recent student activity recorded yet.
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+            {recentActivity.map((act) => {
+              const actDate = act.date ? new Date(act.date) : new Date();
+
+              return (
+                <div key={act._id} className="py-3.5 flex items-center justify-between gap-4 text-xs">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold overflow-hidden shrink-0">
+                      {act.avatarUrl ? (
+                        <img src={act.avatarUrl} alt={act.studentName} className="w-full h-full object-cover" />
+                      ) : (
+                        act.studentName?.charAt(0) || 'S'
+                      )}
+                    </div>
+                    <div>
+                      <span className="font-extrabold text-slate-900 dark:text-white block">
+                        {act.studentName}
+                      </span>
+                      <span className="text-slate-500 dark:text-slate-400 text-[11px]">
+                        Targeted <strong className="text-slate-700 dark:text-slate-300">{act.opportunityTitle}</strong> ({act.opportunityType})
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3 shrink-0">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${
+                      act.status === 'accepted'
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                        : act.status === 'shortlisted'
+                        ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
+                        : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                    }`}>
+                      ● {act.status}
+                    </span>
+
+                    <span className="text-[10px] font-mono text-slate-400 hidden sm:inline">
+                      {actDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
+
     </div>
   );
 }

@@ -48,11 +48,15 @@ const OpportunitySchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['open', 'closed'],
+    enum: ['open', 'closed', 'approved', 'rejected', 'suspended'],
     default: 'open'
   }
 }, {
   timestamps: true
 });
+
+OpportunitySchema.index({ companyId: 1, status: 1 });
+OpportunitySchema.index({ status: 1, type: 1, createdAt: -1 });
+OpportunitySchema.index({ requiredSkills: 1 });
 
 export default mongoose.model('Opportunity', OpportunitySchema);

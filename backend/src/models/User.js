@@ -31,7 +31,7 @@ const UserSchema = new mongoose.Schema({
 
   role: {
     type: String,
-    enum: ['student', 'company', 'academician', 'institution', 'admin'],
+    enum: ['student', 'faculty', 'company', 'admin', 'institution', 'academician'],
     required: [true, 'Please specify a user role']
   },
 
@@ -68,6 +68,11 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+
+  // Notification read IDs persistence
+  readNotifications: [
+    { type: String }
+  ],
 
   createdAt: {
     type: Date,

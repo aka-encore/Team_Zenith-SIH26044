@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
+
+/* ─────────────────────────────────────────────────────────────
+   TAILWIND v4: CLASS-BASED DARK MODE
+   Override the default dark: variant (prefers-color-scheme)
+   to use the .dark class on <html> instead.
+   ───────────────────────────────────────────────────────────── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+
 @layer base {
+
   /* LIGHT MODE VARIABLES */
   :root[data-theme="light"], :root.light {
     --sb-bg: #f1f5f9;
@@ -13,6 +23,7 @@
     --sb-input-border: #94a3b8;
     --sb-nav-bg: #ffffff;
   }
+
 
   /* DARK MODE VARIABLES (DEFAULT) */
   :root[data-theme="dark"], :root.dark {
@@ -27,6 +38,7 @@
     --sb-nav-bg: rgba(9, 13, 22, 0.9);
   }
 
+
   html.light, body.light {
     background-color: #f1f5f9 !important;
     color: #0f172a !important;
@@ -37,6 +49,7 @@
     color: #f8fafc !important;
   }
 
+
   body {
     margin: 0;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -46,7 +59,10 @@
   }
 }
 
-/* Custom Scrollbars */
+
+/* ─────────────────────────────────────────────────────────────
+   CUSTOM SCROLLBARS
+   ───────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -74,6 +90,7 @@
 .light .sb-glass-card {
   box-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.2);
 }
+
 
 .sb-glass-card-interactive {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -114,9 +131,138 @@
   box-shadow: 0 12px 40px -8px rgba(16, 185, 129, 0.15);
 }
 
-/* -------------------------------------------------------------
- * SMOOTH LOGIN ↔ REGISTER SLIDER TRANSITION (0 JITTER)
- * ------------------------------------------------------------- */
+
+/* ─────────────────────────────────────────────────────────────
+   LIGHT MODE: TEXT COLOR OVERRIDES
+   Dashboard pages use hardcoded dark-mode text classes.
+   These rules remap them to proper light-mode equivalents.
+   ───────────────────────────────────────────────────────────── */
+
+/* Headings: text-white → dark slate */
+.light .text-white {
+  color: #0f172a !important;
+}
+
+/* Body text: text-slate-300 → darker */
+.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+/* Muted text: text-slate-400 → medium gray */
+.light .text-slate-400 {
+  color: #475569 !important;
+}
+
+/* Subtle text: text-slate-500 stays readable */
+.light .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Very subtle text: text-slate-600 */
+.light .text-slate-600 {
+  color: #475569 !important;
+}
+
+/* Mono number accents */
+.light .text-slate-100 {
+  color: #1e293b !important;
+}
+
+.light .text-slate-200 {
+  color: #334155 !important;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   LIGHT MODE: BACKGROUND COLOR OVERRIDES
+   ───────────────────────────────────────────────────────────── */
+
+/* Dark card backgrounds → white/light */
+.light .bg-slate-900 {
+  background-color: #ffffff !important;
+}
+
+.light .bg-slate-950 {
+  background-color: #f8fafc !important;
+}
+
+.light .bg-slate-800 {
+  background-color: #f1f5f9 !important;
+}
+
+/* Custom dark backgrounds → light equivalents */
+.light [class*="bg-[#090d16]"] {
+  background-color: #f1f5f9 !important;
+}
+
+.light [class*="bg-[#060a13]"] {
+  background-color: #f8fafc !important;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   LIGHT MODE: BORDER COLOR OVERRIDES
+   ───────────────────────────────────────────────────────────── */
+
+.light .border-slate-800 {
+  border-color: #e2e8f0 !important;
+}
+
+.light .border-slate-700 {
+  border-color: #cbd5e1 !important;
+}
+
+.light .border-slate-900 {
+  border-color: #e2e8f0 !important;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   LIGHT MODE: INPUT FIELD OVERRIDES (AuthPage inputs)
+   ───────────────────────────────────────────────────────────── */
+
+.light input.bg-slate-950,
+.light input.bg-slate-900 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light input.bg-slate-950::placeholder,
+.light input.bg-slate-900::placeholder {
+  color: #94a3b8 !important;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   LIGHT MODE: HOVER BACKGROUND OVERRIDES
+   ───────────────────────────────────────────────────────────── */
+
+.light .hover\:bg-slate-800:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.light .hover\:bg-slate-700:hover {
+  background-color: #e2e8f0 !important;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   LIGHT MODE: SHADOW OVERRIDES
+   ───────────────────────────────────────────────────────────── */
+
+.light .shadow-black\/50 {
+  --tw-shadow-color: rgba(148, 163, 184, 0.25);
+}
+
+.light .shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(148, 163, 184, 0.2);
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   SMOOTH LOGIN ↔ REGISTER SLIDER TRANSITION (0 JITTER)
+   ───────────────────────────────────────────────────────────── */
 .auth-slider-container {
   display: grid;
   grid-template-columns: 100%;
@@ -130,6 +276,7 @@
   will-change: transform, opacity;
 }
 
+
 .auth-slide-left-enter {
   transform: translateX(-100%);
   opacity: 0;
@@ -139,6 +286,7 @@
   transform: translateX(0%);
   opacity: 1;
 }
+
 
 .auth-slide-right-enter {
   transform: translateX(100%);

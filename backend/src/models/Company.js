@@ -12,6 +12,11 @@ const CompanySchema = new mongoose.Schema({
     required: [true, 'Please add a company name'],
     trim: true
   },
+  logoUrl: {
+    type: String,
+    default: '',
+    trim: true
+  },
   industry: {
     type: String,
     default: '',
@@ -34,8 +39,13 @@ const CompanySchema = new mongoose.Schema({
   },
   verificationStatus: {
     type: String,
-    enum: ['pending', 'verified', 'rejected'],
+    enum: ['pending', 'verified', 'rejected', 'suspended'],
     default: 'pending'
+  },
+  hrName: {
+    type: String,
+    default: '',
+    trim: true
   },
   contactPhone: {
     type: String,
@@ -46,9 +56,23 @@ const CompanySchema = new mongoose.Schema({
     type: String,
     default: '',
     trim: true
-  }
+  },
+  companySize: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  foundedYear: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  readNotifications: [{
+    type: String
+  }]
 }, {
   timestamps: true // Automatically create createdAt and updatedAt
 });
 
 export default mongoose.model('Company', CompanySchema);
+

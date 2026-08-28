@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Dna, Menu, Moon, Sun, X } from 'lucide-react';
+import { ChevronDown, Leaf, Menu, Moon, Sun, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 
@@ -13,10 +13,8 @@ export function PublicNavbar() {
 
   const publicLinks = [
     { label: "Home", path: "/" },
-    { label: "Opportunities", path: "/opportunities" },
-    { label: "Skill Assessment", path: "/skill-dna" },
-    { label: "Collaborations", path: "/academia-lab" },
-    { label: "Analytics", path: "/industry-demand" }
+    { label: "How It Works", path: "/how-it-works" },
+    { label: "About", path: "/about" }
   ];
 
 
@@ -30,22 +28,20 @@ export function PublicNavbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/90 backdrop-blur-md transition-colors shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
-
-          {/* ─── SkillNexus AI Logo Brand ─── */}
-          <Link to="/" className="flex items-center space-x-3 group" onClick={() => setIsMobileMenuOpen(false)}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-400 p-0.5 shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+        <div className="flex items-center justify-between h-20">
+          
+          {/* SkillNexus AI Logo Brand */}
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-purple-600 to-blue-400 p-0.5 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-white dark:bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Dna className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                <Leaf className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
             <div className="text-left">
-              <span className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight block leading-tight">
+              <span className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight block">
                 SkillNexus AI
               </span>
-              <span className="text-[10px] text-slate-600 dark:text-slate-400 block font-semibold leading-tight">
-                AYUSH Skills Platform — SIH26044
-              </span>
+              <span className="text-[10px] text-slate-600 dark:text-slate-400 block font-semibold">SkillNexus AI Platform</span>
             </div>
           </Link>
 
