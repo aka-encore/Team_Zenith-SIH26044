@@ -102,18 +102,20 @@ export const sendOtpEmail = async (toEmail, otp, purpose = 'login') => {
 
   if (transporter) {
     try {
-      const info = await transporter.sendMail({
+      const sendPromise = transporter.sendMail({
         from: `"SkillNexus AI" <${SMTP_USER}>`,
         to: toEmail,
         subject,
         html: htmlContent,
       });
-      console.log(`[Email Service] Email sent successfully to ${toEmail} (Message ID: ${info.messageId})`);
-      return { success: true, messageId: info.messageId };
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('SMTP Connection Timeout')), 3000));
+      const info = await Promise.race([sendPromise, timeoutPromise]);
+      console.log(`[Email Service] Email sent successfully to ${toEmail} (Message ID: ${info?.messageId})`);
+      return { success: true, messageId: info?.messageId };
     } catch (err) {
-      console.error(`[Email Service] SMTP send error:`, err.message);
+      console.error(`[Email Service] SMTP send notice:`, err.message);
       // Still return success in development so user is not blocked if Gmail password is missing
-      return { success: true, warning: 'SMTP delivery failed, code logged to console' };
+      return { success: true, warning: 'SMTP delivery failed or timed out, code logged to console' };
     }
   }
 

@@ -1,45 +1,51 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
+const rawApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+const isConfigured = Boolean(rawApiKey && !rawApiKey.includes('DummyKey') && rawApiKey.startsWith('AIzaSy'));
 
-// Firebase Configuration — loads from frontend env or uses defaults
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDummyKeyForFallbackSetup12345",
+// Firebase Configuration — loads from environment variables if present
+const firebaseConfig = isConfigured ? {
+  apiKey: rawApiKey,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "skillnexus-ai.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "skillnexus-ai",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "skillnexus-ai.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789012",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789012:web:abcdef1234567890"
-};
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || ""
+} : null;
 
-
-// Safely initialize Firebase app
+// Only initialize if a valid API key is present
 let auth = null;
 let googleProvider = null;
 
-try {
-  const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-  auth = getAuth(app);
-  googleProvider = new GoogleAuthProvider();
-  googleProvider.setCustomParameters({
-    prompt: 'select_account'
-  });
-} catch (e) {
-  console.warn('Firebase initialization notice:', e.message);
+if (firebaseConfig) {
+  try {
+    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    auth = getAuth(app);
+    googleProvider = new GoogleAuthProvider();
+    googleProvider.setCustomParameters({
+      prompt: 'select_account'
+    });
+  } catch (e) {
+    console.warn('Firebase initialization notice:', e.message);
+  }
 }
 
 export { auth, googleProvider };
 
-
 /**
- * Helper to trigger Google Sign-In popup with Firebase
+ * Helper to trigger Google Sign-In popup with Firebase if configured,
+ * otherwise signal to fallback to backend OAuth route.
  */
 export const signInWithGoogle = async () => {
   try {
     if (!auth || !googleProvider) {
+      // Fallback to server-side Google OAuth
+      window.location.href = '/api/auth/google';
       return {
         success: false,
-        error: 'Firebase not initialized. Falling back to server OAuth.'
+        fallback: true,
+        error: 'Redirecting to Google OAuth authentication...'
       };
     }
 
@@ -58,9 +64,11 @@ export const signInWithGoogle = async () => {
       }
     };
   } catch (error) {
-    console.error('Firebase Google Sign-In Error:', error);
+    console.warn('Firebase Google Sign-In redirected to server OAuth:', error.message);
+    window.location.href = '/api/auth/google';
     return {
       success: false,
+      fallback: true,
       error: error.message || 'Google sign-in failed with Firebase'
     };
   }

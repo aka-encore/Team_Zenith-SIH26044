@@ -95,6 +95,54 @@ export const getOpportunityApplicants = async (req, res) => {
   }
 };
 
+export const getCompanyApplications = async (req, res) => {
+  try {
+    const company = await Company.findOne({ userId: req.user.id });
+    if (!company) {
+      return res.status(404).json({ success: false, message: 'Company profile not found' });
+    }
+
+    const opportunities = await Opportunity.find({ companyId: company._id });
+    const oppIds = opportunities.map(o => o._id);
+
+    const query = { opportunityId: { $in: oppIds } };
+    if (req.query.opportunityId && req.query.opportunityId !== 'all') {
+      query.opportunityId = req.query.opportunityId;
+    }
+    if (req.query.status && req.query.status !== 'all') {
+      query.status = req.query.status;
+    }
+
+    const applications = await Application.find(query)
+      .populate('opportunityId', 'title type location stipend duration status requiredSkills')
+      .populate({
+        path: 'studentId',
+        populate: {
+          path: 'userId',
+          select: 'name email avatarUrl'
+        }
+      })
+      .sort({ createdAt: -1 });
+
+    const formatted = applications.map(app => {
+      const obj = app.toObject();
+      const opp = obj.opportunityId;
+      obj.compatibilityScore = (obj.studentId && opp) ? calculateCompatibility(obj.studentId, opp) : null;
+      return obj;
+    });
+
+    res.status(200).json({
+      success: true,
+      count: formatted.length,
+      applications: formatted,
+      opportunities: opportunities.map(o => ({ _id: o._id, title: o.title, type: o.type, status: o.status }))
+    });
+  } catch (error) {
+    console.error('Get Company Applications Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error retrieving applications list' });
+  }
+};
+
 export const updateApplicationStatus = async (req, res) => {
   try {
     const { status } = req.body;

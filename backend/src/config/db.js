@@ -12,57 +12,54 @@ try {
   console.log("Error to connect dns", error);
 }
 
-// Function to seed default demo accounts if database is empty
+// Function to seed default demo accounts if database is empty or ensure seed users exist
 export async function seedDefaultUsersIfEmpty() {
   try {
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      const student = new User({
-        name: "Alex Chen",
-        email: "student@test.com",
-        passwordHash: "password123",
-        role: "student",
-        status: "active"
-      });
-      await student.save();
+    const seedAccounts = [
+      { name: "Alex Chen", email: "student@test.com", password: "password123", role: "student" },
+      { name: "TechNova Solutions", email: "company@test.com", password: "password123", role: "company" },
+      { name: "Zenith Institute Admin", email: "institution@test.com", password: "password123", role: "institution" },
+      { name: "Dr. Arvind Sharma", email: "faculty@test.com", password: "password123", role: "faculty" },
+      { name: "Test Faculty (DEV/TEST)", email: "faculty.test@example.com", password: "Test@12345", role: "faculty" },
+      { name: "System Admin", email: "admin@test.com", password: "password123", role: "admin" }
+    ];
 
-      await StudentProfile.findOneAndUpdate(
-        { userId: student._id },
-        {
-          skills: ["React", "Node.js", "MongoDB", "Java", "Data Structures"],
-          bio: "3rd Year Computer Science Student",
-          education: { institutionName: "Zenith Institute of Technology", degree: "B.Tech", fieldOfStudy: "Computer Science", graduationYear: 2026 }
-        },
-        { upsert: true, new: true }
-      );
+    for (const acc of seedAccounts) {
+      let user = await User.findOne({ email: acc.email });
+      if (!user) {
+        user = new User({
+          name: acc.name,
+          email: acc.email,
+          passwordHash: acc.password,
+          role: acc.role,
+          status: "active",
+          emailVerified: true
+        });
+        await user.save();
+      }
 
-      const company = new User({
-        name: "TechNova Solutions",
-        email: "company@test.com",
-        passwordHash: "password123",
-        role: "company",
-        status: "active"
-      });
-      await company.save();
-
-      await Company.findOneAndUpdate(
-        { userId: company._id },
-        {
-          companyName: "TechNova Solutions",
-          industry: "Enterprise Software & Cloud",
-          location: "Bengaluru / Remote"
-        },
-        { upsert: true, new: true }
-      );
-
-      const inst = new User({
-        name: "Zenith Institute Admin",
-        email: "institution@test.com",
-        passwordHash: "password123",
-        role: "institution",
-        status: "active"
-      });
-      await inst.save();
+      if (acc.role === "student") {
+        await StudentProfile.findOneAndUpdate(
+          { userId: user._id },
+          {
+            skills: ["React", "Node.js", "MongoDB", "Java", "Data Structures"],
+            bio: "3rd Year Computer Science Student",
+            academicInformation: { college: "Zenith Institute of Technology & Engineering", degree: "B.Tech", branch: "Computer Science", cgpa: 8.9 }
+          },
+          { upsert: true }
+        );
+      } else if (acc.role === "company") {
+        await Company.findOneAndUpdate(
+          { userId: user._id },
+          {
+            companyName: "TechNova Solutions",
+            industry: "Enterprise Software & Cloud",
+            location: "Bengaluru / Remote",
+            verificationStatus: "verified"
+          },
+          { upsert: true }
+        );
+      }
     }
   } catch (err) {
     // Ignore seed errors

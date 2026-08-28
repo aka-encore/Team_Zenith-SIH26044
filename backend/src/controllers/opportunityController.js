@@ -1,6 +1,7 @@
 import Opportunity from '../models/Opportunity.js';
 import Company from '../models/Company.js';
 import StudentProfile from '../models/StudentProfile.js';
+import Application from '../models/Application.js';
 import { calculateCompatibility } from '../utils/matchingEngine.js';
 
 const parseSkills = (requiredSkills) =>
@@ -93,7 +94,22 @@ export const getCompanyOpportunities = async (req, res) => {
     const company = await companyOfUser(req.user.id, res);
     if (!company) return;
     const opportunities = await Opportunity.find({ companyId: company._id }).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, opportunities });
+    const oppIds = opportunities.map(o => o._id);
+
+    const applications = await Application.find({ opportunityId: { $in: oppIds } }).select('opportunityId status');
+    const countsMap = {};
+    applications.forEach(a => {
+      const id = a.opportunityId.toString();
+      countsMap[id] = (countsMap[id] || 0) + 1;
+    });
+
+    const formatted = opportunities.map(opp => {
+      const obj = opp.toObject();
+      obj.applicantCount = countsMap[opp._id.toString()] || 0;
+      return obj;
+    });
+
+    res.status(200).json({ success: true, count: formatted.length, opportunities: formatted });
   } catch (error) {
     console.error('Get Company Opportunities Error:', error.message);
     res.status(500).json({ success: false, message: 'Server error retrieving company postings' });

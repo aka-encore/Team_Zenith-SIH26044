@@ -69,6 +69,11 @@ const UserSchema = new mongoose.Schema({
     default: false
   },
 
+  // Notification read IDs persistence
+  readNotifications: [
+    { type: String }
+  ],
+
   createdAt: {
     type: Date,
     default: Date.now

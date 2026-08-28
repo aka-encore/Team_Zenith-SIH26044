@@ -6,7 +6,7 @@ import {
   Leaf, LayoutDashboard, Cpu, Target, BookOpen, Briefcase,
   User, LogOut, Sun, Moon, TrendingUp, Sparkles, X, Menu,
   Building2, GraduationCap, School, Settings, Code2, FolderGit2,
-  FileText, Award, Bell, Video
+  FileText, Award, Bell, Video, Users, Search, BarChart3
 } from 'lucide-react';
 import { UserProfileModal } from './UserProfileModal';
 
@@ -39,27 +39,35 @@ export function DashboardLayout({ children }) {
   ];
 
   const facultyNav = [
-    { label: "Faculty Dashboard", path: "/faculty", icon: LayoutDashboard },
-    { label: "Skill Intelligence & Gap", path: "/industry-demand", icon: Cpu },
-    { label: "Student Opportunities", path: "/opportunities", icon: Briefcase },
-    { label: "Academia × Industry Lab", path: "/academia-lab", icon: Sparkles, highlight: true },
-    { label: "Public Home", path: "/", icon: Leaf }
+    { label: "Dashboard", path: "/faculty", icon: LayoutDashboard },
+    { label: "Students", path: "/faculty/students", icon: Users },
+    { label: "Skill Analytics", path: "/faculty/skills", icon: BarChart3 },
+    { label: "Skill Gap", path: "/faculty/skill-gap", icon: Target },
+    { label: "Opportunities", path: "/faculty/opportunities", icon: Briefcase },
+    { label: "Placement", path: "/faculty/placement", icon: Award },
+    { label: "Notifications", path: "/faculty/notifications", icon: Bell }
   ];
 
   const companyNav = [
-    { label: "Company Dashboard", path: "/company", icon: LayoutDashboard },
-    { label: "Opportunities & Talent", path: "/opportunities", icon: Briefcase },
-    { label: "Industry Demand Analytics", path: "/industry-demand", icon: TrendingUp },
-    { label: "Academia × Industry Lab", path: "/academia-lab", icon: Sparkles, highlight: true },
-    { label: "Public Home", path: "/", icon: Leaf }
+    { label: "Dashboard", path: "/company", icon: LayoutDashboard },
+    { label: "Company Profile", path: "/company/profile", icon: Building2 },
+    { label: "Opportunities", path: "/company/opportunities", icon: Briefcase },
+    { label: "Applicants", path: "/company/applicants", icon: Users },
+    { label: "Student Search", path: "/company/students", icon: Search },
+    { label: "Shortlisted", path: "/company/shortlisted", icon: Award },
+    { label: "Interviews", path: "/company/interviews", icon: Video },
+    { label: "Notifications", path: "/company/notifications", icon: Bell }
   ];
 
   const adminNav = [
-    { label: "Admin Command Center", path: "/admin", icon: LayoutDashboard },
-    { label: "Skill Demand Analytics", path: "/industry-demand", icon: Cpu },
-    { label: "Platform Opportunities", path: "/opportunities", icon: Briefcase },
-    { label: "Academia × Industry Lab", path: "/academia-lab", icon: Sparkles, highlight: true },
-    { label: "Public Home", path: "/", icon: Leaf }
+    { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
+    { label: "Users", path: "/admin/users", icon: Users },
+    { label: "Companies", path: "/admin/companies", icon: Building2 },
+    { label: "Opportunities", path: "/admin/opportunities", icon: Briefcase },
+    { label: "Assessments", path: "/admin/assessments", icon: Award },
+    { label: "Applications", path: "/admin/applications", icon: FileText },
+    { label: "Placements", path: "/admin/placements", icon: GraduationCap },
+    { label: "Notifications", path: "/admin/notifications", icon: Bell }
   ];
 
   const navItems = role === 'admin'

@@ -460,3 +460,63 @@ export const submitStudentAssessment = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error scoring assessment: ' + error.message });
   }
 };
+
+/**
+ * GET /api/questions/admin/results
+ * [ADMIN ONLY] List all student assessment submissions & scores
+ */
+export const getAdminAssessmentResults = async (req, res) => {
+  try {
+    const { skill, search, skillLevel } = req.query;
+    const query = {};
+
+    if (skill && skill !== 'All') {
+      query.skill = { $regex: new RegExp(`^${skill}$`, 'i') };
+    }
+
+    if (skillLevel && skillLevel !== 'All') {
+      query.$or = [
+        { skillLevel: skillLevel },
+        { proficiencyEarned: skillLevel }
+      ];
+    }
+
+    const results = await AssessmentResult.find(query)
+      .populate('userId', 'name email avatarUrl')
+      .sort({ createdAt: -1 });
+
+    const formatted = results.map(r => ({
+      _id: r._id,
+      studentName: r.userId?.name || 'Student Candidate',
+      studentEmail: r.userId?.email || 'N/A',
+      avatarUrl: r.userId?.avatarUrl || null,
+      skill: r.skill,
+      score: r.score,
+      totalQuestions: r.totalQuestions,
+      correctAnswers: r.correctAnswers,
+      percentage: r.percentage ?? r.scorePercentage ?? Math.round((r.correctAnswers / (r.totalQuestions || 1)) * 100),
+      skillLevel: r.skillLevel || r.proficiencyEarned || 'Beginner',
+      passed: r.passed,
+      date: r.createdAt
+    }));
+
+    let finalResults = formatted;
+    if (search && search.trim()) {
+      const q = search.toLowerCase().trim();
+      finalResults = formatted.filter(r =>
+        r.studentName.toLowerCase().includes(q) ||
+        r.studentEmail.toLowerCase().includes(q) ||
+        r.skill.toLowerCase().includes(q)
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      count: finalResults.length,
+      results: finalResults
+    });
+  } catch (error) {
+    console.error('Get Admin Assessment Results Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error retrieving assessment results: ' + error.message });
+  }
+};

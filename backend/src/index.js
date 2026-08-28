@@ -61,6 +61,7 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/opportunities', opportunityRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/institutions', institutionRoutes);
+app.use('/api/faculty', institutionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/assessment', assessmentRoutes);
 app.use('/api/questions', questionRoutes);
@@ -76,13 +77,30 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// 10. Centralized Global Error Handler for high concurrency safety
+app.use((err, req, res, next) => {
+    console.error('Unhandled Express Error:', err.stack || err.message);
+    if (res.headersSent) return next(err);
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Internal Server Error occurred on processing request.'
+    });
+});
 
-// 10. Start server on PORT (default 5000)
+// Process-level unhandled rejection protection
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Promise Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception caught:', err);
+});
+
+// 11. Start server on PORT (default 5000)
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
-
 
 export default app;

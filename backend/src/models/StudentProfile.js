@@ -245,5 +245,9 @@ const StudentProfileSchema = new mongoose.Schema({
   timestamps: true
 });
 
+StudentProfileSchema.index({ skills: 1 });
+StudentProfileSchema.index({ 'academicInformation.college': 1 });
+StudentProfileSchema.index({ 'academicInformation.cgpa': -1 });
+StudentProfileSchema.index({ overallScore: -1 });
 
 export default mongoose.model('StudentProfile', StudentProfileSchema);

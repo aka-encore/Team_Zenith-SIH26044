@@ -2,6 +2,8 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import mongoose from 'mongoose';
 import User from '../models/User.js';
+import StudentProfile from '../models/StudentProfile.js';
+import Company from '../models/Company.js';
 import Otp from '../models/Otp.js';
 import { sendOtpEmail, generateOtp } from '../utils/emailService.js';
 
@@ -40,14 +42,28 @@ export const register = async (req, res) => {
       });
     }
 
-    const { name, email, password, role } = req.body;
+    const { 
+      name, email, password, role,
+      // Student specific
+      rollNumber, college, department, yearOfStudy, phone,
+      // Company specific
+      companyName, hrName, industry, website, address,
+      // Faculty specific
+      employeeId, designation
+    } = req.body;
 
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ success: false, message: 'Please provide name, email, password, and role' });
+    if (!email || !password || !role) {
+      return res.status(400).json({ success: false, message: 'Please provide email, password, and role' });
     }
 
-    if (!VALID_ROLES.includes(role)) {
-      return res.status(400).json({ success: false, message: 'Invalid role selection' });
+    // Public registration is only allowed for student, company, faculty
+    if (!['student', 'faculty', 'company', 'institution', 'academician'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role for public registration.' });
+    }
+
+    const resolvedName = (name || companyName || hrName || 'User').trim();
+    if (!resolvedName) {
+      return res.status(400).json({ success: false, message: 'Name is required' });
     }
 
     if (await User.findOne({ email: email.toLowerCase() })) {
@@ -55,18 +71,56 @@ export const register = async (req, res) => {
     }
 
     const user = await User.create({
-      name,
+      name: resolvedName,
       email: email.toLowerCase(),
       passwordHash: password,
-      role,
+      role: role === 'institution' || role === 'academician' ? 'faculty' : role,
       status: role === 'company' ? 'pending' : 'active'
     });
+
+    // Create or update required profile records based on role
+    if (role === 'student') {
+      await StudentProfile.findOneAndUpdate(
+        { userId: user._id },
+        {
+          $set: {
+            phone: phone || '',
+            academicInformation: {
+              rollNumber: rollNumber || '',
+              college: college || 'University Campus',
+              branch: department || 'Engineering',
+              graduationYear: yearOfStudy || '2026',
+              cgpa: 8.0
+            },
+            skills: ['Problem Solving', 'Data Structures', 'Web Development']
+          }
+        },
+        { upsert: true, new: true }
+      );
+    } else if (role === 'company') {
+      await Company.findOneAndUpdate(
+        { userId: user._id },
+        {
+          $set: {
+            companyName: companyName || resolvedName,
+            industry: industry || 'Technology',
+            location: address || 'Bengaluru, India',
+            website: website || '',
+            hrName: hrName || resolvedName,
+            contactEmail: email.toLowerCase(),
+            contactPhone: phone || '',
+            verificationStatus: 'pending'
+          }
+        },
+        { upsert: true, new: true }
+      );
+    }
 
     res.status(201).json({
       success: true,
       message: role === 'company'
-        ? 'Registration successful! Your account is pending administrator verification.'
-        : 'Registration successful!',
+        ? 'Registration successful! Your corporate account is pending administrator verification.'
+        : 'Registration successful! You can now sign in with your credentials.',
       token: generateToken(user._id),
       user: userPayload(user)
     });
@@ -224,10 +278,19 @@ export const verifyLoginOtp = async (req, res) => {
 // POST /api/auth/send-register-otp
 export const sendRegisterOtp = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { 
+      name, email, password, role,
+      rollNumber, college, department, yearOfStudy, phone,
+      companyName, hrName, industry, website, address,
+      employeeId, designation
+    } = req.body;
 
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ success: false, message: 'Please provide name, email, password, and role' });
+    if (!email || !password || !role) {
+      return res.status(400).json({ success: false, message: 'Please provide email, password, and role' });
+    }
+
+    if (!['student', 'faculty', 'company', 'institution', 'academician'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role for public registration.' });
     }
 
     if (await User.findOne({ email: email.toLowerCase() })) {
@@ -240,14 +303,22 @@ export const sendRegisterOtp = async (req, res) => {
       email: email.toLowerCase(),
       otp,
       purpose: 'register',
-      userData: { name, email: email.toLowerCase(), password, role }
+      userData: { 
+        name: (name || companyName || hrName || 'User').trim(), 
+        email: email.toLowerCase(), 
+        password, 
+        role: role === 'institution' || role === 'academician' ? 'faculty' : role,
+        rollNumber, college, department, yearOfStudy, phone,
+        companyName, hrName, industry, website, address,
+        employeeId, designation
+      }
     });
 
     await sendOtpEmail(email.toLowerCase(), otp, 'register');
 
     res.status(200).json({
       success: true,
-      message: `Verification code sent to ${email}`,
+      message: `6-digit verification code sent to ${email}`,
       email: email.toLowerCase(),
     });
   } catch (error) {
@@ -263,7 +334,7 @@ export const verifyRegisterOtp = async (req, res) => {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-      return res.status(400).json({ success: false, message: 'Please provide email and OTP' });
+      return res.status(400).json({ success: false, message: 'Please provide email and 6-digit OTP' });
     }
 
     const record = await Otp.findOne({
@@ -273,10 +344,15 @@ export const verifyRegisterOtp = async (req, res) => {
     });
 
     if (!record || !record.userData) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired registration code' });
+      return res.status(400).json({ success: false, message: 'Invalid or expired registration OTP code' });
     }
 
-    const { name, password, role } = record.userData;
+    const { 
+      name, password, role,
+      rollNumber, college, department, yearOfStudy, phone,
+      companyName, hrName, industry, website, address,
+      employeeId, designation
+    } = record.userData;
 
     const user = await User.create({
       name,
@@ -287,13 +363,50 @@ export const verifyRegisterOtp = async (req, res) => {
       emailVerified: true
     });
 
+    if (role === 'student') {
+      await StudentProfile.findOneAndUpdate(
+        { userId: user._id },
+        {
+          $set: {
+            phone: phone || '',
+            academicInformation: {
+              rollNumber: rollNumber || '',
+              college: college || 'University Campus',
+              branch: department || 'Engineering',
+              graduationYear: yearOfStudy || '2026',
+              cgpa: 8.0
+            },
+            skills: ['Problem Solving', 'Data Structures', 'Web Development']
+          }
+        },
+        { upsert: true, new: true }
+      );
+    } else if (role === 'company') {
+      await Company.findOneAndUpdate(
+        { userId: user._id },
+        {
+          $set: {
+            companyName: companyName || name,
+            industry: industry || 'Technology',
+            location: address || 'Bengaluru, India',
+            website: website || '',
+            hrName: hrName || name,
+            contactEmail: email.toLowerCase(),
+            contactPhone: phone || '',
+            verificationStatus: 'pending'
+          }
+        },
+        { upsert: true, new: true }
+      );
+    }
+
     await Otp.deleteMany({ email: email.toLowerCase(), purpose: 'register' });
 
     res.status(201).json({
       success: true,
       message: role === 'company'
-        ? 'Registration successful! Your account is pending administrator verification.'
-        : 'Account created and email verified successfully!',
+        ? 'Registration successful! Your corporate account is pending administrator verification.'
+        : 'Account created and email verified successfully! You can now log in.',
       token: generateToken(user._id),
       user: userPayload(user)
     });
@@ -309,14 +422,19 @@ export const sendForgotPasswordOtp = async (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'Please enter your registered email' });
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid registered email address.' });
     }
 
     const user = await User.findOne({ email: email.toLowerCase() });
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'No account registered with this email address' });
+      // Security: Do not reveal whether the email exists
+      return res.status(200).json({
+        success: true,
+        message: 'If an account exists with this email address, a 6-digit verification code has been dispatched.',
+        email: email.toLowerCase()
+      });
     }
 
     const otp = generateOtp();
@@ -327,7 +445,7 @@ export const sendForgotPasswordOtp = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Password reset OTP sent to ${email}`,
+      message: 'If an account exists with this email address, a 6-digit verification code has been dispatched.',
       email: email.toLowerCase(),
     });
   } catch (error) {
@@ -343,11 +461,11 @@ export const resetPasswordWithOtp = async (req, res) => {
     const { email, otp, newPassword } = req.body;
 
     if (!email || !otp || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Please fill in all fields' });
+      return res.status(400).json({ success: false, message: 'Please provide email, verification code, and new password.' });
     }
 
     if (newPassword.length < 6) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
     }
 
     const validOtp = await Otp.findOne({
@@ -357,23 +475,24 @@ export const resetPasswordWithOtp = async (req, res) => {
     });
 
     if (!validOtp) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired OTP code' });
+      return res.status(400).json({ success: false, message: 'Invalid or expired verification code. Please check and retry.' });
     }
 
     const user = await User.findOne({ email: email.toLowerCase() });
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(400).json({ success: false, message: 'Invalid request or user not found.' });
     }
 
     user.passwordHash = newPassword;
     await user.save();
 
+    // Security: invalidate all reset OTPs for this email after successful verification
     await Otp.deleteMany({ email: email.toLowerCase(), purpose: 'forgot_password' });
 
     res.status(200).json({
       success: true,
-      message: 'Password has been successfully reset! You can now log in.'
+      message: 'Password updated successfully! You can now sign in with your new credentials.'
     });
   } catch (error) {
     console.error('resetPasswordWithOtp error:', error);

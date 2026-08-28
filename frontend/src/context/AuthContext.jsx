@@ -141,10 +141,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout handler - Clears all stored auth data
+  // Logout handler - Clears all stored auth data and destroys session
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    sessionStorage.clear();
     setToken(null);
     setUser(null);
   };

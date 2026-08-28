@@ -25,6 +25,14 @@ const ApplicationSchema = new mongoose.Schema({
     type: String,
     default: '',
     trim: true
+  },
+  interviewDetails: {
+    scheduledAt: { type: Date },
+    mode: { type: String, default: 'video' },
+    round: { type: String, default: 'Technical Round 1' },
+    meetingLink: { type: String, default: '' },
+    notes: { type: String, default: '' },
+    status: { type: String, default: 'scheduled' }
   }
 }, {
   timestamps: true
@@ -32,5 +40,7 @@ const ApplicationSchema = new mongoose.Schema({
 
 // Enforce compound unique constraint so a student can only apply once to any opportunity
 ApplicationSchema.index({ studentId: 1, opportunityId: 1 }, { unique: true });
+ApplicationSchema.index({ opportunityId: 1, status: 1 });
+ApplicationSchema.index({ studentId: 1, createdAt: -1 });
 
 export default mongoose.model('Application', ApplicationSchema);
