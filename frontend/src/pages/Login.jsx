@@ -405,7 +405,7 @@ export default function Login() {
                     }}
                     className={`p-2.5 rounded-2xl border text-left transition flex flex-col items-center justify-center space-y-1 cursor-pointer ${
                       isSelected
-                        ? 'border-emerald-500/80 bg-emerald-500/10 text-white shadow-xs'
+                        ? 'border-indigo-500/80 bg-indigo-500/10 text-white shadow-xs'
                         : 'border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700 hover:text-slate-200'
                     }`}
                   >
@@ -428,7 +428,7 @@ export default function Login() {
               }}
               className={`pb-1 font-bold transition cursor-pointer flex items-center space-x-1.5 ${
                 authMode === 'password'
-                  ? 'text-emerald-400 border-b-2 border-emerald-400'
+                  ? 'text-indigo-400 border-b-2 border-indigo-400'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -444,7 +444,7 @@ export default function Login() {
               }}
               className={`pb-1 font-bold transition cursor-pointer flex items-center space-x-1.5 ${
                 authMode === 'otp'
-                  ? 'text-emerald-400 border-b-2 border-emerald-400'
+                  ? 'text-indigo-400 border-b-2 border-indigo-400'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -470,7 +470,7 @@ export default function Login() {
 
           {/* ══════════════ METHOD 1: PASSWORD LOGIN FORM ══════════════ */}
           {authMode === 'password' && (
-            <form onSubmit={handlePasswordLogin} className="space-y-4">
+            <form onSubmit={handlePasswordLogin} className="space-y-4 pt-1">
               
               {/* Email Field */}
               <div className="space-y-1">
@@ -487,7 +487,7 @@ export default function Login() {
                       setEmail(e.target.value);
                       if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: '' });
                     }}
-                    className={`w-full pl-10 pr-4 py-2.5 bg-slate-950 border rounded-xl text-xs text-white placeholder-slate-600 outline-none transition focus:border-emerald-500 ${
+                    className={`w-full pl-10 pr-4 py-2.5 bg-slate-950 border rounded-xl text-xs text-white placeholder-slate-600 outline-none transition focus:border-indigo-500 ${
                       fieldErrors.email ? 'border-rose-500/80' : 'border-slate-800'
                     }`}
                     disabled={loading}
@@ -508,7 +508,7 @@ export default function Login() {
                   </label>
                   <Link
                     to="/forgot-password"
-                    className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 hover:underline transition"
+                    className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 hover:underline transition"
                   >
                     Forgot password?
                   </Link>
@@ -524,7 +524,7 @@ export default function Login() {
                       setPassword(e.target.value);
                       if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: '' });
                     }}
-                    className={`w-full pl-10 pr-10 py-2.5 bg-slate-950 border rounded-xl text-xs text-white placeholder-slate-600 outline-none transition focus:border-emerald-500 ${
+                    className={`w-full pl-10 pr-10 py-2.5 bg-slate-950 border rounded-xl text-xs text-white placeholder-slate-600 outline-none transition focus:border-indigo-500 ${
                       fieldErrors.password ? 'border-rose-500/80' : 'border-slate-800'
                     }`}
                     disabled={loading}
@@ -551,7 +551,7 @@ export default function Login() {
                   id="rememberMe"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 cursor-pointer accent-emerald-500"
+                  className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer accent-indigo-500"
                 />
                 <label htmlFor="rememberMe" className="text-xs text-slate-400 cursor-pointer select-none">
                   Remember me on this browser session
@@ -562,7 +562,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs rounded-xl transition shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 mt-2"
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-xl transition shadow-lg shadow-indigo-600/25 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 mt-2"
               >
                 {loading ? (
                   <>
@@ -571,7 +571,7 @@ export default function Login() {
                   </>
                 ) : (
                   <>
-                    <span>Sign In as {selectedRole.toUpperCase()}</span>
+                    <span>Sign In</span>
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}

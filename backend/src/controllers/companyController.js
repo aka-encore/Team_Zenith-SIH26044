@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Opportunity from '../models/Opportunity.js';
 import Application from '../models/Application.js';
 import StudentProfile from '../models/StudentProfile.js';
+import { matchSkills } from '../utils/matchingEngine.js';
 
 export const getProfile = async (req, res) => {
   try {
@@ -358,7 +359,16 @@ export const searchStudents = async (req, res) => {
       });
     }
 
-    // Format safe response for corporate recruiter view
+    const company = await Company.findOne({ userId: req.user.id });
+    const opportunities = company ? await Opportunity.find({ companyId: company._id, status: 'open' }).select('_id title type requiredSkills') : [];
+
+    // Check if target opportunity or skills specified for skill matching
+    let targetOpportunity = null;
+    if (req.query.opportunityId && req.query.opportunityId !== 'all') {
+      targetOpportunity = await Opportunity.findById(req.query.opportunityId);
+    }
+
+    // Format safe response for corporate recruiter view with matching engine calculation
     const formatted = studentProfiles.map(sp => {
       const u = sp.userId;
       const skills = (sp.skillsList && sp.skillsList.length > 0)
@@ -372,6 +382,13 @@ export const searchStudents = async (req, res) => {
             proficiencyLevel: 'Intermediate',
             verified: false
           }));
+
+      let matchData = null;
+      if (targetOpportunity) {
+        matchData = matchSkills(sp, targetOpportunity);
+      } else if (skill && skill.trim()) {
+        matchData = matchSkills(sp, [skill.trim()]);
+      }
 
       return {
         _id: sp._id,
@@ -388,18 +405,29 @@ export const searchStudents = async (req, res) => {
         overallScore: sp.overallScore || 85,
         projects: sp.projects || [],
         certifications: sp.certifications || [],
-        resumeUrl: sp.resumeUrl || ''
+        resumeUrl: sp.resumeUrl || '',
+        matchPercentage: matchData ? matchData.matchPercentage : null,
+        matchedSkills: matchData ? matchData.matchedSkills : [],
+        missingSkills: matchData ? matchData.missingSkills : []
       };
     });
 
-    const company = await Company.findOne({ userId: req.user.id });
-    const opportunities = company ? await Opportunity.find({ companyId: company._id, status: 'open' }).select('_id title type') : [];
+    // If matching against target opportunity, sort candidates by matchPercentage descending
+    if (targetOpportunity) {
+      formatted.sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));
+    }
 
     res.status(200).json({
       success: true,
       count: formatted.length,
       students: formatted,
-      opportunities
+      selectedOpportunity: targetOpportunity ? {
+        _id: targetOpportunity._id,
+        title: targetOpportunity.title,
+        type: targetOpportunity.type,
+        requiredSkills: targetOpportunity.requiredSkills || []
+      } : null,
+      opportunities: opportunities.map(o => ({ _id: o._id, title: o.title, type: o.type, requiredSkills: o.requiredSkills }))
     });
   } catch (error) {
     console.error('Search Students Error:', error.message);
@@ -541,7 +569,8 @@ export const scheduleInterview = async (req, res) => {
     const { id } = req.params;
     const { date, time, mode, round, meetingLink, notes, status } = req.body;
 
-    const company = await Company.findOne({ userId: req.user.id });
+    const userId = req.user?.id || req.user?._id;
+    const company = await Company.findOne({ userId });
     if (!company) {
       return res.status(404).json({ success: false, message: 'Company profile not found' });
     }
@@ -555,38 +584,45 @@ export const scheduleInterview = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to schedule interviews for this applicant' });
     }
 
-    const scheduledDateTime = date ? new Date(`${date}T${time || '10:00'}:00`) : new Date();
+    const interviewStatus = (status || 'scheduled').toLowerCase();
+    const scheduledDateTime = date ? new Date(`${date}T${time || '10:00'}:00`) : (application.interviewDetails?.scheduledAt || new Date());
 
     application.interviewDetails = {
       scheduledAt: scheduledDateTime,
-      mode: mode || 'video',
-      round: round || 'Technical Evaluation Round 1',
-      meetingLink: meetingLink || 'https://meet.google.com',
-      notes: notes || '',
-      status: status || 'scheduled'
+      date: date || (application.interviewDetails?.date || ''),
+      time: time || (application.interviewDetails?.time || '10:00 AM'),
+      mode: mode || application.interviewDetails?.mode || 'video',
+      round: round || application.interviewDetails?.round || 'Technical Evaluation Round 1',
+      meetingLink: meetingLink || application.interviewDetails?.meetingLink || 'https://meet.google.com',
+      notes: notes !== undefined ? notes : (application.interviewDetails?.notes || ''),
+      status: interviewStatus
     };
-    if (status === 'completed') {
+
+    if (interviewStatus === 'completed') {
       application.status = 'accepted';
-    } else {
+    } else if (interviewStatus === 'cancelled') {
       application.status = 'shortlisted';
+    } else {
+      application.status = 'interview';
     }
 
     await application.save();
 
     res.status(200).json({
       success: true,
-      message: 'Interview successfully scheduled / updated!',
+      message: `Interview ${interviewStatus === 'completed' ? 'marked completed' : interviewStatus === 'cancelled' ? 'cancelled' : 'scheduled'} successfully!`,
       application
     });
   } catch (error) {
     console.error('Schedule Interview Error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error scheduling candidate interview' });
+    res.status(500).json({ success: false, message: 'Server error scheduling candidate interview: ' + error.message });
   }
 };
 
 export const getCompanyInterviews = async (req, res) => {
   try {
-    const company = await Company.findOne({ userId: req.user.id });
+    const userId = req.user?.id || req.user?._id;
+    const company = await Company.findOne({ userId });
     if (!company) {
       return res.status(404).json({ success: false, message: 'Company profile not found' });
     }
@@ -597,11 +633,11 @@ export const getCompanyInterviews = async (req, res) => {
     const applications = await Application.find({
       opportunityId: { $in: oppIds },
       $or: [
-        { 'interviewDetails.scheduledAt': { $exists: true, $ne: null } },
-        { status: { $in: ['shortlisted', 'accepted'] } }
+        { status: { $in: ['shortlisted', 'interview', 'accepted'] } },
+        { 'interviewDetails.scheduledAt': { $exists: true, $ne: null } }
       ]
     })
-      .populate('opportunityId', 'title type location stipend duration status')
+      .populate('opportunityId', 'title type location stipend duration status requiredSkills')
       .populate({
         path: 'studentId',
         populate: {
@@ -639,7 +675,7 @@ export const getCompanyInterviews = async (req, res) => {
         round: interview.round || 'Technical Evaluation Round 1',
         meetingLink: interview.meetingLink || 'https://meet.google.com',
         notes: interview.notes || '',
-        status: interview.status || (app.status === 'accepted' ? 'completed' : 'scheduled')
+        status: interview.status || (app.status === 'accepted' ? 'completed' : app.status === 'interview' ? 'scheduled' : 'scheduled')
       };
     });
 
@@ -658,14 +694,15 @@ export const getCompanyInterviews = async (req, res) => {
     });
   } catch (error) {
     console.error('Get Company Interviews Error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error retrieving company interviews' });
+    res.status(500).json({ success: false, message: 'Server error retrieving company interviews: ' + error.message });
   }
 };
 
 export const cancelInterview = async (req, res) => {
   try {
     const { id } = req.params;
-    const company = await Company.findOne({ userId: req.user.id });
+    const userId = req.user?.id || req.user?._id;
+    const company = await Company.findOne({ userId });
     if (!company) {
       return res.status(404).json({ success: false, message: 'Company profile not found' });
     }
@@ -684,6 +721,7 @@ export const cancelInterview = async (req, res) => {
     } else {
       application.interviewDetails = { status: 'cancelled' };
     }
+    application.status = 'shortlisted';
     await application.save();
 
     res.status(200).json({
@@ -693,7 +731,7 @@ export const cancelInterview = async (req, res) => {
     });
   } catch (error) {
     console.error('Cancel Interview Error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error cancelling interview' });
+    res.status(500).json({ success: false, message: 'Server error cancelling interview: ' + error.message });
   }
 };
 
@@ -726,6 +764,7 @@ export const getCompanyNotifications = async (req, res) => {
       const studentName = app.studentId?.userId?.name || 'A student candidate';
       const oppTitle = app.opportunityId?.title || 'your open opportunity';
       const oppType = app.opportunityId?.type || 'job';
+      const status = (app.status || 'applied').toLowerCase();
 
       // (a) New Application Notification
       const appId = `app_received_${app._id}`;
@@ -740,8 +779,23 @@ export const getCompanyNotifications = async (req, res) => {
         meta: { studentName, oppTitle }
       });
 
-      // (b) Shortlist Notification (if status is shortlisted or accepted)
-      if (['shortlisted', 'accepted'].includes((app.status || '').toLowerCase())) {
+      // (b) Application Reviewed Notification
+      if (['reviewed', 'shortlisted', 'interview', 'selected', 'accepted'].includes(status)) {
+        const revId = `app_reviewed_${app._id}`;
+        notifications.push({
+          id: revId,
+          type: 'review',
+          title: 'Application Under Review',
+          message: `${studentName}'s profile and verified resume are being evaluated for ${oppTitle}.`,
+          timestamp: app.updatedAt || app.createdAt,
+          read: readIds.has(revId),
+          link: '/company/applicants',
+          meta: { studentName, oppTitle }
+        });
+      }
+
+      // (c) Shortlist Notification
+      if (['shortlisted', 'interview', 'selected', 'accepted'].includes(status)) {
         const shortId = `app_shortlisted_${app._id}`;
         notifications.push({
           id: shortId,
@@ -755,11 +809,28 @@ export const getCompanyNotifications = async (req, res) => {
         });
       }
 
-      // (c) Interview Scheduled / Cancelled Notification
-      if (app.interviewDetails?.scheduledAt) {
-        const isCancelled = app.interviewDetails.status === 'cancelled';
+      // (d) Candidate Rejected Notification
+      if (status === 'rejected') {
+        const rejId = `app_rejected_${app._id}`;
+        notifications.push({
+          id: rejId,
+          type: 'rejection',
+          title: 'Candidate Not Selected',
+          message: `${studentName}'s application for ${oppTitle} was marked as rejected.`,
+          timestamp: app.updatedAt,
+          read: readIds.has(rejId),
+          link: '/company/applicants',
+          meta: { studentName, oppTitle }
+        });
+      }
+
+      // (e) Interview Scheduled / Cancelled Notification
+      if (app.interviewDetails?.scheduledAt || status === 'interview') {
+        const isCancelled = (app.interviewDetails?.status || '').toLowerCase() === 'cancelled';
         const intId = isCancelled ? `interview_cancelled_${app._id}` : `interview_sched_${app._id}`;
-        const formattedDate = new Date(app.interviewDetails.scheduledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const formattedDate = app.interviewDetails?.scheduledAt 
+          ? new Date(app.interviewDetails.scheduledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          : 'Upcoming';
         
         notifications.push({
           id: intId,
@@ -767,11 +838,41 @@ export const getCompanyNotifications = async (req, res) => {
           title: isCancelled ? 'Interview Cancelled' : 'Interview Scheduled',
           message: isCancelled 
             ? `The scheduled interview with ${studentName} for ${oppTitle} has been cancelled.`
-            : `Interview scheduled with ${studentName} for ${oppTitle} on ${formattedDate} (${app.interviewDetails.mode || 'video'}).`,
-          timestamp: app.interviewDetails.scheduledAt || app.updatedAt,
+            : `Interview scheduled with ${studentName} for ${oppTitle} on ${formattedDate} (${app.interviewDetails?.mode || 'video'}).`,
+          timestamp: app.interviewDetails?.scheduledAt || app.updatedAt,
           read: readIds.has(intId),
           link: '/company/interviews',
-          meta: { studentName, oppTitle, mode: app.interviewDetails.mode }
+          meta: { studentName, oppTitle, mode: app.interviewDetails?.mode }
+        });
+      }
+
+      // (f) Candidate Selected / Offer Extended Notification
+      if (['selected', 'accepted'].includes(status)) {
+        const selId = `candidate_selected_${app._id}`;
+        notifications.push({
+          id: selId,
+          type: 'selection',
+          title: 'Candidate Selected 🎉',
+          message: `${studentName} was selected for ${oppTitle}. Offer extended.`,
+          timestamp: app.updatedAt,
+          read: readIds.has(selId),
+          link: '/company/applicants',
+          meta: { studentName, oppTitle }
+        });
+      }
+
+      // (g) Placement Completed Notification
+      if (app.placementDetails?.isPlaced || ['selected', 'accepted'].includes(status)) {
+        const placeId = `placement_completed_${app._id}`;
+        notifications.push({
+          id: placeId,
+          type: 'placement_completed',
+          title: 'Placement Recorded 🎓',
+          message: `Official placement completed for ${studentName} (${oppTitle}).`,
+          timestamp: app.placementDetails?.placedAt || app.updatedAt,
+          read: readIds.has(placeId),
+          link: '/company/applicants',
+          meta: { studentName, oppTitle }
         });
       }
     });
@@ -804,7 +905,7 @@ export const getCompanyNotifications = async (req, res) => {
     });
   } catch (error) {
     console.error('Get Company Notifications Error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error retrieving company notifications' });
+    res.status(500).json({ success: false, message: 'Server error retrieving company notifications: ' + error.message });
   }
 };
 

@@ -215,3 +215,38 @@ LINKEDIN_CLIENT_SECRET=<from LinkedIn Developer Portal>
 LINKEDIN_CALLBACK_URL=http://localhost:5000/api/auth/linkedin/callback
 ```
 
+## IMPORTANT DATA & ACCOUNT RULES
+
+1. NEVER create fake accounts for the application.
+2. NEVER create fake student, company, faculty or admin information.
+3. NEVER generate fake statistics, skills, jobs, internships, applications, placements or analytics.
+4. NEVER use hardcoded demo data to make the UI look populated.
+5. All application data must come from the real MongoDB database.
+6. If real data is unavailable, show:
+   - 0
+   - Empty state
+   - "No data available yet"
+7. Do not create fake users just for testing.
+
+### Temporary Development/Test Accounts
+
+Temporary test accounts are allowed ONLY when explicitly requested by the developer for local development/testing.
+
+If a temporary account is created:
+- Clearly mark it as DEVELOPMENT/TEST.
+- Never present it as a real user.
+- Never use it as production data.
+- Keep the number of test accounts minimal.
+- Make it easy to remove.
+- Do not create additional test accounts automatically.
+- Do not create fake information for other users.
+
+### AI CODING AGENT RULE
+
+Before creating any account, record, seed data or sample information, check this rule.
+
+If the requested data is not explicitly provided and is not required for a real application flow, DO NOT invent it.
+
+Prefer real database data and proper empty states over fake/demo data.
+
+Do not create fake data merely to demonstrate that a page is working.

@@ -27,15 +27,15 @@ export function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
       <div
-        className={`sb-glass-card ${maxWidth} w-full p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6 relative bg-slate-950 shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${className}`}
+        className={`app-card ${maxWidth} w-full p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-6 relative bg-white dark:bg-slate-950 shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${className}`}
         role="dialog"
         aria-modal="true"
       >
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 rounded-full bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition"
+          className="absolute top-6 right-6 p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 transition cursor-pointer"
           aria-label="Close dialog"
         >
           <X className="h-4 w-4" />
@@ -43,8 +43,8 @@ export function Modal({
 
         {title && (
           <div className="space-y-1 pr-8 text-left">
-            <h3 className="text-xl font-bold text-white tracking-tight">{title}</h3>
-            {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{title}</h3>
+            {subtitle && <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>}
           </div>
         )}
 

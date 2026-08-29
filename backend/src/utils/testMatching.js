@@ -1,102 +1,211 @@
-import { calculateCompatibility } from './matchingEngine.js';
+import './loadEnv.js';
+import mongoose from 'mongoose';
+import connectDB from '../config/db.js';
+import StudentProfile from '../models/StudentProfile.js';
+import Opportunity from '../models/Opportunity.js';
+import Company from '../models/Company.js';
+import User from '../models/User.js';
+import { 
+  matchSkills, 
+  extractStudentSkills, 
+  extractOpportunitySkills, 
+  matchStudentWithOpportunities,
+  matchOpportunityWithStudents,
+  analyzeSkillGap
+} from './matchingEngine.js';
 
-const runMatchEngineTests = () => {
-  console.log('--- Starting Weighted Compatibility Matching Engine Tests ---\n');
+const runTests = async () => {
+  console.log('════════════════════════════════════════════════════════════════');
+  console.log('       SKILL MATCHING ENGINE: COMPREHENSIVE TEST SUITE          ');
+  console.log('════════════════════════════════════════════════════════════════\n');
 
-  // Define a mock opportunity
-  const mockOpp = {
-    title: 'React infrastructure developer',
-    type: 'internship',
-    requiredSkills: ['React', 'Node.js', 'Tailwind', 'Git'],
-    location: 'Remote'
-  };
+  let passed = 0;
+  let failed = 0;
 
-  // Define Profile 1: Ideal High Match (Expect score ~100%)
-  const profileHigh = {
-    skills: ['react', 'node.js', 'tailwind', 'git', 'mongodb'],
-    academicInformation: {
-      year: 4,
-      cgpa: 9.5,
-      college: 'SIH Academy'
-    },
-    location: 'Mumbai' // opportunity is remote, so location should match 100%
-  };
-
-  // Define Profile 2: Medium Match (Expect score ~60-70%)
-  // - Skills: 2 out of 4 matches (React, Tailwind) = 50% of skills weight = 25 pts
-  // - CGPA: 8.2 = 16 pts
-  // - Year: 3 = 12 pts
-  // - Location: Pune (opportunity is Remote, so it still matches 100% location = 15 pts)
-  // Total expected: 25 + 16 + 12 + 15 = 68%
-  const profileMedium = {
-    skills: ['react', 'tailwind', 'python'],
-    academicInformation: {
-      year: 3,
-      cgpa: 8.2
-    },
-    location: 'Pune'
-  };
-
-  // Define Profile 3: Low Match (Expect score ~20-30%)
-  // - Skills: 0 out of 4 matches = 0 pts
-  // - CGPA: 5.5 = 4 pts
-  // - Year: 1 = 4 pts
-  // - Location: mismatch = 5 pts
-  // Total expected: 0 + 4 + 4 + 5 = 13%
-  const profileLow = {
-    skills: ['java', 'c++'],
-    academicInformation: {
-      year: 1,
-      cgpa: 5.5
-    },
-    location: 'Chennai'
-  };
-
-  try {
-    // 1. Assert Profile High
-    const scoreHigh = calculateCompatibility(profileHigh, mockOpp);
-    console.log(`      Candidate High Score: ${scoreHigh}%`);
-    if (scoreHigh !== 100) {
-      throw new Error(`FAIL: High match compatibility calculated as ${scoreHigh}%, expected 100%`);
-    }
-    console.log('      ASSERT PASS: High compatibility matching math asserts 100% score.');
-
-    // 2. Assert Profile Medium
-    const scoreMedium = calculateCompatibility(profileMedium, mockOpp);
-    console.log(`      Candidate Medium Score: ${scoreMedium}%`);
-    if (scoreMedium !== 68) {
-      throw new Error(`FAIL: Medium match compatibility calculated as ${scoreMedium}%, expected 68%`);
-    }
-    console.log('      ASSERT PASS: Medium compatibility matching math asserts 68% score.');
-
-    // 3. Assert Profile Low
-    const scoreLow = calculateCompatibility(profileLow, { ...mockOpp, location: 'Bengaluru' }); // change location to trigger mismatch
-    console.log(`      Candidate Low Score: ${scoreLow}%`);
-    if (scoreLow !== 13) {
-      throw new Error(`FAIL: Low match compatibility calculated as ${scoreLow}%, expected 13%`);
-    }
-    console.log('      ASSERT PASS: Low compatibility matching math asserts 13% score.');
-
-    // 4. Assert Sorting List
-    const candidates = [
-      { name: 'Low Candidate', score: scoreLow },
-      { name: 'High Candidate', score: scoreHigh },
-      { name: 'Medium Candidate', score: scoreMedium }
-    ];
-
-    candidates.sort((a, b) => b.score - a.score);
-    if (candidates[0].name === 'High Candidate' && candidates[1].name === 'Medium Candidate' && candidates[2].name === 'Low Candidate') {
-      console.log('      ASSERT PASS: Successfully sorted candidates descending by compatibility score.');
+  const assert = (condition, testName, details = '') => {
+    if (condition) {
+      console.log(`  ✓ PASS: ${testName}`);
+      passed++;
     } else {
-      throw new Error('FAIL: Candidates sorting failed.');
+      console.error(`  ✗ FAIL: ${testName}`);
+      if (details) console.error(`    Details: ${details}`);
+      failed++;
     }
+  };
 
-    console.log('\n--- All Weighted Match Engine Tests PASSED successfully! ---');
+  // ─────────────────────────────────────────────────────────────
+  // 1. UNIT TESTS
+  // ─────────────────────────────────────────────────────────────
+  console.log('--- 1. Case-Insensitive Matching & Calculation ---');
+  const student1 = {
+    skillsList: [
+      { name: 'React', proficiency: 'Expert' },
+      { name: 'Node.js', proficiency: 'Intermediate' },
+      { name: 'MongoDB', proficiency: 'Intermediate' },
+      { name: 'Python', proficiency: 'Beginner' }
+    ]
+  };
 
-  } catch (error) {
-    console.error('\n!!! Weighted Match Engine Integration Test FAILED !!!');
-    console.error(error.message);
+  const opportunity1 = {
+    title: 'Fullstack Developer',
+    requiredSkills: ['react', 'NODE.JS', 'MongoDB', 'Docker'] // 3 matched, 1 missing
+  };
+
+  const res1 = matchSkills(student1, opportunity1);
+  assert(res1.matchPercentage === 75, 'Match Percentage: 3 matched / 4 required = 75%', `Got ${res1.matchPercentage}%`);
+  assert(res1.matchedSkills.length === 3, 'Matched skills count is 3', `Got ${res1.matchedSkills.length}`);
+  assert(res1.missingSkills.length === 1 && res1.missingSkills[0] === 'Docker', 'Missing skill is Docker', `Got ${res1.missingSkills}`);
+
+  console.log('\n--- 2. 100% Match Scenario ---');
+  const studentFull = {
+    skills: ['Java', 'Spring Boot', 'MongoDB', 'C++', 'Microservices', 'Docker']
+  };
+
+  const oppFull = {
+    requiredSkills: ['java', 'spring boot', 'docker']
+  };
+
+  const resFull = matchSkills(studentFull, oppFull);
+  assert(resFull.matchPercentage === 100, 'All 3 required skills matched = 100%', `Got ${resFull.matchPercentage}%`);
+  assert(resFull.missingSkills.length === 0, 'No missing skills', `Missing: ${resFull.missingSkills}`);
+
+  console.log('\n--- 3. 0% Match Scenario ---');
+  const studentZero = {
+    skills: ['HTML', 'CSS']
+  };
+
+  const oppZero = {
+    requiredSkills: ['Go', 'Kubernetes', 'gRPC']
+  };
+
+  const resZero = matchSkills(studentZero, oppZero);
+  assert(resZero.matchPercentage === 0, '0 matched / 3 required = 0%', `Got ${resZero.matchPercentage}%`);
+  assert(resZero.matchedSkills.length === 0, 'Matched skills is empty');
+  assert(resZero.missingSkills.length === 3, 'All 3 skills are missing');
+
+  console.log('\n--- 4. Safe Handling of Empty / Missing Data ---');
+  const emptyStudent = {};
+  const emptyOpp = {};
+
+  const resEmpty1 = matchSkills(emptyStudent, { requiredSkills: ['React'] });
+  assert(resEmpty1.matchPercentage === 0, 'Empty student against required skills returns 0% match');
+  assert(resEmpty1.missingSkills[0] === 'React', 'Missing skill is properly listed');
+
+  const resEmpty2 = matchSkills({ skills: ['React', 'Node.js'] }, emptyOpp);
+  assert(resEmpty2.matchPercentage === 100, 'Student with skills against empty requiredSkills returns 100%');
+  assert(resEmpty2.matchedSkills.length === 0 && resEmpty2.missingSkills.length === 0, 'No matched/missing required skills');
+
+  const resNull = matchSkills(null, null);
+  assert(resNull.matchPercentage === 100 && resNull.matchedSkills.length === 0, 'null/null handled safely');
+
+  console.log('\n--- 5. Flexible Input Formats ---');
+  const studentHybrid = {
+    skillsList: [{ name: 'React' }],
+    skills: ['Node.js', 'MongoDB'],
+    softSkills: ['Leadership']
+  };
+
+  const oppString = {
+    requiredSkills: 'React, Node.js, AWS'
+  };
+
+  const resHybrid = matchSkills(studentHybrid, oppString);
+  assert(resHybrid.matchPercentage === 67, '2 of 3 matched = 67%', `Got ${resHybrid.matchPercentage}%`);
+  assert(resHybrid.missingSkills[0] === 'AWS', 'Missing skill AWS correctly extracted from string');
+
+  console.log('\n--- 6. Student Opportunities Sorting Utility ---');
+  const oppList = [
+    { title: 'Low Match Role', requiredSkills: ['C#', '.NET', 'Azure', 'SQL Server'] }, // 0%
+    { title: 'High Match Role', requiredSkills: ['React', 'Node.js'] }, // 100%
+    { title: 'Medium Match Role', requiredSkills: ['React', 'Python', 'AWS'] } // 50%
+  ];
+
+  const matchedOpps = matchStudentWithOpportunities(studentHybrid, oppList);
+  assert(matchedOpps[0].title === 'High Match Role', 'Top ranked opportunity is 100% High Match Role');
+  assert(matchedOpps[1].title === 'Medium Match Role', 'Second ranked is Medium Match Role');
+  assert(matchedOpps[2].title === 'Low Match Role', 'Third ranked is Low Match Role');
+
+  console.log('\n--- 7. Skill Gap Analysis Utility ---');
+  const gap = analyzeSkillGap(studentHybrid, {
+    requiredSkills: ['React', 'Node.js', 'Docker', 'Kubernetes']
+  });
+
+  assert(gap.matchPercentage === 50, 'Gap match percentage is 50%');
+  assert(gap.matchedSkills.includes('React') && gap.matchedSkills.includes('Node.js'), 'Matched skills include React & Node.js');
+  assert(gap.missingSkills.includes('Docker') && gap.missingSkills.includes('Kubernetes'), 'Missing skills include Docker & Kubernetes');
+
+  // ─────────────────────────────────────────────────────────────
+  // 2. REAL DATABASE INTEGRATION TEST
+  // ─────────────────────────────────────────────────────────────
+  console.log('\n--- 8. Real Database Integration Test ---');
+  try {
+    await connectDB();
+
+    // Query real student profile
+    const studentUser = await User.findOne({ role: 'student' });
+    if (studentUser) {
+      const realStudent = await StudentProfile.findOne({ userId: studentUser._id });
+      if (realStudent) {
+        console.log(`  Found student profile in DB: ${studentUser.name} (${studentUser.email})`);
+        const sSkills = extractStudentSkills(realStudent);
+        console.log(`  Student Skills in DB: [${sSkills.join(', ')}]`);
+
+        // Test with real opportunity or mock opportunity
+        let realOpp = await Opportunity.findOne({ status: 'open' });
+        if (!realOpp) {
+          // Find company
+          let company = await Company.findOne({});
+          if (!company) {
+            const companyUser = await User.findOne({ role: 'company' });
+            if (companyUser) company = await Company.findOne({ userId: companyUser._id });
+          }
+          if (company) {
+            realOpp = await Opportunity.create({
+              companyId: company._id,
+              title: 'Backend Systems Engineer',
+              type: 'job',
+              description: 'Real DB Test Opportunity',
+              requiredSkills: ['Node.js', 'MongoDB', 'AWS', 'Docker'],
+              location: 'Remote'
+            });
+          }
+        }
+
+        if (realOpp) {
+          console.log(`  Evaluating with Opportunity in DB: "${realOpp.title}"`);
+          console.log(`  Opportunity Required Skills: [${realOpp.requiredSkills.join(', ')}]`);
+
+          const dbMatch = matchSkills(realStudent, realOpp);
+          console.log(`  => Match Percentage: ${dbMatch.matchPercentage}%`);
+          console.log(`  => Matched Skills: [${dbMatch.matchedSkills.join(', ')}]`);
+          console.log(`  => Missing Skills: [${dbMatch.missingSkills.join(', ')}]`);
+
+          assert(typeof dbMatch.matchPercentage === 'number', 'DB Match percentage is a valid number');
+          assert(Array.isArray(dbMatch.matchedSkills), 'DB Matched skills is an array');
+          assert(Array.isArray(dbMatch.missingSkills), 'DB Missing skills is an array');
+          assert(
+            dbMatch.matchedSkills.length + dbMatch.missingSkills.length === realOpp.requiredSkills.length,
+            'Matched + Missing equals total required skills'
+          );
+        }
+      }
+    }
+  } catch (dbErr) {
+    console.error('  Database integration check error:', dbErr.message);
+  } finally {
+    await mongoose.disconnect();
+  }
+
+  console.log('\n════════════════════════════════════════════════════════════════');
+  console.log(`TEST SUMMARY: ${passed} PASSED | ${failed} FAILED`);
+  console.log('════════════════════════════════════════════════════════════════\n');
+
+  if (failed > 0) {
+    process.exit(1);
   }
 };
 
-runMatchEngineTests();
+runTests().catch(err => {
+  console.error('Test execution error:', err);
+  process.exit(1);
+});

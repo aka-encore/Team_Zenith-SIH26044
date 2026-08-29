@@ -39,10 +39,28 @@ connectDB();
 const app = express();
 
 
-// 6. Enable CORS so React frontend (http://localhost:5173) can talk to Express backend
+// 6. Enable CORS for production and development frontend clients
+const clientOrigin = process.env.CLIENT_URL || process.env.FRONTEND_URL;
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+];
+if (clientOrigin) {
+  allowedOrigins.push(clientOrigin);
+}
+
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'],
-    credentials: true
+  origin: (origin, callback) => {
+    // Allow non-browser requests (e.g. mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  credentials: true
 }));
 
 
@@ -58,6 +76,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/companies', companyRoutes);
+app.use('/api/company', companyRoutes);
 app.use('/api/opportunities', opportunityRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/institutions', institutionRoutes);

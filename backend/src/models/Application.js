@@ -13,7 +13,7 @@ const ApplicationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['applied', 'reviewed', 'shortlisted', 'accepted', 'rejected'],
+    enum: ['applied', 'reviewed', 'shortlisted', 'interview', 'interviewing', 'selected', 'accepted', 'rejected'],
     default: 'applied'
   },
   resumeUrl: {
@@ -28,11 +28,26 @@ const ApplicationSchema = new mongoose.Schema({
   },
   interviewDetails: {
     scheduledAt: { type: Date },
+    date: { type: String, default: '' },
+    time: { type: String, default: '' },
     mode: { type: String, default: 'video' },
     round: { type: String, default: 'Technical Round 1' },
     meetingLink: { type: String, default: '' },
     notes: { type: String, default: '' },
-    status: { type: String, default: 'scheduled' }
+    status: {
+      type: String,
+      enum: ['scheduled', 'completed', 'cancelled', 'Scheduled', 'Completed', 'Cancelled'],
+      default: 'scheduled'
+    }
+  },
+  placementDetails: {
+    isPlaced: { type: Boolean, default: false },
+    placedAt: { type: Date },
+    package: { type: String, default: '' },
+    designation: { type: String, default: '' },
+    location: { type: String, default: '' },
+    joiningDate: { type: Date },
+    offerLetterUrl: { type: String, default: '' }
   }
 }, {
   timestamps: true

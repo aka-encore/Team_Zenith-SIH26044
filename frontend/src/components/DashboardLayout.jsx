@@ -119,12 +119,12 @@ export function DashboardLayout({ children }) {
             <div>
               <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <Link to="/" className="flex items-center space-x-3 group">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform">
-                    <Leaf className="h-5 w-5" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-indigo-600/20 group-hover:scale-105 transition-transform">
+                    <Sparkles className="h-5 w-5" />
                   </div>
                   <div className="text-left">
                     <span className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight block">SkillNexus AI</span>
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider flex items-center space-x-1">
+                    <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider flex items-center space-x-1">
                       <RoleIcon className="h-3 w-3 inline" />
                       <span>{role === 'admin' ? 'Admin Center' : `${role} Workspace`}</span>
                     </span>
@@ -142,8 +142,8 @@ export function DashboardLayout({ children }) {
               </div>
 
               {/* Navigation Items (Single Active Selection) */}
-              <div className="p-3 space-y-1.5 overflow-y-auto max-h-[calc(100vh-160px)] text-left">
-                <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+              <div className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-160px)] text-left">
+                <div className="px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                   Navigation Menu
                 </div>
 
@@ -158,15 +158,13 @@ export function DashboardLayout({ children }) {
                       onClick={() => {
                         if (window.innerWidth < 1024) setSidebarOpen(false);
                       }}
-                      className={`flex items-center space-x-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-all duration-200 ${
+                      className={`flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
                         isActive
-                          ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
-                          : item.highlight
-                            ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20'
-                            : 'text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'
+                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
+                          : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'
                       }`}
                     >
-                      <ItemIcon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
+                      <ItemIcon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
                       <span>{item.label}</span>
                     </Link>
                   );
@@ -181,7 +179,7 @@ export function DashboardLayout({ children }) {
                 className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 flex items-center justify-between transition cursor-pointer text-left group"
               >
                 <div className="flex items-center space-x-3 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs uppercase shrink-0 overflow-hidden">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs uppercase shrink-0 overflow-hidden">
                     {user?.avatarUrl || user?.profilePhoto ? (
                       <img src={user.avatarUrl || user.profilePhoto} alt={user?.name || "Profile"} className="w-full h-full object-cover" />
                     ) : (
@@ -189,7 +187,7 @@ export function DashboardLayout({ children }) {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">{user?.name || user?.email}</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">{user?.name || user?.email}</p>
                     <p className="text-[10px] text-slate-500 truncate">Edit Profile & Password</p>
                   </div>
                 </div>
@@ -219,10 +217,10 @@ export function DashboardLayout({ children }) {
             {/* Sidebar Toggle Button (Opens sidebar when closed) */}
             <button
               onClick={() => setSidebarOpen(prev => !prev)}
-              className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer text-xs font-bold shadow-xs"
+              className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition cursor-pointer text-xs font-bold shadow-xs"
               title="Toggle Dashboard Menu"
             >
-              <Menu className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <Menu className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
               <span className="hidden sm:inline">{sidebarOpen ? 'Hide Menu' : 'Menu'}</span>
             </button>
 
@@ -235,22 +233,22 @@ export function DashboardLayout({ children }) {
           <div className="flex items-center space-x-3">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer"
+              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition cursor-pointer"
               title="Toggle Theme"
             >
-              {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-emerald-600" />}
+              {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-600" />}
             </button>
 
             <button
               onClick={() => setProfileModalOpen(true)}
-              className="flex items-center space-x-2.5 p-1.5 pl-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 hover:border-emerald-400 dark:hover:border-emerald-500/30 transition cursor-pointer text-right group"
+              className="flex items-center space-x-2.5 p-1.5 pl-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 hover:border-indigo-400 dark:hover:border-indigo-500/30 transition cursor-pointer text-right group"
               title="Click to view & edit profile"
             >
               <div>
-                <span className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 block transition truncate max-w-[140px]">{user?.name || user?.email}</span>
-                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold uppercase">{user?.status || 'Active'}</span>
+                <span className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 block transition truncate max-w-[140px]">{user?.name || user?.email}</span>
+                <span className="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 font-bold uppercase">{user?.status || 'Active'}</span>
               </div>
-              <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center text-xs overflow-hidden shadow-xs">
+              <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center text-xs overflow-hidden shadow-xs">
                 {user?.avatarUrl || user?.profilePhoto ? (
                   <img src={user.avatarUrl || user.profilePhoto} alt={user?.name || "Profile"} className="w-full h-full object-cover" />
                 ) : (

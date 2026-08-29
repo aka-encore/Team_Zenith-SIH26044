@@ -1,28 +1,28 @@
 import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+dotenv.config();
 
+const getTransporter = () => {
+  const SMTP_USER = process.env.SMTP_USER || 'sih096880@gmail.com';
+  const rawPass = process.env.SMTP_PASS || process.env.EMAIL_PASS || '';
+  const SMTP_PASS = rawPass.replace(/\s+/g, '');
+  const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
 
-const SMTP_USER = process.env.SMTP_USER || 'sih96880@gmail.com';
-const SMTP_PASS = process.env.SMTP_PASS || process.env.EMAIL_PASS || '';
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
-
-
-// Create reusable transporter
-let transporter = null;
-
-if (SMTP_USER && SMTP_PASS) {
-  transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS,
-    },
-  });
-} else {
-  console.log(`[Email Service] Note: SMTP_PASS is not set in .env. Initializing fallback transporter for ${SMTP_USER}.`);
-}
+  if (SMTP_USER && SMTP_PASS) {
+    return {
+      transporter: nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: SMTP_USER,
+          pass: SMTP_PASS,
+        },
+      }),
+      user: SMTP_USER
+    };
+  }
+  return { transporter: null, user: SMTP_USER };
+};
 
 
 /**
@@ -83,13 +83,15 @@ export const sendOtpEmail = async (toEmail, otp, purpose = 'login') => {
         <div class="expiry">⏱️ This code is valid for <strong>10 minutes</strong>. Do not share it with anyone.</div>
         
         <div class="footer">
-          Sent by <strong>sih96880@gmail.com</strong> for SkillNexus AI Platform.<br/>
+          Sent by <strong>${process.env.SMTP_USER || 'sih096880@gmail.com'}</strong> for SkillNexus AI Platform.<br/>
           If you did not request this verification, please ignore this email.
         </div>
       </div>
     </body>
     </html>
   `;
+
+  const { transporter, user: SMTP_USER } = getTransporter();
 
   // Always log OTP to server console for testing & auditing
   console.log(`\n======================================================`);
@@ -108,14 +110,13 @@ export const sendOtpEmail = async (toEmail, otp, purpose = 'login') => {
         subject,
         html: htmlContent,
       });
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('SMTP Connection Timeout')), 3000));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('SMTP Connection Timeout')), 6000));
       const info = await Promise.race([sendPromise, timeoutPromise]);
       console.log(`[Email Service] Email sent successfully to ${toEmail} (Message ID: ${info?.messageId})`);
       return { success: true, messageId: info?.messageId };
     } catch (err) {
       console.error(`[Email Service] SMTP send notice:`, err.message);
-      // Still return success in development so user is not blocked if Gmail password is missing
-      return { success: true, warning: 'SMTP delivery failed or timed out, code logged to console' };
+      return { success: true, warning: 'SMTP delivery notice: ' + err.message };
     }
   }
 

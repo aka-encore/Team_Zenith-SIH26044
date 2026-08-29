@@ -81,24 +81,24 @@ function ApplyModal({ opportunity, token, onSuccess, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 relative animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+      <div className="app-card max-w-lg w-full p-6 shadow-2xl space-y-5 relative animate-in fade-in zoom-in duration-200">
         
         {/* Close button */}
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-200 cursor-pointer"
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
         >
           <X className="h-5 w-5" />
         </button>
 
         {/* Header */}
-        <div className="border-b border-slate-800 pb-3 pr-6">
-          <span className="text-[10px] font-bold uppercase text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+        <div className="border-b border-slate-200 dark:border-slate-800 pb-3 pr-6 text-left">
+          <span className="text-[10px] font-bold uppercase text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/20 font-mono">
             {opportunity.type} Application
           </span>
-          <h3 className="text-lg font-black text-white mt-2">Apply for {opportunity.title}</h3>
-          <p className="text-xs text-slate-400 font-extrabold mt-0.5">{opportunity.companyId?.companyName}</p>
+          <h3 className="text-lg font-black text-slate-900 dark:text-white mt-2">{opportunity.title}</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-0.5">{opportunity.companyId?.companyName}</p>
         </div>
 
         {/* Loading Indicator */}

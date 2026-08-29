@@ -27,29 +27,43 @@ export default function StudentInterviewsPage() {
       const oppsData = await oppsRes.json();
 
       if (appsData.success && Array.isArray(appsData.applications)) {
-        // Filter applications that are shortlisted or in interview stage
+        // Filter applications that are shortlisted or in interview/placement stage
         const shortlistedApps = appsData.applications.filter(a => 
-          ['shortlisted', 'accepted', 'interview'].includes((a.status || '').toLowerCase())
+          ['shortlisted', 'accepted', 'selected', 'interview'].includes((a.status || '').toLowerCase()) ||
+          (a.interviewDetails && a.interviewDetails.scheduledAt)
         );
 
-        const mappedInterviews = shortlistedApps.map(a => ({
-          id: a._id,
-          role: a.opportunityId?.title || 'Technical Role',
-          company: a.opportunityId?.company?.name || 'Partner Company',
-          date: new Date(a.updatedAt || a.createdAt).toLocaleDateString(),
-          time: '11:00 AM - 12:00 PM IST',
-          round: 'Technical Round 1 (System & Domain Evaluation)',
-          platform: 'Google Meet',
-          interviewer: 'Technical Hiring Panel',
-          status: a.status === 'accepted' ? 'Offer Extended' : 'Interview Scheduled',
-          link: 'https://meet.google.com'
-        }));
+        const mappedInterviews = shortlistedApps.map(a => {
+          const int = a.interviewDetails || {};
+          const scheduledDate = int.scheduledAt ? new Date(int.scheduledAt) : new Date(a.updatedAt || a.createdAt);
+
+          return {
+            id: a._id,
+            role: a.opportunityId?.title || 'Technical Role',
+            company: a.opportunityId?.companyId?.companyName || a.opportunityId?.company?.name || 'Partner Company',
+            location: a.opportunityId?.location || 'Remote',
+            date: int.scheduledAt 
+              ? scheduledDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              : (int.date || scheduledDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })),
+            time: int.scheduledAt 
+              ? scheduledDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+              : (int.time || '11:00 AM IST'),
+            round: int.round || 'Technical Round 1 (System & Domain Evaluation)',
+            platform: int.mode === 'onsite' ? 'On-Premises Office' : int.mode === 'phone' ? 'Telephonic Interview' : 'Virtual Video (Google Meet / Zoom)',
+            interviewer: 'Technical Hiring Panel',
+            status: ['accepted', 'selected'].includes((a.status || '').toLowerCase()) 
+              ? 'Offer Extended' 
+              : (int.status === 'cancelled' ? 'Cancelled' : int.status === 'completed' ? 'Completed' : 'Interview Scheduled'),
+            link: int.meetingLink || 'https://meet.google.com',
+            notes: int.notes || ''
+          };
+        });
 
         setInterviews(mappedInterviews);
       }
 
       if (oppsData.success && Array.isArray(oppsData.opportunities)) {
-        const fullTimeJobs = oppsData.opportunities.filter(o => o.type === 'job');
+        const fullTimeJobs = oppsData.opportunities.filter(o => o.type === 'job' || o.isPlacementDrive);
         setPlacementDrives(fullTimeJobs);
       }
     } catch (err) {
