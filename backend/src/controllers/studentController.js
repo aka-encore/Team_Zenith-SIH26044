@@ -1131,6 +1131,116 @@ export const getSkillGapAnalysis = async (req, res) => {
       });
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // COMPUTE REAL INDUSTRY DEMAND COMPARISON
+    // ─────────────────────────────────────────────────────────────
+    const demandFrequency = {};
+    let totalTrackedPostings = 0;
+
+    opportunities.forEach(opp => {
+      if (opp.requiredSkills && opp.requiredSkills.length > 0) {
+        totalTrackedPostings++;
+        opp.requiredSkills.forEach(sk => {
+          const norm = sk.trim();
+          if (norm) {
+            demandFrequency[norm] = (demandFrequency[norm] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    const studentSkillsMap = new Map();
+    currentSkills.forEach(s => {
+      studentSkillsMap.set(s.name.toLowerCase().trim(), s.proficiency || 'Intermediate');
+    });
+
+    const assessmentScoreMap = new Map();
+    assessments.forEach(a => {
+      if (a.skill) {
+        assessmentScoreMap.set(a.skill.toLowerCase().trim(), {
+          percentage: a.percentage !== undefined ? a.percentage : (a.scorePercentage || 0),
+          skillLevel: a.skillLevel || a.proficiencyEarned || 'Intermediate'
+        });
+      }
+    });
+
+    let industryDemandComparison = [];
+
+    if (totalTrackedPostings > 0 && Object.keys(demandFrequency).length > 0) {
+      industryDemandComparison = Object.entries(demandFrequency).map(([skillName, count]) => {
+        const norm = skillName.toLowerCase().trim();
+        const ratio = count / totalTrackedPostings;
+
+        let demandLevel = 'Low';
+        let demandColor = 'text-slate-500 bg-slate-500/10 border-slate-500/20';
+        if (count >= 2 || ratio >= 0.35) {
+          demandLevel = 'High';
+          demandColor = 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20';
+        } else if (count >= 1 || ratio >= 0.15) {
+          demandLevel = 'Medium';
+          demandColor = 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20';
+        }
+
+        let studentLevel = studentSkillsMap.get(norm) || 'Not Added';
+        if (assessmentScoreMap.has(norm)) {
+          const assess = assessmentScoreMap.get(norm);
+          if (assess.percentage >= 80) {
+            studentLevel = 'Advanced';
+          } else if (assess.percentage < 50 && studentLevel !== 'Not Added') {
+            studentLevel = 'Beginner';
+          }
+        }
+
+        let gap = 'Low';
+        let gapColor = 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+
+        if (studentLevel === 'Not Added') {
+          if (demandLevel === 'High') {
+            gap = 'High';
+            gapColor = 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20';
+          } else if (demandLevel === 'Medium') {
+            gap = 'Medium';
+            gapColor = 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20';
+          } else {
+            gap = 'Low';
+            gapColor = 'text-slate-500 bg-slate-500/10 border-slate-500/20';
+          }
+        } else if (studentLevel.toLowerCase() === 'beginner') {
+          if (demandLevel === 'High') {
+            gap = 'High';
+            gapColor = 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20';
+          } else {
+            gap = 'Medium';
+            gapColor = 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20';
+          }
+        } else if (studentLevel.toLowerCase() === 'intermediate') {
+          if (demandLevel === 'High') {
+            gap = 'Medium';
+            gapColor = 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20';
+          } else {
+            gap = 'Low';
+            gapColor = 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+          }
+        } else {
+          gap = 'Low';
+          gapColor = 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+        }
+
+        return {
+          skill: skillName,
+          demandCount: count,
+          demandLevel,
+          demandColor,
+          studentLevel,
+          gap,
+          gapColor
+        };
+      });
+
+      // Sort skills by actual industry demand descending
+      industryDemandComparison.sort((a, b) => b.demandCount - a.demandCount);
+    }
+
     res.status(200).json({
       success: true,
       hasTargetSelected: targetSkills.length > 0,
@@ -1141,6 +1251,7 @@ export const getSkillGapAnalysis = async (req, res) => {
       weakSkills,
       recommendedSkills,
       learningRoadmap,
+      industryDemandComparison,
       selectedOpportunity,
       targetSkills,
       opportunities: opportunities.map(o => ({

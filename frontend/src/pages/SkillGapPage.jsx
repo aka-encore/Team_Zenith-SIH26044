@@ -24,6 +24,7 @@ export default function SkillGapPage() {
   const [weakSkills, setWeakSkills] = useState([]);
   const [recommendedSkills, setRecommendedSkills] = useState([]);
   const [learningRoadmap, setLearningRoadmap] = useState([]);
+  const [industryDemandComparison, setIndustryDemandComparison] = useState([]);
   const [targetSkills, setTargetSkills] = useState([]);
   
   const [loading, setLoading] = useState(true);
@@ -53,6 +54,7 @@ export default function SkillGapPage() {
 
       setCurrentSkills(data.currentSkills || []);
       setOpportunities(data.opportunities || []);
+      setIndustryDemandComparison(data.industryDemandComparison || []);
       
       if (targetId && data.hasTargetSelected) {
         setMatchPercentage(data.matchPercentage);
@@ -91,6 +93,7 @@ export default function SkillGapPage() {
           if (data.success) {
             setCurrentSkills(data.currentSkills || []);
             setOpportunities(data.opportunities || []);
+            setIndustryDemandComparison(data.industryDemandComparison || []);
             if (data.opportunities && data.opportunities.length > 0) {
               const firstOppId = data.opportunities[0]._id;
               setSelectedTargetId(firstOppId);
@@ -491,6 +494,84 @@ export default function SkillGapPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── 4. INDUSTRY DEMAND COMPARISON ── */}
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center space-x-2">
+                  <BarChart3 className="h-5 w-5 text-indigo-500" />
+                  <span>Industry Demand Comparison</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Real market demand computed across active corporate job postings versus your verified student skill proficiency.
+                </p>
+              </div>
+
+              <span className="text-[11px] font-mono text-slate-400">
+                Sorted by Market Demand
+              </span>
+            </div>
+
+            {industryDemandComparison.length === 0 ? (
+              <div className="p-8 text-center rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-dashed border-slate-200 dark:border-slate-800 text-slate-500 text-xs font-medium">
+                Industry demand data is not available yet.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-mono uppercase text-slate-400">
+                      <th className="pb-3 font-extrabold">Skill</th>
+                      <th className="pb-3 font-extrabold">Industry Demand</th>
+                      <th className="pb-3 font-extrabold">Student Skill Level</th>
+                      <th className="pb-3 font-extrabold text-right">Skill Gap</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                    {industryDemandComparison.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
+                        {/* Skill Name */}
+                        <td className="py-3.5 font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                          <span>{item.skill}</span>
+                        </td>
+
+                        {/* Industry Demand */}
+                        <td className="py-3.5">
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold border ${item.demandColor}`}>
+                            Demand: {item.demandLevel} ({item.demandCount} {item.demandCount === 1 ? 'Role' : 'Roles'})
+                          </span>
+                        </td>
+
+                        {/* Student Skill Level */}
+                        <td className="py-3.5 font-medium">
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold ${
+                            item.studentLevel === 'Advanced' || item.studentLevel === 'Expert'
+                              ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                              : item.studentLevel === 'Intermediate'
+                                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                                : item.studentLevel === 'Beginner'
+                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'
+                          }`}>
+                            Level: {item.studentLevel}
+                          </span>
+                        </td>
+
+                        {/* Skill Gap */}
+                        <td className="py-3.5 text-right">
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold border ${item.gapColor}`}>
+                            Gap: {item.gap}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
