@@ -23,6 +23,7 @@ export default function SkillGapPage() {
   const [missingSkills, setMissingSkills] = useState([]);
   const [weakSkills, setWeakSkills] = useState([]);
   const [recommendedSkills, setRecommendedSkills] = useState([]);
+  const [learningRoadmap, setLearningRoadmap] = useState([]);
   const [targetSkills, setTargetSkills] = useState([]);
   
   const [loading, setLoading] = useState(true);
@@ -59,6 +60,7 @@ export default function SkillGapPage() {
         setMissingSkills(data.missingSkills || []);
         setWeakSkills(data.weakSkills || []);
         setRecommendedSkills(data.recommendedSkills || []);
+        setLearningRoadmap(data.learningRoadmap || []);
         setTargetSkills(data.targetSkills || []);
         setSelectedTargetRole(data.selectedOpportunity || null);
       } else {
@@ -67,6 +69,7 @@ export default function SkillGapPage() {
         setMissingSkills([]);
         setWeakSkills([]);
         setRecommendedSkills([]);
+        setLearningRoadmap([]);
         setTargetSkills([]);
         setSelectedTargetRole(null);
       }
@@ -220,10 +223,10 @@ export default function SkillGapPage() {
           </div>
           <div>
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-              Select a target role to analyze your skill gap.
+              Select a target role to generate your roadmap.
             </h3>
             <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
-              Choose one of the active target career tracks or opportunity postings above to compare your verified skills.
+              Select a target role or open corporate opportunity above to analyze your skill gap and generate your personalized learning roadmap.
             </p>
           </div>
         </div>
@@ -277,7 +280,7 @@ export default function SkillGapPage() {
             <div className="glass-card p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-3">
               <div className="flex items-center space-x-2 text-rose-500">
                 <AlertTriangle className="h-4 w-4" />
-                <h4 className="text-xs font-black uppercase font-mono">Missing Critical Skills</h4>
+                <h4 className="text-xs font-black uppercase font-mono">Missing Skills</h4>
               </div>
 
               {missingSkills.length === 0 ? (
@@ -295,7 +298,7 @@ export default function SkillGapPage() {
                 </div>
               )}
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Acquiring these missing skills will raise your candidate ranking for this target opening.
+                Critical missing competencies required by the target job opening.
               </p>
             </div>
 
@@ -303,7 +306,7 @@ export default function SkillGapPage() {
             <div className="glass-card p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-3">
               <div className="flex items-center space-x-2 text-amber-500">
                 <TrendingUp className="h-4 w-4" />
-                <h4 className="text-xs font-black uppercase font-mono">Weak Skills Requiring Upgrades</h4>
+                <h4 className="text-xs font-black uppercase font-mono">Weak Skills</h4>
               </div>
 
               {weakSkills.length === 0 ? (
@@ -321,7 +324,7 @@ export default function SkillGapPage() {
                 </div>
               )}
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Take assessments to elevate your proficiency level from Beginner to Intermediate/Advanced.
+                Skills currently evaluated below target requirements.
               </p>
             </div>
 
@@ -393,50 +396,101 @@ export default function SkillGapPage() {
 
           </div>
 
-          {/* ── 3. ROADMAP & RECOMMENDED SKILLS ── */}
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center space-x-2">
-                  <Compass className="h-4 w-4 text-indigo-500" />
-                  <span>Recommended Skills to Learn</span>
+          {/* ── 3. LEARNING ROADMAP (RECOMMENDED LEARNING ORDER) ── */}
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-white via-slate-50/70 to-indigo-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-[#0c1222] shadow-xl space-y-6">
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-mono font-extrabold uppercase tracking-wider">
+                    Dynamic Skill Progression
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono">
+                    Target: <strong className="text-slate-800 dark:text-white">{selectedTargetRole?.title || 'Selected Role'}</strong>
+                  </span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center space-x-2">
+                  <Compass className="h-5 w-5 text-indigo-500" />
+                  <span>Learning Roadmap</span>
                 </h3>
-                <p className="text-xs text-slate-500">
-                  Priority skills extracted from active corporate job postings in the database.
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Step-by-step recommended learning order prioritized from your missing skills, weak proficiencies, and assessment results.
                 </p>
               </div>
 
               <button
                 onClick={() => navigate('/skills')}
-                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center space-x-1"
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition flex items-center space-x-1.5 cursor-pointer shadow-xs shrink-0 self-start sm:self-auto"
               >
-                <span>Assess Skills</span>
-                <ChevronRight className="h-4 w-4" />
+                <span>Take Skill Assessment</span>
+                <ChevronRight className="h-3.5 w-3.5" />
               </button>
             </div>
 
-            {recommendedSkills.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-400">
-                No extra recommendations needed — your profile matches all target prerequisites!
+            {learningRoadmap.length === 0 ? (
+              <div className="p-8 text-center rounded-2xl bg-emerald-500/5 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 space-y-2">
+                <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-500" />
+                <h4 className="text-sm font-black">All Prerequisites Satisfied!</h4>
+                <p className="text-xs opacity-90 max-w-md mx-auto">
+                  Your skill profile meets 100% of the competencies required for this role.
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                {recommendedSkills.slice(0, 4).map((item, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-2">
-                    <div className="flex justify-between items-center text-[10px] font-mono font-bold">
-                      <span className="text-indigo-600 dark:text-indigo-400">Phase {idx + 1}</span>
-                      <span className={`px-1.5 py-0.5 rounded text-[9px] ${
-                        item.priority === 'High' 
-                          ? 'bg-rose-500/10 text-rose-600 font-bold' 
-                          : 'bg-indigo-500/10 text-indigo-600'
-                      }`}>
-                        {item.priority}
-                      </span>
+              <div className="space-y-3.5">
+                <div className="text-[11px] font-bold uppercase tracking-wider font-mono text-slate-400">
+                  Recommended Learning Order ({learningRoadmap.length} Sequential Steps)
+                </div>
+
+                <div className="grid grid-cols-1 gap-3">
+                  {learningRoadmap.map((item) => (
+                    <div 
+                      key={item.step} 
+                      className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-indigo-500/40 transition"
+                    >
+                      <div className="flex items-start sm:items-center space-x-4">
+                        {/* Step Number Badge */}
+                        <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-mono font-black text-sm shrink-0 shadow-xs">
+                          {item.step}
+                        </div>
+
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2.5 flex-wrap">
+                            <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                              {item.skill}
+                            </h4>
+                            
+                            {/* Priority Badge */}
+                            <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-mono font-extrabold uppercase border ${
+                              item.priority === 'High'
+                                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                                : item.priority === 'Medium'
+                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                                  : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20'
+                            }`}>
+                              Priority: {item.priority}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
+                            <span className="font-bold text-slate-600 dark:text-slate-300">Reason:</span>
+                            <span>{item.reason}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Right Action Button */}
+                      <div className="flex items-center space-x-3 shrink-0 self-end sm:self-auto pt-2 sm:pt-0">
+                        <button
+                          onClick={() => navigate('/skills')}
+                          className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
+                        >
+                          <span>Practice / Assess</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </button>
+                      </div>
                     </div>
-                    <h4 className="text-xs font-black text-slate-900 dark:text-white">{item.skill}</h4>
-                    <p className="text-[11px] text-slate-500 leading-snug">{item.reason}</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>

@@ -973,6 +973,8 @@ export const getSkillGapAnalysis = async (req, res) => {
       profile = await StudentProfile.create({ userId });
     }
 
+    const assessments = await AssessmentResult.find({ userId }).sort({ createdAt: -1 });
+
     // Format current student skills with structured categories and proficiencies
     const currentSkills = (profile.skillsList && profile.skillsList.length > 0)
       ? profile.skillsList.map(s => ({
@@ -1019,10 +1021,11 @@ export const getSkillGapAnalysis = async (req, res) => {
       targetSkills = customSkills.split(',').map(s => s.trim()).filter(Boolean);
     }
 
-    // If an opportunity or target role is selected, compute exact matching
+    // If an opportunity or target role is selected, compute exact matching & Learning Roadmap
     let matchData = null;
     let weakSkills = [];
     let recommendedSkills = [];
+    let learningRoadmap = [];
 
     if (targetSkills.length > 0) {
       matchData = matchSkills(profile, targetSkills);
@@ -1033,7 +1036,76 @@ export const getSkillGapAnalysis = async (req, res) => {
         s.proficiency.toLowerCase() === 'beginner' && targetLookup.has(s.name.toLowerCase().trim())
       );
 
-      // Aggregate high-demand skills from active opportunities in MongoDB to construct recommended roadmap
+      // ─────────────────────────────────────────────────────────────
+      // COMPUTE REAL LEARNING ROADMAP
+      // ─────────────────────────────────────────────────────────────
+      const roadmapItems = [];
+      const seenRoadmapSkills = new Set();
+
+      // 1. Missing Skills (High Priority - Required by target role)
+      matchData.missingSkills.forEach(sk => {
+        const norm = sk.toLowerCase().trim();
+        if (!seenRoadmapSkills.has(norm)) {
+          seenRoadmapSkills.add(norm);
+          roadmapItems.push({
+            skill: sk,
+            priority: 'High',
+            reason: 'Required by target role',
+            type: 'missing',
+            currentLevel: 'Not Added',
+            targetLevel: 'Intermediate / Advanced'
+          });
+        }
+      });
+
+      // 2. Weak Skills (Medium Priority - Below requirement)
+      weakSkills.forEach(ws => {
+        const norm = ws.name.toLowerCase().trim();
+        if (!seenRoadmapSkills.has(norm)) {
+          seenRoadmapSkills.add(norm);
+          roadmapItems.push({
+            skill: ws.name,
+            priority: 'Medium',
+            reason: 'Skill level is below requirement',
+            type: 'weak',
+            currentLevel: ws.proficiency,
+            targetLevel: 'Advanced'
+          });
+        }
+      });
+
+      // 3. Low Assessment Score Skills (Medium/High Priority based on test results)
+      assessments.forEach(a => {
+        const aSkill = a.skill ? a.skill.trim() : '';
+        const scorePct = a.percentage !== undefined ? a.percentage : (a.scorePercentage || 0);
+        const norm = aSkill.toLowerCase().trim();
+
+        if (aSkill && scorePct < 70) {
+          if (!seenRoadmapSkills.has(norm)) {
+            seenRoadmapSkills.add(norm);
+            const isTarget = targetLookup.has(norm);
+            roadmapItems.push({
+              skill: aSkill,
+              priority: isTarget ? 'High' : 'Medium',
+              reason: `Assessment score is low (${scorePct}%)`,
+              type: 'assessment',
+              currentLevel: a.skillLevel || a.proficiencyEarned || 'Beginner',
+              targetLevel: 'Advanced'
+            });
+          }
+        }
+      });
+
+      // 4. Sort roadmap into Recommended Learning Order (High -> Medium -> Low)
+      const priorityWeights = { 'High': 1, 'Medium': 2, 'Low': 3 };
+      roadmapItems.sort((a, b) => (priorityWeights[a.priority] || 3) - (priorityWeights[b.priority] || 3));
+
+      learningRoadmap = roadmapItems.map((item, index) => ({
+        step: index + 1,
+        ...item
+      }));
+
+      // Aggregate high-demand skills for backward compatibility
       const skillFrequency = {};
       opportunities.forEach(opp => {
         (opp.requiredSkills || []).forEach(sk => {
@@ -1042,12 +1114,10 @@ export const getSkillGapAnalysis = async (req, res) => {
         });
       });
 
-      // Combine missing skills from target role with high-demand marketplace skills
       const studentSkillSet = new Set(currentSkills.map(s => s.name.toLowerCase().trim()));
       const recommendedSet = new Set();
       recommendedSkills = [];
 
-      // 1. Prioritize missing skills for target role
       matchData.missingSkills.forEach(sk => {
         if (!recommendedSet.has(sk.toLowerCase())) {
           recommendedSet.add(sk.toLowerCase());
@@ -1059,21 +1129,6 @@ export const getSkillGapAnalysis = async (req, res) => {
           });
         }
       });
-
-      // 2. Add top in-demand skills from database not currently in student profile
-      Object.entries(skillFrequency)
-        .sort((a, b) => b[1] - a[1])
-        .forEach(([sk, count]) => {
-          if (!studentSkillSet.has(sk.toLowerCase()) && !recommendedSet.has(sk.toLowerCase()) && recommendedSkills.length < 8) {
-            recommendedSet.add(sk.toLowerCase());
-            recommendedSkills.push({
-              skill: sk,
-              reason: 'High marketplace employer demand',
-              priority: 'Medium',
-              marketDemandCount: count
-            });
-          }
-        });
     }
 
     res.status(200).json({
@@ -1085,6 +1140,7 @@ export const getSkillGapAnalysis = async (req, res) => {
       missingSkills: matchData ? matchData.missingSkills : [],
       weakSkills,
       recommendedSkills,
+      learningRoadmap,
       selectedOpportunity,
       targetSkills,
       opportunities: opportunities.map(o => ({
