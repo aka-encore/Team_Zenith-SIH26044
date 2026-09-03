@@ -637,38 +637,51 @@ export default function CompanyPrepPage() {
               Step 2 of Flow
             </span>
             <h2 className="text-xl font-black text-slate-900 dark:text-white">
-              Choose DSA Programming Language for {selectedCompany.companyName}
+              Choose DSA Programming Language
             </h2>
             <p className="text-xs text-slate-500">
-              Select the language for code walkthroughs, online compiler, and final technical assessment.
+              Selected Company: <strong className="text-slate-900 dark:text-white">{selectedCompany.companyName}</strong> ({selectedCompany.industry})
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { id: 'cpp', title: 'C++', subtitle: 'C++17 / STL Vectors & Maps' },
-              { id: 'java', title: 'Java', subtitle: 'Java 17 / Collections Framework' },
-              { id: 'python', title: 'Python', subtitle: 'Python 3.11 / Built-in Structures' }
+              { id: 'cpp', title: 'C++', desc: 'C++17 with Standard Template Library' },
+              { id: 'java', title: 'Java', desc: 'Java 17 with Collections Framework' },
+              { id: 'python', title: 'Python', desc: 'Python 3.11 with Built-in Structures' }
             ].map(lang => (
               <button
                 key={lang.id}
-                onClick={() => setSelectedLanguage(lang.id)}
-                className={`p-6 rounded-2xl border-2 text-center transition flex flex-col items-center justify-center space-y-2 cursor-pointer ${
+                onClick={() => {
+                  setSelectedLanguage(lang.id);
+                  try {
+                    localStorage.setItem(`zenith_prep_lang_${user?.id || 'guest'}`, lang.id);
+                    localStorage.setItem(`zenith_prep_comp_${user?.id || 'guest'}`, selectedCompany._id);
+                  } catch (e) {
+                    console.error(e);
+                  }
+                  setCurrentFlowStep(3); // Directly navigate to Step 3: DSA Topics
+                }}
+                className={`p-6 rounded-2xl border-2 text-center transition flex flex-col items-center justify-center space-y-2 cursor-pointer group hover:border-purple-500 hover:shadow-lg ${
                   selectedLanguage === lang.id
-                    ? 'border-purple-600 bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-purple-400/40'
+                    ? 'border-purple-600 bg-purple-500/10 shadow-md'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300'
                 }`}
               >
-                <Code2 className="h-6 w-6" />
-                <span className="text-base font-black font-mono">{lang.title}</span>
-                <span className={`text-[10px] ${selectedLanguage === lang.id ? 'text-purple-100' : 'text-slate-400'}`}>
-                  {lang.subtitle}
+                <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center font-mono font-bold text-lg border border-purple-500/20 group-hover:scale-105 transition-transform">
+                  <Code2 className="h-6 w-6" />
+                </div>
+                <span className="text-base font-black font-mono text-slate-900 dark:text-white group-hover:text-purple-600">
+                  {lang.title}
+                </span>
+                <span className="text-[10px] text-slate-500 leading-tight">
+                  {lang.desc}
                 </span>
               </button>
             ))}
           </div>
 
-          <div className="flex justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
             <button
               onClick={() => setCurrentFlowStep(1)}
               className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
@@ -676,13 +689,9 @@ export default function CompanyPrepPage() {
               <ArrowLeft className="h-4 w-4" />
               <span>Change Company</span>
             </button>
-            <button
-              onClick={() => setCurrentFlowStep(3)}
-              className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow-md cursor-pointer"
-            >
-              <span>View DSA Roadmap</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
+            <span className="text-xs text-slate-400 font-mono">
+              Click any language to proceed directly to DSA Topics →
+            </span>
           </div>
         </div>
       )}
