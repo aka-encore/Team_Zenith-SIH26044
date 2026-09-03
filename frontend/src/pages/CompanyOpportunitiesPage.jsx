@@ -44,6 +44,85 @@ export default function CompanyOpportunitiesPage() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
+  // ── SKILL DEMAND ANALYSIS MODAL STATE ──
+  const [demandModal, setDemandModal] = useState({
+    isOpen: false,
+    opportunity: null,
+    title: '',
+    skillsInput: '',
+    loading: false,
+    data: null,
+    error: ''
+  });
+
+  const handleOpenSkillDemandRequest = (opp = null, customSkillsStr = '') => {
+    const initialSkills = opp
+      ? (Array.isArray(opp.requiredSkills) ? opp.requiredSkills.join(', ') : '')
+      : (customSkillsStr || '');
+
+    setDemandModal({
+      isOpen: true,
+      opportunity: opp,
+      title: opp ? opp.title : (customSkillsStr ? 'Required Skills Preview' : 'Campus Skill Demand Request'),
+      skillsInput: initialSkills,
+      loading: Boolean(initialSkills.trim()),
+      data: null,
+      error: ''
+    });
+
+    if (initialSkills.trim()) {
+      fetchSkillDemandAnalysis(opp ? opp._id : null, initialSkills);
+    }
+  };
+
+  const fetchSkillDemandAnalysis = async (opportunityId = null, skillsStr = '') => {
+    const skillsArray = (skillsStr || demandModal.skillsInput || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    if (!opportunityId && skillsArray.length === 0) {
+      setDemandModal(prev => ({ ...prev, error: 'Please specify at least one required skill keyword to analyze.', data: null }));
+      return;
+    }
+
+    setDemandModal(prev => ({ ...prev, loading: true, error: '' }));
+
+    try {
+      const response = await fetch('/api/opportunities/skill-demand-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          opportunityId,
+          requiredSkills: skillsArray
+        })
+      });
+
+      const resData = await response.json();
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.message || 'Failed to analyze student talent availability.');
+      }
+
+      setDemandModal(prev => ({
+        ...prev,
+        loading: false,
+        data: resData,
+        error: ''
+      }));
+    } catch (err) {
+      console.error('Error analyzing skill demand:', err);
+      setDemandModal(prev => ({
+        ...prev,
+        loading: false,
+        data: null,
+        error: err.message || 'Unable to connect to talent availability service.'
+      }));
+    }
+  };
+
   // Fetch opportunities belonging strictly to authenticated company
   const fetchOpportunities = async (isManual = false) => {
     if (isManual) setRefreshing(true);
@@ -254,6 +333,15 @@ export default function CompanyOpportunitiesPage() {
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-emerald-500' : ''}`} />
           </button>
           
+          <button
+            onClick={() => handleOpenSkillDemandRequest()}
+            className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md shadow-purple-600/20 cursor-pointer active:scale-95"
+            title="Evaluate Real Campus Student Availability for Custom Skill Sets"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span>Skill Demand Request</span>
+          </button>
+
           <button
             onClick={() => handleOpenCreate(activeTab === 'internships' ? 'internship' : 'job')}
             className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-emerald-600/20 flex items-center space-x-2 cursor-pointer active:scale-95"
@@ -479,6 +567,15 @@ export default function CompanyOpportunitiesPage() {
 
                 <div className="flex items-center space-x-1.5">
                   <button
+                    onClick={() => handleOpenSkillDemandRequest(opp)}
+                    className="p-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 transition cursor-pointer flex items-center space-x-1"
+                    title="Check Real Student Availability for Required Skills"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-purple-500" />
+                    <span className="text-[10px] font-extrabold hidden sm:inline">Talent Supply</span>
+                  </button>
+
+                  <button
                     onClick={() => setViewOpp(opp)}
                     className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer"
                     title="View Posting Details"
@@ -660,16 +757,28 @@ export default function CompanyOpportunitiesPage() {
 
               {/* Required Skills */}
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
-                  Required Skills (Comma separated) *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px]">
+                    Required Skills (Comma separated) *
+                  </label>
+                  {formSkills.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenSkillDemandRequest(null, formSkills)}
+                      className="text-[10px] font-extrabold text-purple-600 dark:text-purple-400 hover:underline flex items-center space-x-1 cursor-pointer"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      <span>Check Campus Talent Supply</span>
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   required
                   placeholder="e.g. React, Node.js, Express, MongoDB, TypeScript"
                   value={formSkills}
                   onChange={(e) => setFormSkills(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 p-3 rounded-xl outline-none focus:border-emerald-500"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 p-3 rounded-xl outline-none focus:border-emerald-500 font-mono text-xs"
                 />
                 <p className="text-[10px] text-slate-400 mt-0.5">Matched with verified student Skill DNA.</p>
               </div>
@@ -810,6 +919,234 @@ export default function CompanyOpportunitiesPage() {
                 Yes, Delete Posting
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ SKILL DEMAND REQUEST & TALENT AVAILABILITY MODAL ━━━━━━━━━━━━━━━━━━━━ */}
+      {demandModal.isOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="glass-card max-w-2xl w-full p-6 sm:p-8 rounded-3xl border-2 border-purple-500/30 bg-white dark:bg-slate-950 space-y-6 text-left shadow-2xl relative my-8">
+            
+            {/* Header */}
+            <div className="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-400 font-mono font-extrabold uppercase tracking-wider flex items-center space-x-1">
+                    <Sparkles className="h-3 w-3 text-purple-500" />
+                    <span>Real-Time Talent Availability</span>
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">Live Database Match</span>
+                </div>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center space-x-2">
+                  <span>{demandModal.title || 'Skill Demand Request Analysis'}</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Evaluate real campus candidate availability, skill proficiency distributions, and average match readiness from active student profiles.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setDemandModal(prev => ({ ...prev, isOpen: false }))}
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-500 transition cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Input & Action Bar */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase font-mono text-slate-700 dark:text-slate-300">
+                Specify Required Skills for Job/Internship:
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. React, Node.js, Python, AWS, Docker"
+                  value={demandModal.skillsInput}
+                  onChange={(e) => setDemandModal(prev => ({ ...prev, skillsInput: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      fetchSkillDemandAnalysis(null, demandModal.skillsInput);
+                    }
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => fetchSkillDemandAnalysis(null, demandModal.skillsInput)}
+                  disabled={demandModal.loading || !demandModal.skillsInput.trim()}
+                  className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md shadow-purple-600/20 cursor-pointer shrink-0"
+                >
+                  {demandModal.loading ? (
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  <span>Analyze Availability</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Error Display */}
+            {demandModal.error && (
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center space-x-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{demandModal.error}</span>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {demandModal.loading ? (
+              <div className="p-12 text-center text-slate-500 space-y-3">
+                <RefreshCw className="h-6 w-6 animate-spin text-purple-500 mx-auto" />
+                <p className="text-xs font-mono font-bold uppercase tracking-wider">
+                  Analyzing real student database profiles...
+                </p>
+              </div>
+            ) : demandModal.data ? (
+              <div className="space-y-6">
+                
+                {/* 3 Metric Summary Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  
+                  {/* Matching Students Count */}
+                  <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-1">
+                    <span className="text-[10px] font-mono font-bold text-purple-600 dark:text-purple-400 uppercase">
+                      Matching Students
+                    </span>
+                    <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">
+                      {demandModal.data.matchingStudentsCount}
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                      Out of {demandModal.data.totalStudentsCount} total registered students
+                    </p>
+                  </div>
+
+                  {/* Average Match Compatibility */}
+                  <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 space-y-1">
+                    <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 uppercase">
+                      Average Match Rate
+                    </span>
+                    <div className="text-2xl font-black font-mono text-indigo-600 dark:text-indigo-400">
+                      {demandModal.data.averageMatchPercentage}%
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                      Based on required skills matching
+                    </p>
+                  </div>
+
+                  {/* Required Skills Requested */}
+                  <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <span className="text-[10px] font-mono font-bold text-slate-500 uppercase">
+                      Skills Evaluated
+                    </span>
+                    <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">
+                      {(demandModal.data.requiredSkills || []).length}
+                    </div>
+                    <p className="text-[10px] text-slate-400 truncate">
+                      {(demandModal.data.requiredSkills || []).join(', ')}
+                    </p>
+                  </div>
+
+                </div>
+
+                {/* Skill Proficiency Distribution */}
+                {Object.keys(demandModal.data.proficiencyDistribution || {}).length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-black uppercase font-mono text-slate-900 dark:text-white flex items-center space-x-2">
+                      <Layers className="h-4 w-4 text-purple-500" />
+                      <span>Skill Proficiency Distribution</span>
+                    </h4>
+
+                    <div className="space-y-2.5">
+                      {Object.entries(demandModal.data.proficiencyDistribution).map(([skillName, dist]) => (
+                        <div 
+                          key={skillName}
+                          className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs space-y-2"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-slate-900 dark:text-white">{skillName}</span>
+                            <span className="text-[11px] font-mono text-purple-600 dark:text-purple-400 font-bold">
+                              {dist.totalWithSkill} {dist.totalWithSkill === 1 ? 'candidate possesses skill' : 'candidates possess skill'}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-4 gap-2 text-[10px] font-mono text-center">
+                            <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                              Beginner: <strong className="text-slate-900 dark:text-white">{dist.Beginner}</strong>
+                            </div>
+                            <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold">
+                              Intermediate: <strong>{dist.Intermediate}</strong>
+                            </div>
+                            <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold">
+                              Advanced: <strong>{dist.Advanced}</strong>
+                            </div>
+                            <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">
+                              Expert: <strong>{dist.Expert}</strong>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Matching Students List OR No Matching Students Empty State */}
+                <div className="space-y-3 pt-1">
+                  <h4 className="text-xs font-black uppercase font-mono text-slate-900 dark:text-white flex items-center space-x-2">
+                    <Users className="h-4 w-4 text-emerald-500" />
+                    <span>Matching Student Talent ({demandModal.data.matchingStudents?.length || 0})</span>
+                  </h4>
+
+                  {demandModal.data.matchingStudents?.length === 0 ? (
+                    <div className="p-8 text-center rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-dashed border-slate-300 dark:border-slate-800 space-y-2">
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      <h4 className="text-sm font-black text-slate-800 dark:text-slate-200">
+                        No matching students available yet.
+                      </h4>
+                      <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                        No students in the registered cohort currently match these required skills. Check back as new students join and verify their proficiencies.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="max-h-60 overflow-y-auto space-y-2.5 pr-1">
+                      {demandModal.data.matchingStudents.map(st => (
+                        <div
+                          key={st.studentId}
+                          className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs hover:border-purple-400/40 transition"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <span className="font-extrabold text-slate-900 dark:text-white">{st.name}</span>
+                              <span className="text-[10px] text-slate-400 font-mono">{st.department}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {(st.matchedSkills || []).map((sk, idx) => (
+                                <span key={idx} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold">
+                                  ✓ {sk}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              {st.matchPercentage}% Match
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            ) : null}
+
           </div>
         </div>
       )}

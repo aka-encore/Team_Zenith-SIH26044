@@ -286,3 +286,142 @@ export const deleteOpportunity = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error removing opportunity posting' });
   }
 };
+
+/**
+ * POST /api/opportunities/skill-demand-analysis
+ * Analyzes real student talent availability for specified required skills or an opportunity.
+ * Computes:
+ * - Number of matching students
+ * - Skill proficiency distribution for each skill
+ * - Average match percentage
+ */
+export const getSkillDemandAnalysis = async (req, res) => {
+  try {
+    const { opportunityId, requiredSkills: inputSkills } = req.body;
+
+    let skillsToAnalyze = [];
+
+    if (opportunityId) {
+      const opp = await Opportunity.findById(opportunityId);
+      if (opp && Array.isArray(opp.requiredSkills)) {
+        skillsToAnalyze = opp.requiredSkills;
+      }
+    }
+
+    if (inputSkills && (!skillsToAnalyze || skillsToAnalyze.length === 0)) {
+      skillsToAnalyze = parseSkills(inputSkills);
+    }
+
+    // Clean and normalize required skills list
+    const cleanSkills = Array.from(new Set(
+      (skillsToAnalyze || []).map(s => (typeof s === 'string' ? s : s?.name || '').trim()).filter(Boolean)
+    ));
+
+    // Fetch real students from MongoDB
+    const rawStudents = await StudentProfile.find({})
+      .populate('userId', 'name email avatarUrl status createdAt')
+      .sort({ updatedAt: -1 });
+
+    const students = rawStudents.filter(s => s.userId);
+    const totalStudentsInCohort = students.length;
+
+    if (cleanSkills.length === 0 || totalStudentsInCohort === 0) {
+      return res.status(200).json({
+        success: true,
+        requiredSkills: cleanSkills,
+        totalStudentsCount: totalStudentsInCohort,
+        matchingStudentsCount: 0,
+        averageMatchPercentage: 0,
+        proficiencyDistribution: {},
+        matchingStudents: [],
+        message: 'No matching students available yet.'
+      });
+    }
+
+    // Calculate match results for each student using existing matchingEngine
+    const studentMatchResults = [];
+    let sumMatchPercentage = 0;
+
+    // Build proficiency distribution map for each required skill
+    const proficiencyDistribution = {};
+    cleanSkills.forEach(sk => {
+      proficiencyDistribution[sk] = {
+        Beginner: 0,
+        Intermediate: 0,
+        Advanced: 0,
+        Expert: 0,
+        totalWithSkill: 0
+      };
+    });
+
+    students.forEach(student => {
+      const match = matchSkills(student, { requiredSkills: cleanSkills });
+      sumMatchPercentage += match.matchPercentage;
+
+      // Extract proficiencies for matched skills
+      const studentSkillsList = Array.isArray(student.skillsList) && student.skillsList.length > 0
+        ? student.skillsList
+        : (student.skills || []).map(s => (typeof s === 'string' ? { name: s, proficiencyLevel: 'Intermediate' } : s));
+
+      const profMap = {};
+      studentSkillsList.forEach(item => {
+        if (item && item.name) {
+          profMap[item.name.toLowerCase().trim()] = item.proficiencyLevel || 'Intermediate';
+        }
+      });
+
+      // Update distribution
+      cleanSkills.forEach(reqSk => {
+        const norm = reqSk.toLowerCase().trim();
+        if (profMap[norm]) {
+          const level = profMap[norm];
+          if (proficiencyDistribution[reqSk][level] !== undefined) {
+            proficiencyDistribution[reqSk][level]++;
+          } else {
+            proficiencyDistribution[reqSk]['Intermediate']++;
+          }
+          proficiencyDistribution[reqSk].totalWithSkill++;
+        }
+      });
+
+      // Include in matching list if matchPercentage > 0
+      if (match.matchPercentage > 0) {
+        studentMatchResults.push({
+          studentId: student._id,
+          userId: student.userId?._id,
+          name: student.userId?.name || 'Student Candidate',
+          email: student.userId?.email || '',
+          avatarUrl: student.userId?.avatarUrl || null,
+          department: student.academicInformation?.branch || student.academicInformation?.department || 'Engineering',
+          year: student.academicInformation?.year || student.academicInformation?.yearOfStudy || '',
+          cgpa: student.academicInformation?.cgpa,
+          matchPercentage: match.matchPercentage,
+          matchedSkills: match.matchedSkills,
+          missingSkills: match.missingSkills
+        });
+      }
+    });
+
+    // Sort matching students by highest match percentage descending
+    studentMatchResults.sort((a, b) => b.matchPercentage - a.matchPercentage);
+
+    const matchingStudentsCount = studentMatchResults.length;
+    const averageMatchPercentage = matchingStudentsCount > 0
+      ? Math.round(studentMatchResults.reduce((acc, s) => acc + s.matchPercentage, 0) / matchingStudentsCount)
+      : (totalStudentsInCohort > 0 ? Math.round(sumMatchPercentage / totalStudentsInCohort) : 0);
+
+    res.status(200).json({
+      success: true,
+      requiredSkills: cleanSkills,
+      totalStudentsCount: totalStudentsInCohort,
+      matchingStudentsCount,
+      averageMatchPercentage,
+      proficiencyDistribution,
+      matchingStudents: studentMatchResults,
+      message: matchingStudentsCount === 0 ? 'No matching students available yet.' : 'Analysis computed successfully.'
+    });
+  } catch (error) {
+    console.error('Skill Demand Analysis Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error analyzing skill demand: ' + error.message });
+  }
+};
