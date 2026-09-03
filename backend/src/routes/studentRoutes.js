@@ -13,6 +13,7 @@ import {
   getDsaMockTest,
   submitDsaMockTest,
   getCompanyPrepCompanies,
+  getTopicVideo,
   getStudentNotifications, markStudentNotificationAsRead, markAllStudentNotificationsAsRead
 } from '../controllers/studentController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
@@ -30,6 +31,7 @@ router.post('/upload-photo', protect, authorize('student'), uploadProfilePhoto.s
 router.get('/skill-passport', protect, authorize('student', 'faculty', 'institution', 'company', 'admin'), getSkillPassport);
 router.get('/readiness-score', protect, authorize('student'), getCareerReadinessScore);
 router.get('/companies', protect, authorize('student'), getCompanyPrepCompanies);
+router.get('/topic-video', protect, authorize('student'), getTopicVideo);
 router.get('/dsa-problems', protect, authorize('student'), getDsaPracticeProblems);
 router.post('/dsa-submit', protect, authorize('student'), submitDsaProblem);
 router.get('/dsa-mock-test', protect, authorize('student'), getDsaMockTest);

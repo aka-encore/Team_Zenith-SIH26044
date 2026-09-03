@@ -68,8 +68,9 @@ app.use(cors({
 app.use(express.json());
 
 
-// 7b. Serve static uploaded files (Profile Photos, Resumes, etc.)
+// 7b. Serve static uploaded files (Profile Photos, Resumes, etc.) and public topic videos
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use(express.static(path.join(__dirname, '../public')));
 
 
 // 8. Register API route handlers

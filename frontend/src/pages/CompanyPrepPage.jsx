@@ -7,7 +7,8 @@ import {
   ArrowLeft, ArrowRight, ShieldCheck, Award,
   ChevronRight, HelpCircle, Lightbulb, Search, Filter,
   Globe, Briefcase, Type, Columns, Rows, RotateCcw, Check, XCircle,
-  FastForward, Rewind, Maximize, Minimize, Bookmark, AlertTriangle
+  FastForward, Rewind, Maximize, Minimize, Bookmark, AlertTriangle,
+  Volume2, VolumeX
 } from 'lucide-react';
 
 export default function CompanyPrepPage() {
@@ -31,13 +32,20 @@ export default function CompanyPrepPage() {
   // ── Step 3, 4 & 5: Topics & Video Lesson ──
   const [selectedTopicId, setSelectedTopicId] = useState('arrays');
   
-  // Video Lesson Player Controls
+  // Video Lesson Player State & Controls
+  const [videoUrl, setVideoUrl] = useState('');
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [videoLoading, setVideoLoading] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
   const [activeChapterIdx, setActiveChapterIdx] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const playerContainerRef = useRef(null);
+  const videoElementRef = useRef(null);
 
   // ── Step 6: Coding Arena ──
   const [problems, setProblems] = useState([]);
@@ -134,6 +142,35 @@ export default function CompanyPrepPage() {
       fetchProblems();
     }
   }, [token, selectedCompany, selectedTopicId, selectedLanguage]);
+
+  // Fetch Topic Video
+  useEffect(() => {
+    const fetchVideo = async () => {
+      if (!selectedTopicId) return;
+      setVideoLoading(true);
+      setVideoError(false);
+      try {
+        const res = await fetch(`/api/students/topic-video?topic=${selectedTopicId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.videoUrl) {
+          setVideoUrl(data.videoUrl);
+        } else {
+          setVideoError(true);
+        }
+      } catch (err) {
+        console.error('Fetch Video Error:', err);
+        setVideoError(true);
+      } finally {
+        setVideoLoading(false);
+      }
+    };
+
+    if (token && (currentFlowStep === 5 || currentFlowStep === 4)) {
+      fetchVideo();
+    }
+  }, [token, selectedTopicId, currentFlowStep]);
 
   // Mock test countdown timer
   useEffect(() => {
@@ -1217,118 +1254,261 @@ export default function CompanyPrepPage() {
             </button>
           </div>
 
-          {/* Clean Player Stage */}
-          <div
-            ref={playerContainerRef}
-            className={`rounded-2xl bg-slate-950 text-white border border-slate-800 overflow-hidden flex flex-col justify-between ${
-              isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'min-h-[460px]'
-            }`}
-          >
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
-              <span className="font-semibold text-slate-200">{currentLessonChapter.chapter}: {currentLessonChapter.title}</span>
-              <span>{formatTimer(currentTime)} / {formatTimer(totalVideoDuration)}</span>
+          {videoLoading ? (
+            <div className="py-32 text-center space-y-3 border border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-950 text-white">
+              <RefreshCw className="h-8 w-8 animate-spin text-purple-500 mx-auto" />
+              <p className="text-sm font-semibold text-slate-300">Loading educational video course...</p>
+              <p className="text-xs text-slate-500">Preparing topic visual slides and narration audio</p>
             </div>
+          ) : videoError && !videoUrl ? (
+            <div className="py-24 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-8 space-y-3 bg-white dark:bg-slate-900">
+              <AlertCircle className="h-10 w-10 text-amber-500 mx-auto" />
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                Video lesson is currently unavailable.
+              </h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                You can still explore the topic concepts and solve coding practice problems directly in the arena.
+              </p>
+              <button
+                onClick={() => setCurrentFlowStep(6)}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Go to Coding Arena
+              </button>
+            </div>
+          ) : (
+            <div
+              ref={playerContainerRef}
+              className={`rounded-2xl bg-slate-950 text-white border border-slate-800 overflow-hidden flex flex-col justify-between ${
+                isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'min-h-[500px]'
+              }`}
+            >
+              {/* Native Video Canvas */}
+              <div className="relative w-full flex-1 flex items-center justify-center bg-black min-h-[380px]">
+                {videoUrl ? (
+                  <video
+                    ref={videoElementRef}
+                    src={videoUrl}
+                    className="w-full h-full max-h-[560px] object-contain"
+                    onTimeUpdate={() => {
+                      if (videoElementRef.current) {
+                        setCurrentTime(videoElementRef.current.currentTime);
+                        setVideoDuration(videoElementRef.current.duration || totalVideoDuration);
+                      }
+                    }}
+                    onLoadedMetadata={() => {
+                      if (videoElementRef.current) {
+                        setVideoDuration(videoElementRef.current.duration);
+                      }
+                    }}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onEnded={() => setIsPlaying(false)}
+                    playsInline
+                  />
+                ) : (
+                  /* Live Animated Slide Fallback */
+                  <div className="p-8 sm:p-12 w-full space-y-6 text-left">
+                    <div>
+                      <span className="text-xs font-mono uppercase text-purple-400 font-bold">
+                        {currentLessonChapter.chapter}
+                      </span>
+                      <h3 className="text-2xl font-bold text-white mt-1">
+                        {currentLessonChapter.concept}
+                      </h3>
+                    </div>
 
-            <div className="p-6 sm:p-10 space-y-6 text-left">
-              <div>
-                <span className="text-xs font-mono uppercase text-purple-400 font-bold">
-                  {currentLessonChapter.chapter}
-                </span>
-                <h3 className="text-xl sm:text-2xl font-bold text-white mt-1">
-                  {currentLessonChapter.concept}
-                </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {currentLessonChapter.points.map((pt, idx) => (
+                        <div key={idx} className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
+                          <p className="leading-relaxed">{pt}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {currentLessonChapter.codeSnippet && (
+                      <div className="rounded-xl bg-slate-900 p-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-slate-800">
+                        <pre className="whitespace-pre">
+                          <code>{currentLessonChapter.codeSnippet}</code>
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {currentLessonChapter.points.map((pt, idx) => (
-                  <div key={idx} className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
-                    <p className="leading-relaxed">{pt}</p>
+              {/* Video Player Control Bar */}
+              <div className="p-4 bg-slate-900/95 border-t border-slate-800 space-y-3">
+                {/* Timeline Scrubber */}
+                <div className="flex items-center space-x-3 text-xs font-mono text-slate-400">
+                  <span>{formatTimer(currentTime)}</span>
+                  <div className="relative flex-1 flex items-center">
+                    <input
+                      type="range"
+                      min="0"
+                      max={videoDuration || totalVideoDuration || 100}
+                      step="0.1"
+                      value={currentTime}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        setCurrentTime(val);
+                        if (videoElementRef.current) {
+                          videoElementRef.current.currentTime = val;
+                        }
+                      }}
+                      className="w-full h-1.5 bg-slate-800 rounded-full appearance-none cursor-pointer accent-purple-600"
+                    />
                   </div>
+                  <span>{formatTimer(videoDuration || totalVideoDuration)}</span>
+                </div>
+
+                {/* Bottom Control Strip */}
+                <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                  
+                  {/* Play/Pause & Seek Buttons */}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => {
+                        if (videoElementRef.current) {
+                          videoElementRef.current.currentTime = Math.max(0, videoElementRef.current.currentTime - 10);
+                        } else {
+                          handleSeek(-10);
+                        }
+                      }}
+                      className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
+                      title="Rewind 10s"
+                    >
+                      <Rewind className="h-4 w-4" />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (videoElementRef.current) {
+                          if (isPlaying) videoElementRef.current.pause();
+                          else videoElementRef.current.play();
+                        } else {
+                          setIsPlaying(!isPlaying);
+                        }
+                      }}
+                      className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold cursor-pointer flex items-center space-x-1"
+                    >
+                      {isPlaying ? <Pause className="h-4 w-4 mr-1" /> : <Play className="h-4 w-4 mr-1" />}
+                      <span>{isPlaying ? 'Pause' : 'Play'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (videoElementRef.current) {
+                          videoElementRef.current.currentTime = Math.min(videoDuration || 1000, videoElementRef.current.currentTime + 10);
+                        } else {
+                          handleSeek(10);
+                        }
+                      }}
+                      className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
+                      title="Forward 10s"
+                    >
+                      <FastForward className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Volume Control */}
+                  <div className="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-lg">
+                    <button
+                      onClick={() => {
+                        const newMute = !isMuted;
+                        setIsMuted(newMute);
+                        if (videoElementRef.current) {
+                          videoElementRef.current.muted = newMute;
+                        }
+                      }}
+                      className="text-slate-300 hover:text-white cursor-pointer"
+                    >
+                      {isMuted || volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                    </button>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={isMuted ? 0 : volume}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        setVolume(val);
+                        setIsMuted(val === 0);
+                        if (videoElementRef.current) {
+                          videoElementRef.current.volume = val;
+                          videoElementRef.current.muted = val === 0;
+                        }
+                      }}
+                      className="w-16 h-1 bg-slate-700 rounded-full appearance-none cursor-pointer accent-purple-600"
+                    />
+                  </div>
+
+                  {/* Playback Speed */}
+                  <div className="flex items-center space-x-1 bg-slate-800 p-1 rounded-lg">
+                    {[0.75, 1, 1.25, 1.5, 2].map(spd => (
+                      <button
+                        key={spd}
+                        onClick={() => {
+                          setPlaybackSpeed(spd);
+                          if (videoElementRef.current) {
+                            videoElementRef.current.playbackRate = spd;
+                          }
+                        }}
+                        className={`px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer ${
+                          playbackSpeed === spd ? 'bg-purple-600 text-white' : 'text-slate-400'
+                        }`}
+                      >
+                        {spd}x
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Fullscreen Toggle */}
+                  <button
+                    onClick={toggleFullscreen}
+                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
+                  >
+                    {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Chapters Navigation */}
+          {activeLessons.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Course Chapters
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-left">
+                {activeLessons.map((l, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      handleJumpToChapter(idx);
+                      if (videoElementRef.current) {
+                        let accum = 0;
+                        for (let i = 0; i < idx; i++) {
+                          accum += activeLessons[i].duration;
+                        }
+                        videoElementRef.current.currentTime = accum;
+                      }
+                    }}
+                    className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                      activeChapterIdx === idx
+                        ? 'border-purple-600 bg-purple-50/20 dark:bg-purple-950/20 font-semibold text-purple-600 dark:text-purple-400'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    <div className="text-[10px] uppercase font-mono text-slate-400">{l.chapter}</div>
+                    <div className="text-xs truncate">{l.title}</div>
+                  </button>
                 ))}
               </div>
-
-              {currentLessonChapter.codeSnippet && (
-                <div className="rounded-xl bg-slate-900 p-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-slate-800">
-                  <pre className="whitespace-pre">
-                    <code>{currentLessonChapter.codeSnippet}</code>
-                  </pre>
-                </div>
-              )}
             </div>
-
-            {/* Playback Controls */}
-            <div className="p-4 bg-slate-900/90 border-t border-slate-800 space-y-3">
-              <div className="relative w-full h-1.5 bg-slate-800 rounded-full overflow-hidden cursor-pointer">
-                <div
-                  style={{ width: `${(currentTime / totalVideoDuration) * 100}%` }}
-                  className="h-full bg-purple-600 transition-all duration-300"
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-xs font-mono">
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleSeek(-10)}
-                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
-                  >
-                    <Rewind className="h-4 w-4" />
-                  </button>
-
-                  <button
-                    onClick={() => setIsPlaying(!isPlaying)}
-                    className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold cursor-pointer"
-                  >
-                    {isPlaying ? 'Pause' : 'Play'}
-                  </button>
-
-                  <button
-                    onClick={() => handleSeek(10)}
-                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
-                  >
-                    <FastForward className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div className="flex items-center space-x-1 bg-slate-800 p-1 rounded-lg">
-                  {[0.75, 1, 1.25, 1.5, 2].map(spd => (
-                    <button
-                      key={spd}
-                      onClick={() => setPlaybackSpeed(spd)}
-                      className={`px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer ${
-                        playbackSpeed === spd ? 'bg-purple-600 text-white' : 'text-slate-400'
-                      }`}
-                    >
-                      {spd}x
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={toggleFullscreen}
-                  className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
-                >
-                  {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-left">
-            {activeLessons.map((l, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleJumpToChapter(idx)}
-                className={`p-3 rounded-xl border text-left transition cursor-pointer ${
-                  activeChapterIdx === idx
-                    ? 'border-purple-600 bg-purple-50/20 dark:bg-purple-950/20 font-semibold text-purple-600 dark:text-purple-400'
-                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'
-                }`}
-              >
-                <div className="text-[10px] uppercase font-mono text-slate-400">{l.chapter}</div>
-                <div className="text-xs truncate">{l.title}</div>
-              </button>
-            ))}
-          </div>
+          )}
         </section>
       )}
 

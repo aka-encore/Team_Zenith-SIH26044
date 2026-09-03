@@ -5,6 +5,7 @@ import Company from '../models/Company.js';
 import Application from '../models/Application.js';
 import AssessmentResult from '../models/AssessmentResult.js';
 import { matchSkills, analyzeSkillGap } from '../utils/matchingEngine.js';
+import { getOrGenerateTopicVideo } from '../services/topicVideoService.js';
 
 
 /**
@@ -2711,6 +2712,43 @@ export const getCompanyPrepCompanies = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error loading real companies: ' + error.message });
   }
 };
+
+/**
+ * GET /api/students/topic-video
+ * Retrieves or generates the structured educational video course for the requested DSA topic
+ */
+export const getTopicVideo = async (req, res) => {
+  try {
+    const { topic } = req.query;
+    if (!topic) {
+      return res.status(400).json({ success: false, message: 'Topic parameter is required' });
+    }
+
+    const result = await getOrGenerateTopicVideo(topic);
+
+    if (!result.success && !result.videoUrl) {
+      return res.status(200).json({
+        success: false,
+        message: 'Video lesson is currently unavailable.',
+        curriculum: result.curriculum
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      videoUrl: result.videoUrl,
+      cached: result.cached,
+      curriculum: result.curriculum
+    });
+  } catch (error) {
+    console.error('Get Topic Video Controller Error:', error.message);
+    res.status(200).json({
+      success: false,
+      message: 'Video lesson is currently unavailable.'
+    });
+  }
+};
+
 
 
 
