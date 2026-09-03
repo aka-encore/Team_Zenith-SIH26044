@@ -8,6 +8,8 @@ import {
   getSkillGapAnalysis,
   getCareerReadinessScore,
   getSkillPassport,
+  getDsaPracticeProblems,
+  submitDsaProblem,
   getStudentNotifications, markStudentNotificationAsRead, markAllStudentNotificationsAsRead
 } from '../controllers/studentController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
@@ -21,9 +23,11 @@ router.get('/profile', protect, authorize('student'), getProfile);
 router.put('/profile', protect, authorize('student'), updateProfile);
 router.post('/upload-photo', protect, authorize('student'), uploadProfilePhoto.single('photo'), uploadPhoto);
 
-// 2. Skill Passport & Career Readiness
+// 2. Skill Passport, Career Readiness & DSA Coding Practice
 router.get('/skill-passport', protect, authorize('student', 'faculty', 'institution', 'company', 'admin'), getSkillPassport);
 router.get('/readiness-score', protect, authorize('student'), getCareerReadinessScore);
+router.get('/dsa-problems', protect, authorize('student'), getDsaPracticeProblems);
+router.post('/dsa-submit', protect, authorize('student'), submitDsaProblem);
 
 // 3. Skills CRUD
 router.get('/skills', protect, authorize('student'), getSkills);
