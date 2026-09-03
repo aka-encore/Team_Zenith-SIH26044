@@ -125,7 +125,9 @@ export default function CompanyPrepPage() {
       title: 'Arrays',
       level: 'Beginner to Advanced',
       difficulty: 'Easy - Medium',
+      estimatedHours: '4-6 Hours',
       patterns: ['Traversal', 'Searching', 'Sorting', 'Two Pointer', 'Sliding Window'],
+      keyProblems: ['Two Sum II (Sorted)', 'Container With Most Water', 'Trapping Rain Water'],
       description: 'Contiguous memory, index access, prefix sums, and two-pointer search.'
     },
     {
@@ -134,7 +136,9 @@ export default function CompanyPrepPage() {
       title: 'Strings',
       level: 'Beginner to Intermediate',
       difficulty: 'Easy - Medium',
+      estimatedHours: '3-5 Hours',
       patterns: ['ASCII/Unicode', 'Palindromes', 'Anagrams', 'String Matching (KMP)'],
+      keyProblems: ['Valid Palindrome', 'Longest Substring Without Repeating Characters', 'Group Anagrams'],
       description: 'Character manipulation, string builder, and substring windows.'
     },
     {
@@ -143,7 +147,9 @@ export default function CompanyPrepPage() {
       title: 'Linked List',
       level: 'Beginner to Intermediate',
       difficulty: 'Medium',
+      estimatedHours: '4-6 Hours',
       patterns: ['Singly/Doubly Linked', 'Fast & Slow Pointers', 'Reversal', 'Merge K Lists'],
+      keyProblems: ['Reverse Linked List', 'Detect Cycle (Floyd)', 'Merge Two Sorted Lists'],
       description: 'Dynamic pointer chaining, cycle detection, and memory nodes.'
     },
     {
@@ -152,7 +158,9 @@ export default function CompanyPrepPage() {
       title: 'Stack',
       level: 'Beginner to Intermediate',
       difficulty: 'Easy - Medium',
+      estimatedHours: '3-4 Hours',
       patterns: ['LIFO Operations', 'Monotonic Stack', 'Parentheses Validation', 'Min Stack'],
+      keyProblems: ['Valid Parentheses', 'Daily Temperatures', 'Largest Rectangle in Histogram'],
       description: 'LIFO buffer, expression evaluation, and next greater element.'
     },
     {
@@ -161,7 +169,9 @@ export default function CompanyPrepPage() {
       title: 'Queue',
       level: 'Beginner to Intermediate',
       difficulty: 'Easy - Medium',
+      estimatedHours: '3-4 Hours',
       patterns: ['FIFO Operations', 'Circular Queue', 'Deque', 'Sliding Window Maximum'],
+      keyProblems: ['Implement Queue using Stacks', 'Sliding Window Maximum', 'Rotting Oranges (BFS)'],
       description: 'FIFO buffers, breadth-first traversal, and streaming window max.'
     },
     {
@@ -170,7 +180,9 @@ export default function CompanyPrepPage() {
       title: 'Hashing',
       level: 'Beginner to Intermediate',
       difficulty: 'Easy - Medium',
+      estimatedHours: '3-5 Hours',
       patterns: ['Hash Maps', 'Hash Sets', 'Collision Resolution', 'Frequency Tables'],
+      keyProblems: ['Two Sum', 'Subarray Sum Equals K', 'LRU Cache'],
       description: 'O(1) average lookups, frequency counting, and complement pairing.'
     },
     {
@@ -179,7 +191,9 @@ export default function CompanyPrepPage() {
       title: 'Recursion',
       level: 'Beginner to Intermediate',
       difficulty: 'Easy - Medium',
+      estimatedHours: '3-5 Hours',
       patterns: ['Base Case / Inductive Step', 'Call Stack Frames', 'Divide & Conquer'],
+      keyProblems: ['Fibonacci & Power(x, n)', 'Tower of Hanoi', 'Generate Parentheses'],
       description: 'Self-referential execution frames, call stack depth, and recurrence relations.'
     },
     {
@@ -188,7 +202,9 @@ export default function CompanyPrepPage() {
       title: 'Binary Search',
       level: 'Beginner to Advanced',
       difficulty: 'Easy - Hard',
+      estimatedHours: '4-6 Hours',
       patterns: ['Sorted Arrays', 'Search on Answer', 'Rotated Array', 'Peak Finding'],
+      keyProblems: ['Binary Search', 'Search in Rotated Sorted Array', 'Koko Eating Bananas'],
       description: 'O(log N) divide-and-conquer search on monotonic search spaces.'
     },
     {
@@ -197,7 +213,9 @@ export default function CompanyPrepPage() {
       title: 'Sorting',
       level: 'Beginner to Intermediate',
       difficulty: 'Easy - Medium',
+      estimatedHours: '3-4 Hours',
       patterns: ['QuickSort', 'MergeSort', 'Counting Sort', 'Custom Comparators'],
+      keyProblems: ['Sort Colors (Dutch National Flag)', 'Merge Intervals', 'Kth Largest Element'],
       description: 'O(N log N) divide-and-conquer sorting and stability properties.'
     },
     {
@@ -206,7 +224,9 @@ export default function CompanyPrepPage() {
       title: 'Trees',
       level: 'Intermediate to Advanced',
       difficulty: 'Medium - Hard',
+      estimatedHours: '6-8 Hours',
       patterns: ['Binary Trees', 'Pre/In/Postorder DFS', 'Level-order BFS', 'LCA'],
+      keyProblems: ['Maximum Depth of Binary Tree', 'Invert Binary Tree', 'Binary Tree Maximum Path Sum'],
       description: 'Acyclic graphs, hierarchical node traversals, and subtree recursions.'
     },
     {
@@ -215,7 +235,9 @@ export default function CompanyPrepPage() {
       title: 'BST (Binary Search Tree)',
       level: 'Intermediate to Advanced',
       difficulty: 'Medium',
+      estimatedHours: '4-5 Hours',
       patterns: ['BST Invariants', 'Inorder Sorting', 'Insertion/Deletion', 'Validation'],
+      keyProblems: ['Validate BST', 'Lowest Common Ancestor in BST', 'Kth Smallest in BST'],
       description: 'Ordered hierarchical lookup, balanced trees, and range queries.'
     },
     {
@@ -224,7 +246,9 @@ export default function CompanyPrepPage() {
       title: 'Heap (Priority Queue)',
       level: 'Intermediate to Advanced',
       difficulty: 'Medium - Hard',
+      estimatedHours: '4-6 Hours',
       patterns: ['Min/Max Heap', 'Top K Elements', 'Median Stream', 'K-way Merge'],
+      keyProblems: ['Top K Frequent Elements', 'Find Median from Data Stream', 'Merge K Sorted Lists'],
       description: 'O(log N) priority extractions, complete binary tree array representations.'
     },
     {
@@ -233,7 +257,9 @@ export default function CompanyPrepPage() {
       title: 'Graphs',
       level: 'Intermediate to Advanced',
       difficulty: 'Medium - Hard',
+      estimatedHours: '6-8 Hours',
       patterns: ['Adjacency Lists', 'BFS / DFS', 'Dijkstra', 'Topological Sort'],
+      keyProblems: ['Number of Islands', 'Course Schedule', 'Network Delay Time (Dijkstra)'],
       description: 'Networks of vertices & edges, cycle detection, and shortest paths.'
     },
     {
@@ -242,7 +268,9 @@ export default function CompanyPrepPage() {
       title: 'Greedy',
       level: 'Intermediate',
       difficulty: 'Medium',
+      estimatedHours: '3-5 Hours',
       patterns: ['Locally Optimal Choices', 'Interval Scheduling', 'Huffman Coding'],
+      keyProblems: ['Jump Game', 'Gas Station', 'Non-overlapping Intervals'],
       description: 'Making optimal local decisions without backtracking.'
     },
     {
@@ -251,7 +279,9 @@ export default function CompanyPrepPage() {
       title: 'Backtracking',
       level: 'Intermediate to Advanced',
       difficulty: 'Medium - Hard',
+      estimatedHours: '5-7 Hours',
       patterns: ['N-Queens', 'Sudoku Solver', 'Subsets / Permutations', 'State Pruning'],
+      keyProblems: ['Subsets', 'Permutations', 'N-Queens'],
       description: 'Exhaustive state-space search with recursive trial and rollbacks.'
     },
     {
@@ -260,7 +290,9 @@ export default function CompanyPrepPage() {
       title: 'Dynamic Programming',
       level: 'Intermediate to Advanced',
       difficulty: 'Medium - Hard',
+      estimatedHours: '8-10 Hours',
       patterns: ['Memoization (Top-Down)', 'Tabulation (Bottom-Up)', '0/1 Knapsack', 'LCS'],
+      keyProblems: ['Climbing Stairs', 'Coin Change', 'Longest Common Subsequence'],
       description: 'Optimal substructure and overlapping subproblems optimization.'
     }
   ];
@@ -641,7 +673,7 @@ export default function CompanyPrepPage() {
                           Key Coding Patterns:
                         </span>
                         <div className="flex flex-wrap gap-1">
-                          {topic.patterns.map((p, i) => (
+                          {(topic?.patterns || []).map((p, i) => (
                             <span key={i} className="text-[10px] font-mono px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-md font-medium">
                               • {p}
                             </span>
@@ -655,7 +687,7 @@ export default function CompanyPrepPage() {
                           Benchmark Interview Questions:
                         </span>
                         <ul className="text-xs space-y-1 text-slate-600 dark:text-slate-300 font-medium list-disc list-inside">
-                          {topic.keyProblems.map((prob, idx) => (
+                          {(topic?.keyProblems || []).map((prob, idx) => (
                             <li key={idx} className="line-clamp-1">{prob}</li>
                           ))}
                         </ul>
@@ -666,9 +698,9 @@ export default function CompanyPrepPage() {
                     {/* Footer Info & Topic Learning Action */}
                     <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] font-mono text-slate-400">
                       <div className="flex items-center space-x-2">
-                        <span>Est: {topic.estimatedHours}</span>
+                        <span>Est: {topic?.estimatedHours || '3-5 Hours'}</span>
                         <span>•</span>
-                        <span className="font-bold text-purple-600 dark:text-purple-400">{topic.difficulty}</span>
+                        <span className="font-bold text-purple-600 dark:text-purple-400">{topic?.difficulty || 'Medium'}</span>
                       </div>
 
                       <button
