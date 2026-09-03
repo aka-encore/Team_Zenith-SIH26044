@@ -12,11 +12,12 @@ export const getFacultyDashboardStats = async (req, res) => {
 
     const collegeName = facultyUser.name || 'Zenith Institute of Technology & Engineering';
 
-    // 1. Fetch all Student Profiles
-    const allStudents = await StudentProfile.find({})
+    // 1. Fetch all Student Profiles (linked to real active users)
+    const rawStudents = await StudentProfile.find({})
       .populate('userId', 'name email avatarUrl status createdAt')
       .sort({ updatedAt: -1 });
 
+    const allStudents = rawStudents.filter(s => s.userId);
     const totalStudents = allStudents.length;
 
     // 2. Students with Completed Profiles
@@ -174,9 +175,11 @@ export const getFacultyStudents = async (req, res) => {
       ];
     }
 
-    const students = await StudentProfile.find(query)
+    const rawStudents = await StudentProfile.find(query)
       .populate('userId', 'name email avatarUrl status createdAt')
       .sort({ updatedAt: -1 });
+
+    const students = rawStudents.filter(s => s.userId);
 
     const studentIds = students.map(s => s._id);
     const applications = await Application.find({ studentId: { $in: studentIds } }).populate('opportunityId');
@@ -261,7 +264,8 @@ export const getFacultySkillsAnalytics = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Faculty / Institution account not found' });
     }
 
-    const students = await StudentProfile.find({}).populate('userId', 'name email status');
+    const rawStudents = await StudentProfile.find({}).populate('userId', 'name email status');
+    const students = rawStudents.filter(s => s.userId);
     const opportunities = await Opportunity.find({ status: 'open' });
 
     const totalStudents = students.length;
@@ -417,7 +421,8 @@ export const getFacultySkillGap = async (req, res) => {
       }
     }
 
-    const students = await StudentProfile.find(studentQuery);
+    const rawStudents = await StudentProfile.find(studentQuery).populate('userId', 'name email');
+    const students = rawStudents.filter(s => s.userId);
     const opportunities = await Opportunity.find({ status: 'open' }).populate('companyId', 'companyName');
 
     const totalStudents = students.length;
