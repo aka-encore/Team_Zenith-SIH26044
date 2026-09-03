@@ -5,7 +5,7 @@ import {
   Building2, ArrowLeft, ArrowRight, CheckCircle2, Circle, CheckSquare,
   Square, Code2, BookOpen, Layers, Sparkles, ChevronRight, Zap,
   Play, RefreshCw, Award, Target, HelpCircle, FileCode, Check,
-  Lightbulb, Compass, Terminal, ShieldCheck, ExternalLink
+  Lightbulb, Compass, Terminal, ShieldCheck, ExternalLink, Video
 } from 'lucide-react';
 
 export default function CompanyTopicLearningPage() {
@@ -17,7 +17,7 @@ export default function CompanyTopicLearningPage() {
   const [studentProfile, setStudentProfile] = useState(null);
   const [selectedOppId, setSelectedOppId] = useState(searchParams.get('oppId') || '');
   const [activeTopicId, setActiveTopicId] = useState(searchParams.get('topicId') || 'arrays');
-  const [activeStage, setActiveStage] = useState('basics'); // 'basics' | 'concepts' | 'examples' | 'practice' | 'interview'
+  const [activeStage, setActiveStage] = useState('basics'); // 'basics' | 'concepts' | 'examples' | 'practice' | 'interview' | 'video'
   const [codeLanguage, setCodeLanguage] = useState('javascript'); // 'javascript' | 'python' | 'cpp' | 'java'
   const [loading, setLoading] = useState(true);
   const [completedStages, setCompletedStages] = useState({});
@@ -88,8 +88,7 @@ export default function CompanyTopicLearningPage() {
   const roleTitle = selectedOpportunity?.title || 'Software Engineer';
   const requiredSkills = selectedOpportunity?.requiredSkills || [];
 
-  // Structured Topic Learning Content with the 5-Stage Progressive Flow:
-  // Basics → Concepts → Examples → Practice → Interview Level
+  // Structured Topic Learning Content with Verified Video References & 5-Stage Progressive Flow:
   const topicDataMap = {
     arrays: {
       id: 'arrays',
@@ -97,6 +96,14 @@ export default function CompanyTopicLearningPage() {
       subtitle: 'Contiguous memory allocation, random access, and multi-pointer search patterns',
       category: 'Data Structures',
       skillsMatched: ['Data Structures', 'C++', 'Java', 'Python', 'Algorithms', 'JavaScript'],
+      video: {
+        title: 'Arrays and Dynamic Arrays - Data Structures and Algorithms',
+        source: 'freeCodeCamp.org',
+        url: 'https://www.youtube.com/watch?v=RBSGKlAvoiM',
+        embedUrl: 'https://www.youtube-nocookie.com/embed/RBSGKlAvoiM',
+        explanation: 'Comprehensive breakdown of memory indexing, contiguous allocation, static vs dynamic vectors, and two-pointer search patterns.',
+        conceptLevels: 'Beginner → Advanced (Array Memory Architecture → Two Pointer & Sliding Window Optimization)'
+      },
       stages: {
         basics: {
           title: 'Array Basics & Memory Architecture',
@@ -113,26 +120,11 @@ export default function CompanyTopicLearningPage() {
           title: 'Core Array Algorithms & Progressive Sub-patterns',
           summary: 'Mastering the 5 progressive techniques required for high-performance array manipulation.',
           subPatterns: [
-            {
-              name: '1. Array Traversal & Linear Scanning',
-              desc: 'Single-pass traversal to compute accumulators, maximum/minimum elements, and running aggregates.'
-            },
-            {
-              name: '2. Searching (Linear & Binary Search)',
-              desc: 'Linear search on unsorted collections vs O(log N) Binary Search on sorted sequences with boundary adjustments.'
-            },
-            {
-              name: '3. Sorting Algorithms',
-              desc: 'Comparison-based sorting (QuickSort, MergeSort in O(N log N)) and non-comparison sorting (Counting/Radix Sort).'
-            },
-            {
-              name: '4. Two Pointer Technique',
-              desc: 'Converging pointers (left & right moving toward center) or same-direction fast & slow pointers to eliminate nested O(N²) loops.'
-            },
-            {
-              name: '5. Sliding Window Pattern',
-              desc: 'Maintaining a dynamic or fixed-size window over a contiguous subarray to compute subarray sums, maximums, or unique character substrings in O(N).'
-            }
+            { name: '1. Array Traversal & Linear Scanning', desc: 'Single-pass traversal to compute accumulators, maximum/minimum elements, and running aggregates.' },
+            { name: '2. Searching (Linear & Binary Search)', desc: 'Linear search on unsorted collections vs O(log N) Binary Search on sorted sequences with boundary adjustments.' },
+            { name: '3. Sorting Algorithms', desc: 'Comparison-based sorting (QuickSort, MergeSort in O(N log N)) and non-comparison sorting (Counting/Radix Sort).' },
+            { name: '4. Two Pointer Technique', desc: 'Converging pointers (left & right moving toward center) or same-direction fast & slow pointers to eliminate nested O(N²) loops.' },
+            { name: '5. Sliding Window Pattern', desc: 'Maintaining a dynamic or fixed-size window over a contiguous subarray to compute subarray sums, maximums, or unique character substrings in O(N).' }
           ]
         },
         examples: {
@@ -141,62 +133,25 @@ export default function CompanyTopicLearningPage() {
           codeSnippets: {
             javascript: `// Two Pointer: Two Sum II (Sorted Array) - O(N) Time, O(1) Space
 function twoSumSorted(numbers, target) {
-  let left = 0;
-  let right = numbers.length - 1;
-  
+  let left = 0, right = numbers.length - 1;
   while (left < right) {
     const currentSum = numbers[left] + numbers[right];
-    if (currentSum === target) {
-      return [left + 1, right + 1]; // 1-indexed
-    } else if (currentSum < target) {
-      left++; // Need a larger sum
-    } else {
-      right--; // Need a smaller sum
-    }
+    if (currentSum === target) return [left + 1, right + 1];
+    else if (currentSum < target) left++;
+    else right--;
   }
   return [];
-}
-
-// Sliding Window: Maximum Sum Subarray of Size K
-function maxSubarraySum(arr, k) {
-  let maxSum = 0;
-  let windowSum = 0;
-  
-  for (let i = 0; i < k; i++) {
-    windowSum += arr[i];
-  }
-  maxSum = windowSum;
-  
-  for (let i = k; i < arr.length; i++) {
-    windowSum += arr[i] - arr[i - k]; // Slide window
-    maxSum = Math.max(maxSum, windowSum);
-  }
-  return maxSum;
 }`,
-            python: `# Two Pointer: Two Sum II (Sorted Array) - O(N) Time, O(1) Space
+            python: `# Two Pointer: Two Sum II (Sorted Array)
 def two_sum_sorted(numbers, target):
     left, right = 0, len(numbers) - 1
     while left < right:
         curr_sum = numbers[left] + numbers[right]
-        if curr_sum == target:
-            return [left + 1, right + 1]
-        elif curr_sum < target:
-            left += 1
-        else:
-            right -= 1
-    return []
-
-# Sliding Window: Maximum Sum Subarray of Size K
-def max_subarray_sum(arr, k):
-    if len(arr) < k:
-        return 0
-    window_sum = sum(arr[:k])
-    max_sum = window_sum
-    for i in range(k, len(arr)):
-        window_sum += arr[i] - arr[i - k]
-        max_sum = max(max_sum, window_sum)
-    return max_sum`,
-            cpp: `// Two Pointer: Two Sum II (Sorted Array) in C++
+        if curr_sum == target: return [left + 1, right + 1]
+        elif curr_sum < target: left += 1
+        else: right -= 1
+    return []`,
+            cpp: `// Two Pointer in C++
 #include <vector>
 using namespace std;
 
@@ -210,7 +165,7 @@ vector<int> twoSum(vector<int>& numbers, int target) {
     }
     return {};
 }`,
-            java: `// Two Pointer: Two Sum II in Java
+            java: `// Two Pointer in Java
 class Solution {
     public int[] twoSum(int[] numbers, int target) {
         int left = 0, right = numbers.length - 1;
@@ -227,32 +182,11 @@ class Solution {
         },
         practice: {
           title: 'Curated Benchmark Practice Problems',
-          summary: 'Solve these 4 progressive problems to reinforce the concepts.',
+          summary: 'Solve these progressive problems to reinforce concepts.',
           problems: [
-            {
-              name: 'Contains Duplicate (Easy)',
-              strategy: 'Use a Hash Set to track seen numbers in O(N) time and O(N) space.',
-              targetComplexity: 'O(N) Time, O(N) Space',
-              platform: 'LeetCode #217'
-            },
-            {
-              name: 'Best Time to Buy and Sell Stock (Easy)',
-              strategy: 'Track minPrice so far and maxProfit in a single linear pass.',
-              targetComplexity: 'O(N) Time, O(1) Space',
-              platform: 'LeetCode #121'
-            },
-            {
-              name: '3Sum (Medium)',
-              strategy: 'Sort the array, fix one element, and use Two Pointers for remaining two elements.',
-              targetComplexity: 'O(N²) Time, O(1) Space',
-              platform: 'LeetCode #15'
-            },
-            {
-              name: 'Longest Substring Without Repeating Characters (Medium)',
-              strategy: 'Sliding window with hash map storing latest index of each character.',
-              targetComplexity: 'O(N) Time, O(min(N, M)) Space',
-              platform: 'LeetCode #3'
-            }
+            { name: 'Contains Duplicate (Easy)', strategy: 'Use a Hash Set to track seen numbers in O(N) time and O(N) space.', targetComplexity: 'O(N) Time, O(N) Space', platform: 'LeetCode #217' },
+            { name: '3Sum (Medium)', strategy: 'Sort the array, fix one element, and use Two Pointers for remaining two elements.', targetComplexity: 'O(N²) Time, O(1) Space', platform: 'LeetCode #15' },
+            { name: 'Longest Substring Without Repeating Characters (Medium)', strategy: 'Sliding window with hash map storing latest index of each character.', targetComplexity: 'O(N) Time, O(N) Space', platform: 'LeetCode #3' }
           ]
         },
         interview: {
@@ -262,22 +196,15 @@ class Solution {
             {
               title: 'Trapping Rain Water (Hard)',
               pattern: 'Two Pointers with LeftMax and RightMax bounds',
-              prompt: 'Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.',
+              prompt: 'Given n non-negative integers representing an elevation map, compute how much water it can trap after raining.',
               optimalSolution: 'Use two pointers from left (0) and right (n-1). Maintain left_max and right_max. Accumulate water at the smaller bound and advance pointer.',
               complexity: 'O(N) Time, O(1) Space (Optimal)'
-            },
-            {
-              title: 'Sliding Window Maximum (Hard)',
-              pattern: 'Monotonic Decreasing Deque',
-              prompt: 'Given an array nums and sliding window size k, return the max in each window.',
-              optimalSolution: 'Use a double-ended queue storing indices in decreasing order of element values. Pop expired indices and smaller elements in O(1) amortized per step.',
-              complexity: 'O(N) Time, O(K) Space'
             }
           ],
           interviewTips: [
             'Clarify if the array is sorted before choosing between Binary Search or Hash Map.',
             'Always ask if duplicate values or negative numbers are allowed in the input.',
-            'Communicate the brute force O(N²) approach first, then explain how Two Pointers / Sliding Window reduces it to O(N).'
+            'Explain how Two Pointers / Sliding Window reduces quadratic complexity to linear.'
           ]
         }
       }
@@ -288,6 +215,14 @@ class Solution {
       subtitle: 'O(1) average lookup, key-value hashing functions, and frequency count patterns',
       category: 'Data Structures',
       skillsMatched: ['Data Structures', 'Algorithms', 'Python', 'Java', 'Backend'],
+      video: {
+        title: 'Hash Tables and Hash Functions Explained',
+        source: 'Computerphile',
+        url: 'https://www.youtube.com/watch?v=shs0KM3wKv8',
+        embedUrl: 'https://www.youtube-nocookie.com/embed/shs0KM3wKv8',
+        explanation: 'Hash functions, collision resolution via separate chaining and open addressing, load factor, and O(1) lookups.',
+        conceptLevels: 'Beginner → Intermediate (Hash Buckets → Frequency Counters & Collision Management)'
+      },
       stages: {
         basics: {
           title: 'Hashing Basics & Collision Resolution',
@@ -295,8 +230,7 @@ class Solution {
           bullets: [
             'Hash Function: Maps arbitrary keys to fixed integer indices in an internal bucket array.',
             'Average Time Complexities: Insert O(1), Search O(1), Delete O(1). Worst Case: O(N) when multiple collisions occur.',
-            'Collision Resolution: Separate Chaining (linked lists/red-black trees per bucket) vs Open Addressing (linear/quadratic probing).',
-            'Space Overhead: Requires extra memory (load factor threshold ~0.75 before resizing).'
+            'Collision Resolution: Separate Chaining vs Open Addressing.'
           ],
           keyNotes: 'Crucial for reducing nested loops from O(N²) to O(N) in corporate technical interviews.'
         },
@@ -306,8 +240,7 @@ class Solution {
           subPatterns: [
             { name: '1. Frequency Counter', desc: 'Counting character/word occurrences to check anagrams, majorities, and frequency ranks.' },
             { name: '2. Complement Lookup (Two Sum)', desc: 'Storing target - x in a hash map to find pair matches in a single pass.' },
-            { name: '3. Grouping & Categorization', desc: 'Using sorted strings or tuple representations as map keys to group related items.' },
-            { name: '4. Prefix Sum Map', desc: 'Storing running prefix sums to find subarrays matching sum target K in O(N).' }
+            { name: '3. Grouping & Categorization', desc: 'Using sorted strings or tuple representations as map keys to group related items.' }
           ]
         },
         examples: {
@@ -369,9 +302,7 @@ class Solution {
           summary: 'Solve these key hashing challenges.',
           problems: [
             { name: 'Two Sum (Easy)', strategy: 'One pass hash map storing { value: index }', targetComplexity: 'O(N) Time, O(N) Space', platform: 'LeetCode #1' },
-            { name: 'Valid Anagram (Easy)', strategy: 'Count array of size 26 or hash map', targetComplexity: 'O(N) Time, O(1) Space', platform: 'LeetCode #242' },
-            { name: 'Subarray Sum Equals K (Medium)', strategy: 'Prefix sum hash map storing prefix sum frequencies', targetComplexity: 'O(N) Time, O(N) Space', platform: 'LeetCode #560' },
-            { name: 'Longest Consecutive Sequence (Medium)', strategy: 'Hash set with sequence starter check (x - 1 not in set)', targetComplexity: 'O(N) Time, O(N) Space', platform: 'LeetCode #128' }
+            { name: 'Group Anagrams (Medium)', strategy: 'Sort words or hash character frequencies', targetComplexity: 'O(N * K log K) Time', platform: 'LeetCode #49' }
           ]
         },
         interview: {
@@ -381,15 +312,12 @@ class Solution {
             {
               title: 'LRU Cache Implementation (Medium - Hard)',
               pattern: 'Hash Map + Doubly Linked List',
-              prompt: 'Design a data structure that follows the constraints of a Least Recently Used (LRU) cache with O(1) get and put.',
-              optimalSolution: 'Combine a Hash Map (for O(1) key lookup) with a Doubly Linked List (for O(1) node removal and insertion to head).',
-              complexity: 'O(1) Time for get and put, O(Capacity) Space'
+              prompt: 'Design a data structure for a Least Recently Used (LRU) cache with O(1) get and put.',
+              optimalSolution: 'Combine a Hash Map with a Doubly Linked List.',
+              complexity: 'O(1) Time, O(Capacity) Space'
             }
           ],
-          interviewTips: [
-            'Discuss collision handling techniques if the interviewer asks what happens under worst-case inputs.',
-            'Always mention space-time tradeoffs when introducing a Hash Map.'
-          ]
+          interviewTips: ['Discuss collision handling techniques if the interviewer asks about worst-case inputs.']
         }
       }
     },
@@ -399,15 +327,22 @@ class Solution {
       subtitle: 'Hierarchical node representations, BFS/DFS traversals, and recursive invariants',
       category: 'Data Structures & Algorithms',
       skillsMatched: ['Data Structures', 'C++', 'Java', 'Algorithms'],
+      video: {
+        title: 'Binary Trees & Binary Search Trees - Tree Traversal',
+        source: 'freeCodeCamp.org',
+        url: 'https://www.youtube.com/watch?v=fAAZixBzIAI',
+        embedUrl: 'https://www.youtube-nocookie.com/embed/fAAZixBzIAI',
+        explanation: 'Binary trees, BST invariants, DFS preorder/inorder/postorder, and BFS level order traversal.',
+        conceptLevels: 'Beginner → Advanced (Hierarchical Nodes → Tree Balancing & Subtree DP)'
+      },
       stages: {
         basics: {
           title: 'Tree Basics & Node Structure',
           summary: 'Nodes with left and right child pointers forming acyclic hierarchical graphs.',
           bullets: [
             'Binary Tree: Each node has at most 2 children (left and right).',
-            'Binary Search Tree (BST): For every node, all left subtree values < node value < all right subtree values.',
-            'Height & Depth: Height is max edges from node to leaf; Depth is edges from root to node.',
-            'Balanced BST (AVL / Red-Black): Guarantees O(log N) search, insertion, and deletion.'
+            'Binary Search Tree (BST): Left subtree < Node < Right subtree.',
+            'Height & Depth: Max edges from node to leaf / root to node.'
           ],
           keyNotes: 'Forms the backbone of technical rounds for engineering and systems roles.'
         },
@@ -415,90 +350,28 @@ class Solution {
           title: 'Tree Traversal Techniques & Recursion',
           summary: 'The 4 fundamental tree traversal orders.',
           subPatterns: [
-            { name: '1. Inorder Traversal (Left, Root, Right)', desc: 'Produces sorted sequence on a Binary Search Tree (BST).' },
-            { name: '2. Preorder Traversal (Root, Left, Right)', desc: 'Useful for cloning trees or prefix mathematical notation.' },
-            { name: '3. Postorder Traversal (Left, Right, Root)', desc: 'Bottom-up computation: calculating tree height, subtree sizes, or deleting trees.' },
-            { name: '4. Level Order Traversal (BFS)', desc: 'Breadth-First Search using a Queue to visit nodes level by level.' }
+            { name: '1. Inorder (Left, Root, Right)', desc: 'Produces sorted sequence on a BST.' },
+            { name: '2. Level Order (BFS)', desc: 'Queue-based level by level traversal.' }
           ]
         },
         examples: {
           title: 'Code Example: Maximum Depth & Inorder Traversal',
           summary: 'Recursive and iterative tree processing.',
           codeSnippets: {
-            javascript: `// Maximum Depth of Binary Tree (Recursive DFS)
-function maxDepth(root) {
+            javascript: `function maxDepth(root) {
   if (!root) return 0;
   return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
-}
-
-// Level Order Traversal (BFS using Queue)
-function levelOrder(root) {
-  if (!root) return [];
-  const result = [];
-  const queue = [root];
-  
-  while (queue.length > 0) {
-    const levelSize = queue.length;
-    const currentLevel = [];
-    
-    for (let i = 0; i < levelSize; i++) {
-      const node = queue.shift();
-      currentLevel.push(node.val);
-      if (node.left) queue.push(node.left);
-      if (node.right) queue.push(node.right);
-    }
-    result.push(currentLevel);
-  }
-  return result;
 }`,
-            python: `# Maximum Depth of Binary Tree
-def max_depth(root):
-    if not root:
-        return 0
-    return 1 + max(max_depth(root.left), max_depth(root.right))
-
-# Level Order Traversal (BFS)
-from collections import deque
-
-def level_order(root):
-    if not root:
-        return []
-    res, queue = [], deque([root])
-    while queue:
-        level = []
-        for _ in range(len(queue)):
-            node = queue.popleft()
-            level.append(node.val)
-            if node.left: queue.append(node.left)
-            if node.right: queue.append(node.right)
-        res.append(level)
-    return res`,
-            cpp: `#include <algorithm>
-#include <vector>
-#include <queue>
-using namespace std;
-
-struct TreeNode {
-    int val;
-    TreeNode *left;
-    TreeNode *right;
-};
-
-int maxDepth(TreeNode* root) {
+            python: `def max_depth(root):
+    if not root: return 0
+    return 1 + max(max_depth(root.left), max_depth(root.right))`,
+            cpp: `int maxDepth(TreeNode* root) {
     if (!root) return 0;
-    return 1 + max(maxDepth(root.left), maxDepth(root.right));
+    return 1 + max(maxDepth(root->left), maxDepth(root->right));
 }`,
-            java: `class TreeNode {
-    int val;
-    TreeNode left;
-    TreeNode right;
-}
-
-class Solution {
-    public int maxDepth(TreeNode root) {
-        if (root == null) return 0;
-        return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
-    }
+            java: `public int maxDepth(TreeNode root) {
+    if (root == null) return 0;
+    return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
 }`
           }
         },
@@ -507,9 +380,7 @@ class Solution {
           summary: 'Essential tree questions for campus placement tests.',
           problems: [
             { name: 'Invert Binary Tree (Easy)', strategy: 'Recursive postorder swap left and right pointers', targetComplexity: 'O(N) Time, O(H) Space', platform: 'LeetCode #226' },
-            { name: 'Same Tree (Easy)', strategy: 'Simultaneous recursion verifying root values and subtrees', targetComplexity: 'O(N) Time, O(H) Space', platform: 'LeetCode #100' },
-            { name: 'Lowest Common Ancestor of a BST (Medium)', strategy: 'Compare root value with p and q to navigate left or right', targetComplexity: 'O(H) Time, O(1) Space', platform: 'LeetCode #235' },
-            { name: 'Validate Binary Search Tree (Medium)', strategy: 'Inorder traversal or passing (min, max) boundary constraints', targetComplexity: 'O(N) Time, O(H) Space', platform: 'LeetCode #98' }
+            { name: 'Validate Binary Search Tree (Medium)', strategy: 'Inorder traversal checking sorted order', targetComplexity: 'O(N) Time, O(H) Space', platform: 'LeetCode #98' }
           ]
         },
         interview: {
@@ -519,15 +390,12 @@ class Solution {
             {
               title: 'Binary Tree Maximum Path Sum (Hard)',
               pattern: 'Bottom-Up Postorder DFS',
-              prompt: 'A path in a binary tree is a sequence of nodes where each pair has an edge. Return max path sum of any non-empty path.',
-              optimalSolution: 'Compute max gain from left and right subtrees (clamped at 0). Update global max with root.val + leftGain + rightGain.',
+              prompt: 'Return max path sum of any non-empty path in a binary tree.',
+              optimalSolution: 'Compute max gain from left and right subtrees. Update global max with root.val + leftGain + rightGain.',
               complexity: 'O(N) Time, O(H) Space'
             }
           ],
-          interviewTips: [
-            'State base cases explicitly (null checks) before writing recursive calls.',
-            'Explain how call stack memory O(H) behaves on skewed trees vs balanced trees.'
-          ]
+          interviewTips: ['State base cases explicitly (null checks) before writing recursive calls.']
         }
       }
     },
@@ -537,69 +405,48 @@ class Solution {
       subtitle: 'Optimal substructure, overlapping subproblems, and state transition equations',
       category: 'Advanced Algorithms',
       skillsMatched: ['Algorithms', 'Data Structures', 'C++', 'Python'],
+      video: {
+        title: 'Dynamic Programming - Learn to Solve Algorithmic Problems',
+        source: 'freeCodeCamp.org',
+        url: 'https://www.youtube.com/watch?v=oBt53YbR9Kk',
+        embedUrl: 'https://www.youtube-nocookie.com/embed/oBt53YbR9Kk',
+        explanation: 'Overlapping subproblems, optimal substructure, top-down memoization, bottom-up tabulation, and knapsack optimization.',
+        conceptLevels: 'Intermediate → Advanced (1D Subproblems → 2D Matrix DP & Knapsack Optimization)'
+      },
       stages: {
         basics: {
           title: 'DP Fundamentals: Top-Down vs Bottom-Up',
           summary: 'Converting exponential recursive algorithms into polynomial time solutions.',
           bullets: [
             'Overlapping Subproblems: The same subproblems are solved repeatedly.',
-            'Optimal Substructure: An optimal solution to the problem contains optimal solutions to subproblems.',
-            'Top-Down Memoization: Start at target and cache recursive return values.',
-            'Bottom-Up Tabulation: Start at base cases (e.g. dp[0], dp[1]) and build iteratively.'
+            'Optimal Substructure: Solution to problem contains optimal solutions to subproblems.',
+            'Tabulation vs Memoization: Iterative bottom-up vs recursive top-down caching.'
           ],
           keyNotes: 'Distinguishes elite tier candidates in technical rounds.'
         },
         concepts: {
           title: 'Core DP Frameworks & Patterns',
-          summary: 'The 4 standard dynamic programming categories.',
+          summary: 'The standard dynamic programming categories.',
           subPatterns: [
-            { name: '1. 1D Array DP (Fibonacci / Climbing Stairs)', desc: 'State depends only on previous 1 or 2 steps. Space can be optimized from O(N) to O(1).' },
-            { name: '2. 0/1 Knapsack & Subset Sum', desc: 'Deciding whether to include or exclude an element with weight and capacity limits.' },
-            { name: '3. Longest Common Subsequence (LCS)', desc: '2D grid comparison between two strings for matching characters.' },
-            { name: '4. Interval & Grid DP', desc: 'Moving from top-left to bottom-right in minimum cost grid traversals.' }
+            { name: '1. 1D Array DP (Climbing Stairs)', desc: 'State depends only on previous 1 or 2 steps.' },
+            { name: '2. 0/1 Knapsack & Coin Change', desc: 'Include or exclude item decision.' }
           ]
         },
         examples: {
-          title: 'Code Example: Climbing Stairs & Coin Change',
-          summary: 'Bottom-up DP implementations.',
+          title: 'Code Example: Coin Change',
+          summary: 'Bottom-up DP implementation.',
           codeSnippets: {
-            javascript: `// Climbing Stairs: Bottom-Up O(N) Time, O(1) Space
-function climbStairs(n) {
-  if (n <= 2) return n;
-  let prev1 = 1, prev2 = 2;
-  for (let i = 3; i <= n; i++) {
-    const current = prev1 + prev2;
-    prev1 = prev2;
-    prev2 = current;
-  }
-  return prev2;
-}
-
-// Coin Change: Minimum coins to make amount
-function coinChange(coins, amount) {
+            javascript: `function coinChange(coins, amount) {
   const dp = new Array(amount + 1).fill(Infinity);
   dp[0] = 0;
-  
   for (let i = 1; i <= amount; i++) {
     for (const c of coins) {
-      if (i - c >= 0) {
-        dp[i] = Math.min(dp[i], dp[i - c] + 1);
-      }
+      if (i - c >= 0) dp[i] = Math.min(dp[i], dp[i - c] + 1);
     }
   }
   return dp[amount] === Infinity ? -1 : dp[amount];
 }`,
-            python: `# Climbing Stairs
-def climb_stairs(n):
-    if n <= 2:
-        return n
-    prev1, prev2 = 1, 2
-    for _ in range(3, n + 1):
-        prev1, prev2 = prev2, prev1 + prev2
-    return prev2
-
-# Coin Change (Bottom-up DP)
-def coin_change(coins, amount):
+            python: `def coin_change(coins, amount):
     dp = [float('inf')] * (amount + 1)
     dp[0] = 0
     for i in range(1, amount + 1):
@@ -607,38 +454,26 @@ def coin_change(coins, amount):
             if i - c >= 0:
                 dp[i] = min(dp[i], dp[i - c] + 1)
     return dp[amount] if dp[amount] != float('inf') else -1`,
-            cpp: `#include <vector>
-#include <algorithm>
-using namespace std;
-
-int coinChange(vector<int>& coins, int amount) {
+            cpp: `int coinChange(vector<int>& coins, int amount) {
     vector<int> dp(amount + 1, amount + 1);
     dp[0] = 0;
     for (int i = 1; i <= amount; i++) {
         for (int c : coins) {
-            if (i - c >= 0) {
-                dp[i] = min(dp[i], dp[i - c] + 1);
-            }
+            if (i - c >= 0) dp[i] = min(dp[i], dp[i - c] + 1);
         }
     }
     return dp[amount] > amount ? -1 : dp[amount];
 }`,
-            java: `import java.util.Arrays;
-
-class Solution {
-    public int coinChange(int[] coins, int amount) {
-        int[] dp = new int[amount + 1];
-        Arrays.fill(dp, amount + 1);
-        dp[0] = 0;
-        for (int i = 1; i <= amount; i++) {
-            for (int c : coins) {
-                if (i - c >= 0) {
-                    dp[i] = Math.min(dp[i], dp[i - c] + 1);
-                }
-            }
+            java: `public int coinChange(int[] coins, int amount) {
+    int[] dp = new int[amount + 1];
+    Arrays.fill(dp, amount + 1);
+    dp[0] = 0;
+    for (int i = 1; i <= amount; i++) {
+        for (int c : coins) {
+            if (i - c >= 0) dp[i] = Math.min(dp[i], dp[i - c] + 1);
         }
-        return dp[amount] > amount ? -1 : dp[amount];
     }
+    return dp[amount] > amount ? -1 : dp[amount];
 }`
           }
         },
@@ -647,8 +482,7 @@ class Solution {
           summary: 'Key dynamic programming problems.',
           problems: [
             { name: 'House Robber (Medium)', strategy: 'dp[i] = max(dp[i-1], dp[i-2] + nums[i])', targetComplexity: 'O(N) Time, O(1) Space', platform: 'LeetCode #198' },
-            { name: 'Longest Increasing Subsequence (Medium)', strategy: 'Binary search with patience sorting or O(N²) DP', targetComplexity: 'O(N log N) Time, O(N) Space', platform: 'LeetCode #300' },
-            { name: 'Longest Common Subsequence (Medium)', strategy: '2D matrix comparing characters s1[i] == s2[j]', targetComplexity: 'O(M*N) Time, O(M*N) Space', platform: 'LeetCode #1143' }
+            { name: 'Coin Change (Medium)', strategy: 'Bottom-up array tracking minimum coins for every sub-amount', targetComplexity: 'O(amount * coins.length) Time', platform: 'LeetCode #322' }
           ]
         },
         interview: {
@@ -658,15 +492,12 @@ class Solution {
             {
               title: 'Edit Distance (Hard)',
               pattern: '2D Dynamic Programming',
-              prompt: 'Given two strings word1 and word2, return minimum number of operations (insert, delete, replace) to convert word1 to word2.',
+              prompt: 'Return minimum operations (insert, delete, replace) to convert word1 to word2.',
               optimalSolution: 'If word1[i] == word2[j], dp[i][j] = dp[i-1][j-1]. Otherwise 1 + min(insert, delete, replace).',
               complexity: 'O(M * N) Time, O(M * N) Space'
             }
           ],
-          interviewTips: [
-            'Define your DP state variable explicitly: "Let dp[i] represent the minimum cost to reach step i."',
-            'Always verify boundary cases: dp[0], empty inputs, or unreachable amounts.'
-          ]
+          interviewTips: ['Define your DP state variable explicitly before writing transitions.']
         }
       }
     }
@@ -676,12 +507,12 @@ class Solution {
   const stagesList = [
     { id: 'basics', label: '1. Basics', icon: BookOpen },
     { id: 'concepts', label: '2. Concepts', icon: Layers },
+    { id: 'video', label: 'Video Lecture', icon: Video, highlight: true },
     { id: 'examples', label: '3. Examples', icon: FileCode },
     { id: 'practice', label: '4. Practice', icon: Target },
     { id: 'interview', label: '5. Interview Level', icon: Award }
   ];
 
-  // Calculate overall progress across 5 stages for current topic
   const currentTopicCompletedCount = stagesList.filter(st => completedStages[`${selectedOppId}_${currentTopic.id}_${st.id}`]).length;
   const topicProgressPercent = Math.round((currentTopicCompletedCount / stagesList.length) * 100);
 
@@ -702,10 +533,10 @@ class Solution {
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1 flex items-center space-x-2.5">
             <Code2 className="h-7 w-7 text-purple-600 dark:text-purple-400" />
-            <span>Topic Learning: 5-Stage Progressive Flow</span>
+            <span>Topic Learning & Video Studio</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Basics → Concepts → Examples → Practice → Interview Level for <strong>{companyName}</strong> ({roleTitle}).
+            Basics → Concepts → Video → Examples → Practice → Interview Level for <strong>{companyName}</strong> ({roleTitle}).
           </p>
         </div>
 
@@ -757,9 +588,9 @@ class Solution {
               </div>
 
               <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
-                <span>Stages: {completedCount}/5</span>
-                <span className={`font-bold ${completedCount === 5 ? 'text-emerald-500' : 'text-purple-500'}`}>
-                  {completedCount === 5 ? '✓ Mastered' : `${Math.round((completedCount / 5) * 100)}%`}
+                <span>Stages: {completedCount}/{stagesList.length}</span>
+                <span className={`font-bold ${completedCount === stagesList.length ? 'text-emerald-500' : 'text-purple-500'}`}>
+                  {completedCount === stagesList.length ? '✓ Mastered' : `${Math.round((completedCount / stagesList.length) * 100)}%`}
                 </span>
               </div>
             </button>
@@ -767,7 +598,7 @@ class Solution {
         })}
       </div>
 
-      {/* ── 5-STAGE PROGRESSIVE FLOW STEPPER HEADER ── */}
+      {/* ── 5-STAGE & VIDEO STEPPER HEADER ── */}
       <div className="p-6 rounded-3xl border-2 border-purple-500/30 bg-white dark:bg-slate-900 shadow-xl space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
@@ -793,13 +624,13 @@ class Solution {
               <span className="font-black text-purple-600 dark:text-purple-400 text-base">{topicProgressPercent}%</span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-mono font-black text-sm border border-purple-500/20">
-              {currentTopicCompletedCount}/5
+              {currentTopicCompletedCount}/{stagesList.length}
             </div>
           </div>
         </div>
 
-        {/* 5-Stage Stepper Buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+        {/* Stepper Buttons */}
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
           {stagesList.map((st) => {
             const isStageActive = activeStage === st.id;
             const isDone = Boolean(completedStages[`${selectedOppId}_${currentTopic.id}_${st.id}`]);
@@ -812,14 +643,16 @@ class Solution {
                     ? 'border-purple-500 bg-purple-600 text-white shadow-md shadow-purple-600/30'
                     : isDone
                       ? 'border-emerald-500/40 bg-emerald-50/30 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300'
-                      : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-purple-400/40'
+                      : st.highlight
+                        ? 'border-red-500/30 bg-red-50/30 dark:bg-red-950/20 text-red-600 dark:text-red-400 hover:border-red-400'
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-purple-400/40'
                 }`}
               >
-                <div className="flex items-center space-x-2">
-                  <st.icon className="h-4 w-4 shrink-0" />
-                  <span className="text-xs font-bold font-mono">{st.label}</span>
+                <div className="flex items-center space-x-1.5 truncate">
+                  <st.icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="text-xs font-bold font-mono truncate">{st.label}</span>
                 </div>
-                {isDone && <CheckCircle2 className={`h-4 w-4 shrink-0 ${isStageActive ? 'text-white' : 'text-emerald-500'}`} />}
+                {isDone && <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${isStageActive ? 'text-white' : 'text-emerald-500'}`} />}
               </button>
             );
           })}
@@ -829,13 +662,113 @@ class Solution {
       {/* ── STAGE CONTENT VIEWER ── */}
       <div className="p-6 sm:p-8 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-6">
         
+        {/* Stage: Video Lecture */}
+        {activeStage === 'video' && (
+          <div className="space-y-6 animate-in fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono font-bold uppercase text-red-600 dark:text-red-400 flex items-center space-x-1">
+                  <Video className="h-3.5 w-3.5" />
+                  <span>Verified Educational Video Masterclass</span>
+                </span>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                  {currentTopic.video?.title || 'Topic Learning Video'}
+                </h3>
+              </div>
+
+              {currentTopic.video && (
+                <div className="flex items-center space-x-2">
+                  <a
+                    href={currentTopic.video.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md shadow-red-600/20 cursor-pointer"
+                  >
+                    <Play className="h-3.5 w-3.5 fill-current" />
+                    <span>Open on YouTube</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+
+                  <button
+                    onClick={() => toggleStageCompleted(`${selectedOppId}_${currentTopic.id}_video`)}
+                    className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer border border-purple-500/30 bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300"
+                  >
+                    {completedStages[`${selectedOppId}_${currentTopic.id}_video`] ? (
+                      <>
+                        <CheckSquare className="h-4 w-4 text-emerald-500" />
+                        <span>Watched</span>
+                      </>
+                    ) : (
+                      <>
+                        <Square className="h-4 w-4 text-purple-400" />
+                        <span>Mark Watched</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {currentTopic.video ? (
+              <div className="space-y-4">
+                {/* Responsive Embedded Player */}
+                <div className="relative aspect-video rounded-3xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 bg-black shadow-2xl">
+                  <iframe
+                    src={currentTopic.video.embedUrl}
+                    title={currentTopic.video.title}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-slate-500">Official Educational Source: <strong className="text-purple-600 dark:text-purple-400">{currentTopic.video.source}</strong></span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓ Verified Content</span>
+                  </div>
+
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                    <strong className="text-slate-900 dark:text-white">Topic Explanation:</strong> {currentTopic.video.explanation}
+                  </p>
+
+                  <p className="text-xs text-purple-600 dark:text-purple-400 font-mono font-medium">
+                    <strong>Concepts:</strong> {currentTopic.video.conceptLevels}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="p-12 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 text-center text-slate-400 font-mono text-xs">
+                No learning video available yet.
+              </div>
+            )}
+
+            <div className="flex justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => setActiveStage('concepts')}
+                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Concepts</span>
+              </button>
+              <button
+                onClick={() => setActiveStage('examples')}
+                className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+              >
+                <span>Proceed to Examples</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Stage 1: Basics */}
         {activeStage === 'basics' && (
           <div className="space-y-6 animate-in fade-in">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="space-y-1">
                 <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
-                  Stage 1 of 5: Fundamentals
+                  Stage 1: Fundamentals
                 </span>
                 <h3 className="text-xl font-black text-slate-900 dark:text-white">
                   {currentTopic.stages.basics.title}
@@ -854,7 +787,7 @@ class Solution {
                 ) : (
                   <>
                     <Square className="h-4 w-4 text-purple-400" />
-                    <span>Mark Stage Done</span>
+                    <span>Mark Done</span>
                   </>
                 )}
               </button>
@@ -866,7 +799,7 @@ class Solution {
 
             <div className="space-y-3">
               <h4 className="text-xs font-black uppercase font-mono text-slate-900 dark:text-white">
-                Core Architectural Principles:
+                Core Principles:
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {currentTopic.stages.basics.bullets.map((b, idx) => (
@@ -901,7 +834,7 @@ class Solution {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="space-y-1">
                 <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
-                  Stage 2 of 5: Deep Concepts & Sub-Patterns
+                  Stage 2: Core Concepts & Sub-Patterns
                 </span>
                 <h3 className="text-xl font-black text-slate-900 dark:text-white">
                   {currentTopic.stages.concepts.title}
@@ -920,7 +853,7 @@ class Solution {
                 ) : (
                   <>
                     <Square className="h-4 w-4 text-purple-400" />
-                    <span>Mark Stage Done</span>
+                    <span>Mark Done</span>
                   </>
                 )}
               </button>
@@ -952,10 +885,10 @@ class Solution {
                 <span>Back to Basics</span>
               </button>
               <button
-                onClick={() => setActiveStage('examples')}
-                className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                onClick={() => setActiveStage('video')}
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
               >
-                <span>Proceed to Examples</span>
+                <span>Watch Video Lecture</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -968,7 +901,7 @@ class Solution {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="space-y-1">
                 <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
-                  Stage 3 of 5: Code Walkthrough
+                  Stage 3: Code Walkthrough
                 </span>
                 <h3 className="text-xl font-black text-slate-900 dark:text-white">
                   {currentTopic.stages.examples.title}
@@ -1017,7 +950,6 @@ class Solution {
               {currentTopic.stages.examples.summary}
             </p>
 
-            {/* Code Block Container */}
             <div className="rounded-2xl border border-slate-800 bg-[#0b101b] p-4 sm:p-5 font-mono text-xs text-slate-100 overflow-x-auto shadow-inner relative">
               <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800/80 text-[11px] text-slate-400">
                 <span className="flex items-center space-x-1.5">
@@ -1033,11 +965,11 @@ class Solution {
 
             <div className="flex justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
               <button
-                onClick={() => setActiveStage('concepts')}
+                onClick={() => setActiveStage('video')}
                 className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Back to Concepts</span>
+                <span>Back to Video</span>
               </button>
               <button
                 onClick={() => setActiveStage('practice')}
@@ -1056,7 +988,7 @@ class Solution {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="space-y-1">
                 <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
-                  Stage 4 of 5: Benchmark Practice
+                  Stage 4: Benchmark Practice
                 </span>
                 <h3 className="text-xl font-black text-slate-900 dark:text-white">
                   {currentTopic.stages.practice.title}
@@ -1075,7 +1007,7 @@ class Solution {
                 ) : (
                   <>
                     <Square className="h-4 w-4 text-purple-400" />
-                    <span>Mark Stage Done</span>
+                    <span>Mark Done</span>
                   </>
                 )}
               </button>
@@ -1108,10 +1040,10 @@ class Solution {
                   </div>
 
                   <button
-                    onClick={() => navigate('/skills')}
+                    onClick={() => navigate(`/company-prep/practice?oppId=${selectedOppId}&topic=${currentTopic.id}`)}
                     className="pt-2 border-t border-slate-200 dark:border-slate-800 text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center justify-between cursor-pointer"
                   >
-                    <span>Test in Skills Module</span>
+                    <span>Solve in Coding Editor</span>
                     <ChevronRight className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -1143,7 +1075,7 @@ class Solution {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="space-y-1">
                 <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
-                  Stage 5 of 5: Company Interview Standards
+                  Stage 5: Company Interview Standards
                 </span>
                 <h3 className="text-xl font-black text-slate-900 dark:text-white">
                   {currentTopic.stages.interview.title}
@@ -1162,7 +1094,7 @@ class Solution {
                 ) : (
                   <>
                     <Square className="h-4 w-4 text-purple-400" />
-                    <span>Mark Stage Done</span>
+                    <span>Mark Done</span>
                   </>
                 )}
               </button>
@@ -1190,19 +1122,6 @@ class Solution {
               ))}
             </div>
 
-            {/* Interview Communication Tips */}
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-              <h4 className="text-xs font-black uppercase font-mono text-slate-900 dark:text-white flex items-center space-x-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-purple-500" />
-                <span>Interviewer Evaluation Checklist:</span>
-              </h4>
-              <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400">
-                {currentTopic.stages.interview.interviewTips.map((tip, idx) => (
-                  <li key={idx}>{tip}</li>
-                ))}
-              </ul>
-            </div>
-
             <div className="flex justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
               <button
                 onClick={() => setActiveStage('practice')}
@@ -1213,11 +1132,11 @@ class Solution {
               </button>
               
               <button
-                onClick={() => navigate('/skills')}
+                onClick={() => navigate(`/company-prep/practice?oppId=${selectedOppId}&topic=${currentTopic.id}`)}
                 className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
               >
                 <Award className="h-4 w-4" />
-                <span>Take Skills Assessment</span>
+                <span>Solve in DSA Practice Studio</span>
               </button>
             </div>
           </div>
