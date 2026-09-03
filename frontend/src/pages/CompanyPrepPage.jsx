@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Building2, Code2, BookOpen, Layers, Target, Terminal, Play,
+  Building2, Code2, BookOpen, Layers, Target, Terminal, Play, Pause,
   Send, Clock, CheckCircle2, Circle, AlertCircle, RefreshCw,
   ArrowLeft, ArrowRight, ShieldCheck, Award, Sparkles, CheckSquare,
   Square, ChevronRight, HelpCircle, Lightbulb, Search, Filter,
   Globe, Briefcase, Type, ZoomIn, ZoomOut, Layout, LayoutGrid,
-  Columns, Rows, RotateCcw, Check, XCircle
+  Columns, Rows, RotateCcw, Check, XCircle, FastForward, Rewind,
+  Maximize, Minimize, Volume2, VolumeX, Sparkle, Compass, Cpu,
+  Database, Activity, CheckCheck
 } from 'lucide-react';
 
 export default function CompanyPrepPage() {
@@ -15,7 +17,7 @@ export default function CompanyPrepPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // ── Preparation Flow: 1: Company | 2: Language | 3: Roadmap & Topics | 4: Topic Studio | 5: Problem Solving | 6: Mock Test ──
+  // ── Preparation Flow: 1: Company | 2: Language | 3: Roadmap & Topics | 4: Topic Studio (AI Video) | 5: Problem Arena | 6: Mock Assessment ──
   const [currentFlowStep, setCurrentFlowStep] = useState(1);
 
   // ── Step 1: Real Database Companies ──
@@ -28,9 +30,17 @@ export default function CompanyPrepPage() {
   // ── Step 2: DSA Language Selection (C++, Java, Python) ──
   const [selectedLanguage, setSelectedLanguage] = useState('cpp');
 
-  // ── Step 3 & 4: Topics & Progressive Progression ──
+  // ── Step 3 & 4: Topics & AI Video Player State ──
   const [selectedTopicId, setSelectedTopicId] = useState('arrays');
-  const [activeTopicLevel, setActiveTopicLevel] = useState('all'); // 'all' | 'beginner' | 'intermediate' | 'advanced' | 'company'
+  
+  // AI Topic Video Player Controls
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [currentTime, setCurrentTime] = useState(0); // in seconds
+  const [activeChapterIdx, setActiveChapterIdx] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const playerContainerRef = useRef(null);
 
   // ── Step 5: LeetCode-Style Coding Area Controls ──
   const [problems, setProblems] = useState([]);
@@ -41,14 +51,14 @@ export default function CompanyPrepPage() {
   const [codeResult, setCodeResult] = useState(null);
   const [activeConsoleTab, setActiveConsoleTab] = useState('testcases'); // 'testcases' | 'output'
 
-  // Problem solving layout & accessibility font settings
+  // Accessibility and layout settings
   const [problemFontSize, setProblemFontSize] = useState(16); // 14, 16, 18, 20
   const [editorFontSize, setEditorFontSize] = useState(14); // 12, 14, 16, 18
-  const [editorLayout, setEditorLayout] = useState('split'); // 'split' (horizontal) | 'stacked' (vertical)
+  const [editorLayout, setEditorLayout] = useState('split'); // 'split' | 'stacked'
 
   // ── Real Progress & Unsolved Tracking ──
   const [completedTopics, setCompletedTopics] = useState({});
-  const [problemSubmissions, setProblemSubmissions] = useState({}); // { [probId]: { status: 'Accepted' | 'Failed', language, ... } }
+  const [problemSubmissions, setProblemSubmissions] = useState({});
 
   // ── Step 6: Timed Mock Test ──
   const [mockSession, setMockSession] = useState(null);
@@ -84,7 +94,7 @@ export default function CompanyPrepPage() {
     if (token) fetchCompanies();
   }, [token]);
 
-  // Load real student progress from localStorage
+  // Load persistent progress from localStorage
   useEffect(() => {
     try {
       const savedTopics = localStorage.getItem(`zenith_prep_topics_${user?.id || 'guest'}`);
@@ -145,41 +155,41 @@ export default function CompanyPrepPage() {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  // ── Verified Public Interview Patterns Database for Major Companies ──
+  // ── Verified Public Interview Patterns for Target Companies ──
   const companyInterviewProfiles = {
     google: {
       focusTopics: ['Trees & BST', 'Graphs', 'Dynamic Programming', 'Recursion & Backtracking'],
-      roundBreakdown: 'Round 1: Screening (Array/Strings & Hashing) → Rounds 2-4: Coding & Problem Solving (Trees, Graphs, DP) → Round 5: Googleyness & System Architecture.',
+      roundBreakdown: 'Round 1: Screening (Arrays/Strings) → Rounds 2-4: Deep Problem Solving (Trees, Graphs, DP) → Round 5: Googleyness & Architecture.',
       difficultyPattern: 'High algorithmic rigor. Heavy emphasis on optimal O(N) or O(log N) time with sub-quadratic space and complete handling of extreme constraints.',
-      tips: 'State time & space complexity before writing code. Handle null and negative integer edge cases without prompt.'
+      tips: 'State time & space complexity upfront. Test edge cases (null, negative indices, overflow).'
     },
     amazon: {
       focusTopics: ['Arrays', 'Hash Maps', 'Trees & BST', 'Heap & Priority Queue', 'Sliding Window'],
-      roundBreakdown: 'Online Assessment: 2 Coding Problems (Arrays/Hash Maps) → Technical Rounds: 3-4 Rounds focusing on Trees, Priority Queues & 14 Leadership Principles.',
+      roundBreakdown: 'Online Assessment: 2 Coding Problems → 3-4 Technical Rounds focusing on Trees, Heaps, and Leadership Principles.',
       difficultyPattern: 'Medium to Hard problems. Strong focus on clean modular code, fast lookups, and heap data structures.',
-      tips: 'Explain data structure choice clearly and relate problem solving to maintainability.'
+      tips: 'Explain data structure choice clearly and relate problem solving to scalability.'
     },
     microsoft: {
       focusTopics: ['Strings', 'Linked List', 'Trees & Graph Traversal', 'Two Pointers'],
-      roundBreakdown: 'Round 1: Codility OA → Rounds 2-4: In-depth Technical interviews with focus on memory pointers, recursion, and data structures.',
+      roundBreakdown: 'Round 1: Online Assessment → Rounds 2-4: In-depth Technical interviews with focus on memory pointers, recursion, and data structures.',
       difficultyPattern: 'Medium difficulty with deep questions on recursion call stacks, string parsing, and pointer management.',
       tips: 'Write bug-free code on the first attempt and dry-run with custom test cases.'
     },
     flipkart: {
       focusTopics: ['Dynamic Programming', 'Binary Search on Answer', 'Greedy Algorithms', 'Graphs'],
-      roundBreakdown: 'Round 1: Machine Coding Round → Rounds 2-3: Advanced DSA & Problem Solving (DP & Graphs) → Round 4: Hiring Manager.',
+      roundBreakdown: 'Machine Coding Round → 2-3 Advanced DSA Rounds (DP & Graphs) → Hiring Manager Round.',
       difficultyPattern: 'Heavy focus on Binary Search variants (search on answer) and 2D dynamic programming.',
       tips: 'Clearly formulate DP recurrence relations and state transitions.'
     },
     tcs: {
       focusTopics: ['Arrays', 'Strings', 'Sorting', 'Binary Search', 'Hashing Basics'],
-      roundBreakdown: 'Round 1: National Qualifier Test (NQT Coding) → Round 2: Technical & Managerial Interview.',
-      difficultyPattern: 'Easy to Medium difficulty. Tests core foundational logic, string manipulation, and standard sorting.',
+      roundBreakdown: 'National Qualifier Test (NQT Coding) → Technical & Managerial Interview.',
+      difficultyPattern: 'Easy to Medium difficulty. Tests foundational logic, string manipulation, and standard sorting.',
       tips: 'Ensure correct output formatting and pass all sample input/output constraints.'
     },
     infosys: {
       focusTopics: ['Arrays', 'Strings', 'Recursion', 'Basic Dynamic Programming'],
-      roundBreakdown: 'HackWithInfy / InfyTQ Online Rounds → Technical Coding Assessment & Discussion.',
+      roundBreakdown: 'HackWithInfy / InfyTQ Online Rounds → Technical Coding Assessment.',
       difficultyPattern: 'Focus on recursion, greedy heuristics, and basic 1D DP.',
       tips: 'Demonstrate clean variable naming and modular helper functions.'
     },
@@ -210,131 +220,549 @@ export default function CompanyPrepPage() {
 
   const currentCompanyProfile = getCompanyProfile();
 
-  // ── Progressive 16 Core DSA Topics ──
+  // ── Structured 16 Core DSA Topics with Full AI Video Lecture Curriculum ──
   const dsaTopics = [
     {
       id: 'arrays',
       title: 'Arrays & Two Pointers',
       category: 'Linear Structures',
       description: 'Contiguous memory indexing, dynamic vectors, prefix sums, two pointers, and sliding window optimization.',
-      explanation: 'Arrays store items at contiguous memory locations enabling O(1) random access by index. Two-pointer and sliding window paradigms reduce brute-force quadratic searches to optimal linear time.',
-      patterns: ['Traversal & Running Aggregates', 'Converging Two Pointers (Left & Right)', 'Dynamic Sliding Window', 'Prefix Sum Queries'],
-      beginnerConcepts: ['Contiguous memory allocation and zero-indexed addressing.', 'O(1) access time vs O(N) insertion/deletion at arbitrary positions.', 'Static vs Dynamic Vectors.'],
-      intermediateConcepts: ['Two Pointers on sorted arrays to achieve O(N) time and O(1) space.', 'Sliding Window over contiguous subarrays for maximum sum or distinct elements.'],
-      advancedConcepts: ['Two-pointer boundary tracking for Trapping Rain Water.', 'Monotonic Deque for sliding window maximums in O(N).'],
-      companyRelevance: 'Tested in 40%+ of initial screening rounds across product and service companies.'
-    },
-    {
-      id: 'strings',
-      title: 'Strings & Character Arrays',
-      category: 'Linear Structures',
-      description: 'ASCII/UTF-8 character manipulation, palindromes, anagram frequency tables, and string searching.',
-      explanation: 'Strings are immutable or mutable sequences of characters. Efficient string algorithms utilize frequency buckets, two pointers, and rolling hashes to avoid expensive concatenation.',
-      patterns: ['Frequency Counter Arrays', 'Two Pointer Palindrome Validation', 'Sliding Window Substrings', 'String Matching (KMP & Rabin-Karp)'],
-      beginnerConcepts: ['Character ASCII values and byte indexing.', 'String immutability and StringBuilder / string buffers.'],
-      intermediateConcepts: ['Frequency tables for anagram validation in O(N).', 'Expanding around center for palindrome substrings.'],
-      advancedConcepts: ['Rolling hash for substring search (Rabin-Karp).', 'Prefix function computation for KMP pattern matching.'],
-      companyRelevance: 'Essential for parser logic, text processing, and initial hiring rounds.'
-    },
-    {
-      id: 'linked_list',
-      title: 'Linked List & Node Pointers',
-      category: 'Linear Structures',
-      description: 'Dynamic pointer allocation, singly and doubly linked nodes, cycle detection, and in-place reversal.',
-      explanation: 'Linked lists provide dynamic memory allocation without requiring contiguous space. Mastering pointer manipulations (prev, curr, next) is fundamental for system memory and cache design.',
-      patterns: ['Fast & Slow Pointers (Floyd\'s Cycle)', 'In-Place Pointer Reversal', 'Merge K Sorted Lists', 'Dummy Head Technique'],
-      beginnerConcepts: ['Node pointer structures: val and next references.', 'Iterative traversal and inserting/deleting nodes in O(1) when reference is known.'],
-      intermediateConcepts: ['Floyd\'s Tortoise and Hare algorithm for cycle detection.', 'In-place reversal without allocating auxiliary nodes.'],
-      advancedConcepts: ['Merging K sorted lists using Min-Heap priority queues in O(N log K).', 'Implementing Doubly Linked List with Hash Map for LRU Cache.'],
-      companyRelevance: 'Common in technical rounds to evaluate raw memory pointer discipline.'
-    },
-    {
-      id: 'stack_queue',
-      title: 'Stack & Queue (LIFO / FIFO)',
-      category: 'Linear Structures',
-      description: 'LIFO buffer evaluation, monotonic stacks, FIFO queues, circular buffers, and double-ended deques.',
-      explanation: 'Stacks enforce Last-In-First-Out access, essential for function call frames and parentheses parsing. Queues enforce First-In-First-Out, forming the core of breadth-first graph algorithms.',
-      patterns: ['Parentheses Matching', 'Monotonic Increasing/Decreasing Stack', 'Queue-based BFS Buffers', 'Circular Array Queues'],
-      beginnerConcepts: ['LIFO vs FIFO access rules and stack push/pop in O(1).', 'Queue enqueue/dequeue operations.'],
-      intermediateConcepts: ['Monotonic stack to find Next Greater Element in O(N) time.', 'Evaluating arithmetic expressions and infix/postfix conversions.'],
-      advancedConcepts: ['Largest Rectangle in Histogram using monotonic index stack.', 'Sliding Window Maximum using Deque.'],
-      companyRelevance: 'High frequency in system evaluation, expression parsing, and breadth-first search.'
+      aiVideoLessons: [
+        {
+          chapter: '1. What It Is',
+          title: 'Definition & Memory Layout',
+          duration: 20,
+          concept: 'An Array is a contiguous block of memory where each element is stored sequentially and accessed via zero-based index in O(1) time.',
+          points: [
+            'Contiguous Memory: Address of element at index i is Base_Address + i * sizeof(Type).',
+            'Index Lookup: Direct arithmetic jump with O(1) time.',
+            'Static vs Dynamic: Fixed capacity in C/C++ arrays vs 2x amortized geometric doubling in std::vector / ArrayList.'
+          ],
+          codeSnippet: `// Memory layout formula: addr(i) = base + i * size\nint arr[5] = {10, 20, 30, 40, 50};\nint val = arr[2]; // O(1) memory offset jump to 30`
+        },
+        {
+          chapter: '2. Why It Is Used',
+          title: 'When to Choose Arrays',
+          duration: 20,
+          concept: 'Arrays provide maximum cache locality and predictable constant-time element retrieval.',
+          points: [
+            'CPU Cache Friendly: Adjacent elements are fetched into CPU L1/L2 cache lines simultaneously.',
+            'Constant-Time Access: Ideal when frequent random reads by index are required.',
+            'Trade-off: Insertion/deletion at beginning or middle requires shifting elements in O(N).'
+          ],
+          codeSnippet: `// Fast random reads vs Shifting on insert\nvector<int> v = {1, 2, 4, 5};\nv.insert(v.begin() + 2, 3); // O(N) because elements 4,5 must shift right`
+        },
+        {
+          chapter: '3. Core Concepts',
+          title: 'Traversal, Mutation & Boundaries',
+          duration: 25,
+          concept: 'Basic operations include single-pass traversal, in-place swapping, and index boundary checks.',
+          points: [
+            'Traversal: Linear scan in O(N) time and O(1) auxiliary space.',
+            'In-Place Swap: Swapping elements without auxiliary arrays using temporary variables.',
+            'Boundary Guards: Always check 0 <= index < size to prevent buffer overflow vulnerabilities.'
+          ],
+          codeSnippet: `for (int i = 0; i < n; i++) {\n    if (arr[i] < 0) arr[i] = 0; // In-place mutation guard\n}`
+        },
+        {
+          chapter: '4. Visual Examples',
+          title: 'Two-Pointer Search Walkthrough',
+          duration: 30,
+          concept: 'Two Pointer Technique eliminates nested quadratic loops by moving left and right pointers toward each other on sorted collections.',
+          points: [
+            'Left pointer starts at 0, Right pointer starts at N-1.',
+            'If sum == target: return indices.',
+            'If sum < target: increment left to increase total.',
+            'If sum > target: decrement right to decrease total.'
+          ],
+          codeSnippet: `int left = 0, right = n - 1;\nwhile (left < right) {\n    int sum = nums[left] + nums[right];\n    if (sum == target) return {left + 1, right + 1};\n    else if (sum < target) left++;\n    else right--;\n}`
+        },
+        {
+          chapter: '5. Time & Space Complexity',
+          title: 'Complexity Benchmark Matrix',
+          duration: 20,
+          concept: 'Time & Space complexity summary for core array operations.',
+          points: [
+            'Access / Read: O(1) Time, O(1) Space.',
+            'Linear Search: O(N) Time, O(1) Space.',
+            'Binary Search (Sorted): O(log N) Time, O(1) Space.',
+            'Insertion / Deletion: O(1) at end amortized, O(N) at start/middle.'
+          ],
+          codeSnippet: `// Amortized doubling formula for dynamic vectors\n// Resizing occurs at 1, 2, 4, 8, 16... Total copies = 2N - 1 => O(1) amortized`
+        },
+        {
+          chapter: '6. Common Patterns',
+          title: 'High-Frequency Algorithmic Patterns',
+          duration: 25,
+          concept: 'Master these 4 canonical patterns to solve 80%+ of array interview questions.',
+          points: [
+            '1. Two Pointers (Converging & Fast/Slow)',
+            '2. Sliding Window (Fixed & Variable Length)',
+            '3. Prefix Sums (O(1) Range Queries)',
+            '4. Dutch National Flag (3-Way Partitioning)'
+          ],
+          codeSnippet: `// Prefix sum array: prefix[i] = prefix[i-1] + arr[i]\n// Range sum (L, R) = prefix[R] - prefix[L-1] in O(1) time`
+        },
+        {
+          chapter: '7. Beginner → Advanced',
+          title: 'Skill Progression Roadmap',
+          duration: 20,
+          concept: 'Progress systematically from basic element access to optimal boundary elevation trapping.',
+          points: [
+            'Beginner: Two Sum, Find Maximum, Reverse Array.',
+            'Intermediate: 3Sum, Container With Most Water, Subarray Sum Equals K.',
+            'Advanced: Trapping Rain Water, Sliding Window Maximum with Deque.'
+          ],
+          codeSnippet: `// Advanced: Trapping Rain Water LeftMax/RightMax\nwater += max(0, min(leftMax, rightMax) - height[i]);`
+        },
+        {
+          chapter: '8. Real-World Use Cases',
+          title: 'Where Arrays Power Modern Systems',
+          duration: 20,
+          concept: 'Arrays are the foundation of low-level high-performance engineering.',
+          points: [
+            'GPU Video Buffers: Framebuffers and texture pixels stored contiguously.',
+            'Database Tables: Columnar databases (Apache Arrow) store columnar arrays for vectorized SIMD operations.',
+            'Operating System Kernels: Process tables, file descriptors, and interrupt vectors.'
+          ],
+          codeSnippet: `// GPU SIMD: 8 floats processed in a single CPU clock cycle\n__m256 a = _mm256_load_ps(&arr[0]);\n__m256 b = _mm256_load_ps(&arr[8]);`
+        },
+        {
+          chapter: '9. Interview & Company Relevance',
+          title: 'Corporate Hiring Alignment',
+          duration: 20,
+          concept: 'Why companies test Arrays extensively during technical screening.',
+          points: [
+            'Tests basic algorithmic hygiene: Off-by-one errors and pointer bounds.',
+            'Evaluates capacity to optimize brute force O(N²) into linear O(N).',
+            'Core requirement for Google, Amazon, Microsoft, and service-based screening.'
+          ],
+          codeSnippet: `// Interview checklist: Check empty array, size == 1, duplicate values, negative numbers`
+        }
+      ]
     },
     {
       id: 'hashing',
-      title: 'Hashing & Hash Tables',
+      title: 'Hash Tables & Sets',
       category: 'Data Structures',
-      description: 'Hash functions, collision resolution, O(1) average key-value lookups, and frequency maps.',
-      explanation: 'Hash tables map arbitrary keys to integer bucket indices. They provide average O(1) lookups and are the single most effective tool to optimize algorithm time complexities from quadratic to linear.',
-      patterns: ['Direct Addressing & Buckets', 'Separate Chaining vs Open Addressing', 'Complement Lookups (Target - X)', 'Frequency Grouping'],
-      beginnerConcepts: ['Hash functions, uniform distribution, and modulo arithmetic.', 'Average O(1) vs Worst Case O(N) collision lookups.'],
-      intermediateConcepts: ['One-pass complement lookup for Two Sum and Pair finding.', 'Grouping anagrams using sorted string keys or character counts.'],
-      advancedConcepts: ['Design of LRU Cache with O(1) get and put.', 'Subarray Sum Equals K using running prefix sum hash maps.'],
-      companyRelevance: 'Foundational across all companies for fast lookups and state management.'
-    },
-    {
-      id: 'binary_search',
-      title: 'Binary Search & Search on Answer',
-      category: 'Algorithms',
-      description: 'O(log N) divide-and-conquer on sorted spaces, boundary invariants, and monotonic search predicates.',
-      explanation: 'Binary Search repeatedly halves the monotonic search space. Beyond sorted arrays, it is applied to continuous answer ranges to optimize resource allocation and scheduling.',
-      patterns: ['Classic Sorted Array Lookup', 'Rotated Sorted Array Pivots', 'Search on Answer (Monotonic Predicate)', 'First and Last Occurrence Bounds'],
-      beginnerConcepts: ['Middle calculation (low + (high - low) / 2) to prevent 32-bit integer overflow.', 'Strictly monotonic search spaces and boundary updates.'],
-      intermediateConcepts: ['Binary search on rotated sorted array with pivot identification.', 'Finding square roots and peak elements.'],
-      advancedConcepts: ['Search on Answer: Koko Eating Bananas, Capacity to Ship Packages in D Days.', 'Median of two sorted arrays in O(log(min(M,N))).'],
-      companyRelevance: 'Crucial for product engineering interviews (Flipkart, Amazon, Google).'
+      description: 'Hash functions, collision resolution, O(1) average lookups, frequency maps, and caching architectures.',
+      aiVideoLessons: [
+        {
+          chapter: '1. What It Is',
+          title: 'Hash Tables & Buckets',
+          duration: 20,
+          concept: 'A Hash Table maps keys to values by computing an integer bucket index using a Hash Function.',
+          points: [
+            'Hash Function: h(key) = hash(key) % Bucket_Count.',
+            'Direct Indexing: Computes array index directly from key contents.',
+            'Collision Resolution: Separate Chaining (Linked Lists/Red-Black Trees) vs Open Addressing (Linear Probing).'
+          ],
+          codeSnippet: `unordered_map<string, int> freq;\nfreq["apple"] = 5; // hash("apple") % buckets => stored in bucket in O(1)`
+        },
+        {
+          chapter: '2. Why It Is Used',
+          title: 'Instant O(1) Lookups',
+          duration: 20,
+          concept: 'Hash tables turn expensive O(N) linear search checks into average O(1) time.',
+          points: [
+            'Complement Lookups: Check if (target - x) exists instantly.',
+            'Frequency Counting: Count character/word occurrences in a single pass.',
+            'Deduplication: Fast O(1) uniqueness check using Hash Sets.'
+          ],
+          codeSnippet: `unordered_set<int> seen;\nfor (int num : nums) {\n    if (seen.count(num)) return true; // Found duplicate in O(1)\n    seen.insert(num);\n}`
+        },
+        {
+          chapter: '3. Core Concepts',
+          title: 'Load Factor & Re-hashing',
+          duration: 25,
+          concept: 'Managing hash collisions and maintaining constant time efficiency.',
+          points: [
+            'Load Factor = Elements / Buckets. Default threshold is typically 0.75.',
+            'Re-hashing: When load factor exceeds threshold, bucket array doubles in size and keys are re-distributed.',
+            'Worst-Case O(N): Occurs when all keys collide into the exact same bucket.'
+          ],
+          codeSnippet: `// Java 8+ converts bucket linked lists to balanced Red-Black Trees when chain length > 8 (O(log N) worst case)`
+        },
+        {
+          chapter: '4. Visual Examples',
+          title: 'One-Pass Two Sum Walkthrough',
+          duration: 30,
+          concept: 'Using a hash map to solve Two Sum in a single pass in O(N) time and O(N) space.',
+          points: [
+            'Iterate through array with current value x.',
+            'Compute complement = target - x.',
+            'If complement exists in map: return {map[complement], current_index}.',
+            'Otherwise: insert map[x] = current_index.'
+          ],
+          codeSnippet: `unordered_map<int, int> mp;\nfor (int i = 0; i < nums.size(); i++) {\n    int comp = target - nums[i];\n    if (mp.count(comp)) return {mp[comp], i};\n    mp[nums[i]] = i;\n}`
+        },
+        {
+          chapter: '5. Time & Space Complexity',
+          title: 'Hashing Complexity Matrix',
+          duration: 20,
+          concept: 'Average vs Worst case complexity comparison.',
+          points: [
+            'Insert: O(1) Average, O(N) Worst Case.',
+            'Lookup / Search: O(1) Average, O(N) Worst Case.',
+            'Delete: O(1) Average, O(N) Worst Case.',
+            'Space: O(N) for storing hash buckets and entries.'
+          ],
+          codeSnippet: `// Space-Time Tradeoff: Uses O(N) auxiliary space to achieve O(1) time operations`
+        },
+        {
+          chapter: '6. Common Patterns',
+          title: 'Key Hashing Patterns',
+          duration: 25,
+          concept: 'Primary techniques tested in technical rounds.',
+          points: [
+            '1. Frequency Mapping & Anagram Grouping',
+            '2. Prefix Sum Hash Map (Subarray Sum Equals K)',
+            '3. Sliding Window + Hash Map (Longest Substring Without Repeating Characters)',
+            '4. LRU Cache (Hash Map + Doubly Linked List)'
+          ],
+          codeSnippet: `// Subarray Sum Equals K: count subarrays with sum K\nmp[0] = 1;\nfor (int x : nums) {\n    curr += x;\n    if (mp.count(curr - k)) total += mp[curr - k];\n    mp[curr]++;\n}`
+        },
+        {
+          chapter: '7. Beginner → Advanced',
+          title: 'Progression Path',
+          duration: 20,
+          concept: 'From single-key lookups to full caching systems.',
+          points: [
+            'Beginner: Two Sum, Contains Duplicate, Valid Anagram.',
+            'Intermediate: Group Anagrams, Subarray Sum Equals K, Top K Frequent.',
+            'Advanced: LRU Cache Implementation, LFU Cache.'
+          ],
+          codeSnippet: `// Advanced: LRU Cache combines O(1) map key lookup with O(1) linked list node splicing`
+        },
+        {
+          chapter: '8. Real-World Use Cases',
+          title: 'Production Applications',
+          duration: 20,
+          concept: 'Where hashing is used in enterprise software.',
+          points: [
+            'Redis In-Memory Key-Value Stores: O(1) caching layer for web applications.',
+            'Database Primary Key Indexing: Hash indexes for exact key matching.',
+            'Compiler Symbol Tables: Storing variable names and scopes during compilation.'
+          ],
+          codeSnippet: `// Redis SET user:1001 '{"name":"Alice"}' EX 3600`
+        },
+        {
+          chapter: '9. Interview & Company Relevance',
+          title: 'Interview Strategy',
+          duration: 20,
+          concept: 'High-frequency topic in Amazon, Google, Microsoft, and TCS/Infosys assessments.',
+          points: [
+            'First optimization strategy whenever nested loops appear.',
+            'Demonstrates ability to make space vs time engineering tradeoffs.'
+          ],
+          codeSnippet: `// Question prompt: Can we solve this in O(N) time? Answer: Yes, by utilizing a Hash Map.`
+        }
+      ]
     },
     {
       id: 'trees',
-      title: 'Trees & Binary Search Trees (BST)',
+      title: 'Trees & Binary Search Trees',
       category: 'Hierarchical Structures',
-      description: 'Binary trees, BST invariants, DFS preorder/inorder/postorder traversals, and BFS level order.',
-      explanation: 'Trees represent hierarchical acyclic structures. Binary Search Trees maintain sorted invariants enabling O(log N) operations. Tree traversals test recursive thinking and stack frame management.',
-      patterns: ['Recursive DFS (Pre, In, Postorder)', 'Queue-based BFS Level Order', 'BST Range Queries & Inorder Invariant', 'Lowest Common Ancestor'],
-      beginnerConcepts: ['TreeNode definitions with left and right children.', 'Tree height, depth, and leaf node base conditions.'],
-      intermediateConcepts: ['Inorder traversal on BST yields sorted elements.', 'BFS level order traversal using queue.', 'Finding Lowest Common Ancestor (LCA).'],
-      advancedConcepts: ['Binary Tree Maximum Path Sum with bottom-up DFS.', 'Serializing and deserializing binary trees to string.'],
-      companyRelevance: 'Top 3 most tested DSA topic in Google, Amazon, Microsoft rounds.'
-    },
-    {
-      id: 'heap',
-      title: 'Heap & Priority Queue',
-      category: 'Priority Structures',
-      description: 'Min-heaps, max-heaps, complete binary tree array indexing, top K elements, and streaming medians.',
-      explanation: 'Heaps are complete binary trees mapped to arrays. They enable O(1) minimum/maximum lookup and O(log N) extractions, critical for priority scheduling and K-way merging.',
-      patterns: ['Array-based Binary Tree Indexing', 'Top K Frequent / Largest Elements', 'Two Heaps for Median Stream', 'K-way Merge of Sorted Lists'],
-      beginnerConcepts: ['Heap property: Parent is smaller than (Min-Heap) or larger than (Max-Heap) children.', 'Parent (i-1)/2, Left 2i+1, Right 2i+2 array indexing.'],
-      intermediateConcepts: ['Building heap in O(N) using sift-down.', 'Finding Kth largest element in O(N log K) using min-heap.'],
-      advancedConcepts: ['Find median from continuous data stream using balanced Min & Max heaps.', 'Merge K sorted streams.'],
-      companyRelevance: 'High priority in Amazon, Uber, and real-time backend engineering tests.'
-    },
-    {
-      id: 'graphs',
-      title: 'Graphs & Network Algorithms',
-      category: 'Non-Linear Structures',
-      description: 'Adjacency lists, Breadth-First Search, Depth-First Search, Dijkstra shortest path, and Topological Sort.',
-      explanation: 'Graphs model networks of vertices and edges. Traversals (BFS for unweighted shortest paths, DFS for connectivity and cycles) form the foundation of routing and distributed systems.',
-      patterns: ['Adjacency List & Matrix Representations', 'BFS Shortest Path (Unweighted)', 'DFS Cycle Detection', 'Topological Sort (Kahn\'s Algorithm)', 'Dijkstra (Weighted Shortest Path)'],
-      beginnerConcepts: ['Directed vs Undirected, Weighted vs Unweighted graphs.', 'Visited set tracking to avoid infinite loops in cyclic graphs.'],
-      intermediateConcepts: ['Number of Connected Components / Number of Islands using DFS/BFS.', 'Topological Sort for dependency resolution (Course Schedule).'],
-      advancedConcepts: ['Dijkstra algorithm using Min-Heap Priority Queue in O((V + E) log V).', 'Disjoint Set Union (Union-Find) with path compression.'],
-      companyRelevance: 'Key topic for senior engineering and competitive hiring tests (Google, Microsoft).'
+      description: 'Binary trees, BST invariants, DFS traversals (Inorder, Preorder, Postorder), BFS level order, and Lowest Common Ancestor.',
+      aiVideoLessons: [
+        {
+          chapter: '1. What It Is',
+          title: 'Hierarchical Node Structures',
+          duration: 20,
+          concept: 'A Tree is a connected, acyclic hierarchical data structure consisting of a root node and subtrees of children.',
+          points: [
+            'Binary Tree: Each node contains at most two children (left and right).',
+            'Binary Search Tree (BST): Left subtree keys < Root key < Right subtree keys.',
+            'Depth & Height: Max edges from node to leaf / root to node.'
+          ],
+          codeSnippet: `struct TreeNode {\n    int val;\n    TreeNode *left;\n    TreeNode *right;\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};`
+        },
+        {
+          chapter: '2. Why It Is Used',
+          title: 'Ordered Hierarchies & Fast Search',
+          duration: 20,
+          concept: 'Trees model natural hierarchies and enable O(log N) search, insertion, and deletion on balanced structures.',
+          points: [
+            'Logarithmic Time: Balanced BSTs guarantee O(log N) search operations.',
+            'Hierarchical Modeling: File systems, DOM trees, and JSON structures.',
+            'Sorted Traversal: Inorder traversal on a BST yields sorted elements in O(N).'
+          ],
+          codeSnippet: `// Inorder on BST: Left -> Root -> Right yields [1, 2, 3, 4, 5]`
+        },
+        {
+          chapter: '3. Core Concepts',
+          title: 'DFS vs BFS Traversals',
+          duration: 25,
+          concept: 'The two foundational ways to traverse trees.',
+          points: [
+            'DFS (Depth-First Search): Preorder (Root, L, R), Inorder (L, Root, R), Postorder (L, R, Root) using recursion call stack.',
+            'BFS (Breadth-First Search): Level by level traversal using a FIFO queue.',
+            'Base Condition: Always check if (root == nullptr) return 0;'
+          ],
+          codeSnippet: `void inorder(TreeNode* root) {\n    if (!root) return;\n    inorder(root->left);\n    cout << root->val << " ";\n    inorder(root->right);\n}`
+        },
+        {
+          chapter: '4. Visual Examples',
+          title: 'Maximum Depth Walkthrough',
+          duration: 30,
+          concept: 'Computing tree height with bottom-up postorder DFS in O(N) time and O(H) call stack space.',
+          points: [
+            'If root is null: height is 0.',
+            'Recursively compute left_height = maxDepth(root->left).',
+            'Recursively compute right_height = maxDepth(root->right).',
+            'Return 1 + max(left_height, right_height).'
+          ],
+          codeSnippet: `int maxDepth(TreeNode* root) {\n    if (!root) return 0;\n    return 1 + max(maxDepth(root->left), maxDepth(root->right));\n}`
+        },
+        {
+          chapter: '5. Time & Space Complexity',
+          title: 'Tree Complexity Matrix',
+          duration: 20,
+          concept: 'Complexity breakdown for balanced vs skewed trees.',
+          points: [
+            'Balanced Tree Search: O(log N) Time, O(log N) Stack Space.',
+            'Skewed Worst-Case: O(N) Time, O(N) Stack Space.',
+            'Tree Traversals: O(N) Time visiting all nodes, O(H) auxiliary space for recursion height.'
+          ],
+          codeSnippet: `// Balanced: H = log2(N) | Skewed (Linked list): H = N`
+        },
+        {
+          chapter: '6. Common Patterns',
+          title: 'High-Yield Tree Patterns',
+          duration: 25,
+          concept: 'Core tree interview problem patterns.',
+          points: [
+            '1. Bottom-Up Subtree Return (Max Depth, Diameter, Max Path Sum)',
+            '2. Level Order Traversal (BFS with Queue)',
+            '3. BST Validation (Min/Max bound propagation)',
+            '4. Lowest Common Ancestor (LCA)'
+          ],
+          codeSnippet: `TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {\n    if (!root || root == p || root == q) return root;\n    TreeNode* left = lowestCommonAncestor(root->left, p, q);\n    TreeNode* right = lowestCommonAncestor(root->right, p, q);\n    return (left && right) ? root : (left ? left : right);\n}`
+        },
+        {
+          chapter: '7. Beginner → Advanced',
+          title: 'Progression Roadmap',
+          duration: 20,
+          concept: 'Step-by-step tree mastery.',
+          points: [
+            'Beginner: Invert Binary Tree, Maximum Depth, Same Tree.',
+            'Intermediate: Level Order Traversal, Validate BST, Lowest Common Ancestor.',
+            'Advanced: Binary Tree Maximum Path Sum, Serialize & Deserialize Tree.'
+          ],
+          codeSnippet: `// Advanced: Global max path sum updated during bottom-up subtree traversal`
+        },
+        {
+          chapter: '8. Real-World Use Cases',
+          title: 'Production Tree Systems',
+          duration: 20,
+          concept: 'Where trees are deployed in industry.',
+          points: [
+            'Database B+ Trees: MySQL and PostgreSQL disk page indexing.',
+            'DOM (Document Object Model): Web browsers rendering HTML trees.',
+            'Abstract Syntax Trees (AST): Compilers (Babel, LLVM) parsing source code.'
+          ],
+          codeSnippet: `// B+ Tree root page with branching factor of 100+ minimizes disk I/O reads`
+        },
+        {
+          chapter: '9. Interview & Company Relevance',
+          title: 'Corporate Focus',
+          duration: 20,
+          concept: 'Top 3 most tested DSA topic in Google, Amazon, and Microsoft hiring rounds.',
+          points: [
+            'Evaluates recursive depth, base case handling, and pointer safety.',
+            'Crucial benchmark for full-stack and systems engineering candidates.'
+          ],
+          codeSnippet: `// Common follow-up: Solve without recursion using an explicit stack (Iterative DFS)`
+        }
+      ]
     },
     {
       id: 'dp',
       title: 'Dynamic Programming (DP)',
       category: 'Advanced Algorithms',
       description: 'Optimal substructure, overlapping subproblems, top-down memoization, and bottom-up tabulation.',
-      explanation: 'Dynamic Programming transforms exponential recursive time complexities into polynomial time by caching and reusing subproblem solutions.',
-      patterns: ['1D Array Linear DP', '0/1 Knapsack & Unbounded Knapsack', '2D Matrix DP (LCS & Edit Distance)', 'DP on Trees & State Compression'],
-      beginnerConcepts: ['Recognizing overlapping subproblems and optimal substructure.', 'Memoization (Top-Down with recursion cache) vs Tabulation (Bottom-Up iteratively).'],
-      intermediateConcepts: ['Climbing Stairs, House Robber, and Coin Change state equations.', 'Longest Increasing Subsequence in O(N log N).'],
-      advancedConcepts: ['2D DP: Longest Common Subsequence and Edit Distance.', '0/1 Knapsack optimization from O(N*W) space to 1D O(W).'],
-      companyRelevance: 'Distinguishes elite candidates in product company bar raiser rounds.'
+      aiVideoLessons: [
+        {
+          chapter: '1. What It Is',
+          title: 'Definition & Core Invariants',
+          duration: 20,
+          concept: 'Dynamic Programming is an optimization technique that solves complex problems by breaking them down into overlapping subproblems and caching their solutions.',
+          points: [
+            'Overlapping Subproblems: The same subproblems are solved repeatedly.',
+            'Optimal Substructure: Optimal solution to the problem can be constructed from optimal solutions to subproblems.',
+            'State: A minimal set of parameters that uniquely describes a subproblem.'
+          ],
+          codeSnippet: `// Fibonacci without DP: O(2^N) exponential time\n// Fibonacci with DP memoization: O(N) linear time`
+        },
+        {
+          chapter: '2. Why It Is Used',
+          title: 'Taming Exponential Complexity',
+          duration: 20,
+          concept: 'Converts brute-force O(2^N) or O(N!) exponential algorithms into polynomial O(N) or O(N^2) solutions.',
+          points: [
+            'Eliminates Redundant Calculations: Computes each subproblem state once and stores in a DP table.',
+            'Guaranteed Global Optimum: Examines all valid decision paths systematically.'
+          ],
+          codeSnippet: `int memo[1000] = {0};\nint fib(int n) {\n    if (n <= 1) return n;\n    if (memo[n] != 0) return memo[n];\n    return memo[n] = fib(n-1) + fib(n-2);\n}`
+        },
+        {
+          chapter: '3. Core Concepts',
+          title: 'Memoization vs Tabulation',
+          duration: 25,
+          concept: 'The two canonical implementations of Dynamic Programming.',
+          points: [
+            'Top-Down (Memoization): Recursive approach starting from target and caching results (easy to write).',
+            'Bottom-Up (Tabulation): Iterative approach starting from base cases and filling an array (avoids stack overflow).',
+            'Space Optimization: Often only the previous 1 or 2 states are needed, reducing space from O(N) to O(1).'
+          ],
+          codeSnippet: `// Bottom-Up Tabulation for Climbing Stairs\nint dp[n+1];\ndp[1] = 1; dp[2] = 2;\nfor (int i = 3; i <= n; i++) dp[i] = dp[i-1] + dp[i-2];`
+        },
+        {
+          chapter: '4. Visual Examples',
+          title: 'Coin Change Walkthrough',
+          duration: 30,
+          concept: 'Finding minimum coins to make amount using bottom-up 1D DP table in O(amount * coins) time.',
+          points: [
+            'Initialize dp array of size amount + 1 filled with Infinity, dp[0] = 0.',
+            'For each amount i from 1 to target:',
+            'For each coin c: if i - c >= 0: dp[i] = min(dp[i], dp[i-c] + 1).',
+            'Return dp[amount] == Infinity ? -1 : dp[amount].'
+          ],
+          codeSnippet: `vector<int> dp(amount + 1, amount + 1);\ndp[0] = 0;\nfor (int i = 1; i <= amount; i++) {\n    for (int c : coins) {\n        if (i - c >= 0) dp[i] = min(dp[i], dp[i - c] + 1);\n    }\n}\nreturn dp[amount] > amount ? -1 : dp[amount];`
+        },
+        {
+          chapter: '5. Time & Space Complexity',
+          title: 'DP Complexity Formula',
+          duration: 20,
+          concept: 'Calculating time and space complexity for any DP solution.',
+          points: [
+            'Time Complexity = Number of States * Transitions per State.',
+            'Space Complexity = Number of States (Table size) + Recursion Call Stack.',
+            'Example (Coin Change): States = amount, Transitions = coins.size() => O(amount * C).'
+          ],
+          codeSnippet: `// 2D DP (LCS): States = M * N, Transition = O(1) => O(M * N) Time & Space`
+        },
+        {
+          chapter: '6. Common Patterns',
+          title: 'Canonical DP Patterns',
+          duration: 25,
+          concept: 'The 5 major DP categories in technical interviews.',
+          points: [
+            '1. 1D Linear DP (Climbing Stairs, House Robber)',
+            '2. 0/1 Knapsack & Unbounded Knapsack (Coin Change)',
+            '3. 2D Grid DP (Unique Paths, Minimum Path Sum)',
+            '4. String DP (Longest Common Subsequence, Edit Distance)',
+            '5. State Machine DP (Stock Buy & Sell with Cooldown)'
+          ],
+          codeSnippet: `// 0/1 Knapsack: pick or leave\ndp[i][w] = max(dp[i-1][w], val[i] + dp[i-1][w - wt[i]]);`
+        },
+        {
+          chapter: '7. Beginner → Advanced',
+          title: 'Progression Roadmap',
+          duration: 20,
+          concept: 'Systematic climb from Fibonacci to 2D state transitions.',
+          points: [
+            'Beginner: Climbing Stairs, House Robber, Min Cost Climbing Stairs.',
+            'Intermediate: Coin Change, Longest Increasing Subsequence (LIS), Unique Paths.',
+            'Advanced: Edit Distance, Longest Common Subsequence, Burst Balloons.'
+          ],
+          codeSnippet: `// Advanced: LIS in O(N log N) using Patience Sorting / Binary Search`
+        },
+        {
+          chapter: '8. Real-World Use Cases',
+          title: 'Production DP Systems',
+          duration: 20,
+          concept: 'Where Dynamic Programming powers enterprise technology.',
+          points: [
+            'DNA Sequence Alignment: Needleman-Wunsch algorithm for genomics.',
+            'Git Diff / Text Comparison: Longest Common Subsequence algorithm computing line differences.',
+            'Routing & GPS: Bellman-Ford shortest path algorithm with negative edge detection.'
+          ],
+          codeSnippet: `// Git diff uses Myers diff algorithm (based on LCS 2D Dynamic Programming)`
+        },
+        {
+          chapter: '9. Interview & Company Relevance',
+          title: 'Corporate Focus',
+          duration: 20,
+          concept: 'Bar raiser topic for Google, Flipkart, Uber, and Amazon final rounds.',
+          points: [
+            'Distinguishes top-tier candidates who can formulate recurrence relations.',
+            'Interview strategy: Start by writing recursive solution, identify overlapping calls, then add memoization array.'
+          ],
+          codeSnippet: `// Golden Rule: State definition -> Base cases -> Transition equation -> Space optimization`
+        }
+      ]
     }
   ];
 
   const currentTopic = dsaTopics.find(t => t.id === selectedTopicId) || dsaTopics[0];
+  const activeLessons = currentTopic.aiVideoLessons || [];
+  const currentLessonChapter = activeLessons[activeChapterIdx] || activeLessons[0];
+  const totalVideoDuration = activeLessons.reduce((acc, l) => acc + l.duration, 0);
+
+  // ── AI Video Player Timeline & Auto-chapter Advancement ──
+  useEffect(() => {
+    let interval = null;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setCurrentTime(prev => {
+          const next = prev + 1;
+          if (next >= totalVideoDuration) {
+            setIsPlaying(false);
+            return totalVideoDuration;
+          }
+          // Calculate chapter based on cumulative duration
+          let accum = 0;
+          for (let i = 0; i < activeLessons.length; i++) {
+            accum += activeLessons[i].duration;
+            if (next < accum) {
+              setActiveChapterIdx(i);
+              break;
+            }
+          }
+          return next;
+        });
+      }, 1000 / playbackSpeed);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, playbackSpeed, totalVideoDuration, activeLessons]);
+
+  // Jump to specific chapter
+  const handleJumpToChapter = (idx) => {
+    let accum = 0;
+    for (let i = 0; i < idx; i++) {
+      accum += activeLessons[i].duration;
+    }
+    setCurrentTime(accum);
+    setActiveChapterIdx(idx);
+  };
+
+  const handleSeek = (delta) => {
+    setCurrentTime(prev => {
+      const updated = Math.min(totalVideoDuration, Math.max(0, prev + delta));
+      let accum = 0;
+      for (let i = 0; i < activeLessons.length; i++) {
+        accum += activeLessons[i].duration;
+        if (updated < accum) {
+          setActiveChapterIdx(i);
+          break;
+        }
+      }
+      return updated;
+    });
+  };
+
+  const toggleFullscreen = () => {
+    if (!playerContainerRef.current) return;
+    if (!document.fullscreenElement) {
+      playerContainerRef.current.requestFullscreen?.();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen?.();
+      setIsFullscreen(false);
+    }
+  };
+
   const completedTopicsCount = Object.keys(completedTopics).filter(k => completedTopics[k] && k.startsWith(selectedCompany?._id || '')).length;
 
   const toggleTopicDone = (topicId) => {
@@ -507,7 +935,7 @@ export default function CompanyPrepPage() {
             {currentFlowStep === 1 && 'Choose Target Company'}
             {currentFlowStep === 2 && `Select DSA Language for ${selectedCompany?.companyName || 'Target Company'}`}
             {currentFlowStep === 3 && `DSA Learning Roadmap: ${selectedCompany?.companyName || 'Target Company'}`}
-            {currentFlowStep === 4 && `Topic Learning: ${currentTopic.title}`}
+            {currentFlowStep === 4 && `AI Topic Video Lesson: ${currentTopic.title}`}
             {currentFlowStep === 5 && `LeetCode-Style Coding Arena`}
             {currentFlowStep === 6 && `Timed Mock Technical Assessment`}
           </h1>
@@ -524,7 +952,7 @@ export default function CompanyPrepPage() {
             { num: 1, label: '1. Company' },
             { num: 2, label: '2. Language' },
             { num: 3, label: '3. Roadmap' },
-            { num: 4, label: '4. Topic Studio' },
+            { num: 4, label: '4. AI Video Lesson' },
             { num: 5, label: '5. Coding Arena' },
             { num: 6, label: '6. Mock Test' }
           ].map(s => (
@@ -871,15 +1299,6 @@ export default function CompanyPrepPage() {
                           {topic.description}
                         </p>
                       </div>
-
-                      {/* Patterns */}
-                      <div className="flex flex-wrap gap-1">
-                        {topic.patterns.slice(0, 3).map((pat, idx) => (
-                          <span key={idx} className="text-[9px] font-mono px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded">
-                            • {pat}
-                          </span>
-                        ))}
-                      </div>
                     </div>
 
                     <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
@@ -887,11 +1306,14 @@ export default function CompanyPrepPage() {
                         onClick={() => {
                           setSelectedTopicId(topic.id);
                           setCurrentFlowStep(4);
+                          setCurrentTime(0);
+                          setIsPlaying(false);
+                          setActiveChapterIdx(0);
                         }}
                         className="px-3.5 py-1.5 bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 hover:bg-purple-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
                       >
-                        <BookOpen className="h-3.5 w-3.5" />
-                        <span>Topic Studio</span>
+                        <Sparkles className="h-3.5 w-3.5 text-purple-500" />
+                        <span>AI Video Lesson</span>
                       </button>
 
                       <button
@@ -914,99 +1336,191 @@ export default function CompanyPrepPage() {
         </div>
       )}
 
-      {/* ── STEP 4: TOPIC STUDIO (Beginner → Intermediate → Advanced Breakdown) ── */}
+      {/* ── STEP 4: AI TOPIC VIDEO LESSON STUDIO (NATIVE INTERACTIVE PLAYER) ── */}
       {currentFlowStep === 4 && selectedCompany && (
-        <div className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-6 animate-in fade-in">
+        <div className="space-y-6 animate-in fade-in">
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
-                Topic Mastery Studio • {selectedCompany.companyName}
-              </span>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white">
-                {currentTopic.title}
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center space-x-1">
+                  <Sparkles className="h-3 w-3" />
+                  <span>AI Topic Masterclass Engine</span>
+                </span>
+                <span className="text-xs text-slate-400 font-mono">Target: {selectedCompany.companyName}</span>
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                {currentTopic.title} • Video Explanation
               </h2>
-              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-                {currentTopic.explanation}
-              </p>
             </div>
 
             <button
               onClick={() => setCurrentFlowStep(5)}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm cursor-pointer shrink-0"
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer shrink-0"
             >
-              <span>Solve Problems in Arena</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+              <Terminal className="h-4 w-4" />
+              <span>Proceed to Coding Arena</span>
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
 
-          {/* Striver-Style 3-Tier Progressive Concept Breakdown */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* ── AI INTERACTIVE VIDEO PLAYER (FULL FEATURED) ── */}
+          <div
+            ref={playerContainerRef}
+            className={`rounded-3xl border-2 border-purple-500/30 bg-[#080d19] text-white shadow-2xl overflow-hidden flex flex-col justify-between ${
+              isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'min-h-[500px]'
+            }`}
+          >
             
-            {/* Beginner */}
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
-              <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 block w-fit">
-                Tier 1: Beginner Fundamentals
-              </span>
-              <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc list-inside leading-relaxed">
-                {currentTopic.beginnerConcepts.map((c, i) => (
-                  <li key={i}>{c}</li>
-                ))}
-              </ul>
+            {/* Top Player Bar */}
+            <div className="p-4 bg-slate-900/80 backdrop-blur border-b border-slate-800 flex items-center justify-between text-xs font-mono">
+              <div className="flex items-center space-x-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-bold text-slate-200">AI Educational Video Stream</span>
+                <span className="text-slate-500">•</span>
+                <span className="text-purple-400">{currentLessonChapter.chapter}</span>
+              </div>
+
+              <div className="flex items-center space-x-3 text-slate-400">
+                <span className="hidden sm:inline">Speed: <strong>{playbackSpeed}x</strong></span>
+                <span className="text-slate-200 font-bold">{formatTimer(currentTime)} / {formatTimer(totalVideoDuration)}</span>
+              </div>
             </div>
 
-            {/* Intermediate */}
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
-              <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 block w-fit">
-                Tier 2: Intermediate Patterns
-              </span>
-              <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc list-inside leading-relaxed">
-                {currentTopic.intermediateConcepts.map((c, i) => (
-                  <li key={i}>{c}</li>
+            {/* Main Stage Display (Animated Slide & Code Visualizer) */}
+            <div className="p-6 sm:p-10 flex-1 flex flex-col justify-center space-y-6">
+              
+              <div className="space-y-2 text-left">
+                <span className="text-xs font-mono font-extrabold uppercase px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 inline-block border border-purple-500/30">
+                  {currentLessonChapter.chapter}: {currentLessonChapter.title}
+                </span>
+                <h3 className="text-xl sm:text-3xl font-black text-white tracking-tight">
+                  {currentLessonChapter.concept}
+                </h3>
+              </div>
+
+              {/* Key Concept Bullets */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
+                {currentLessonChapter.points.map((pt, idx) => (
+                  <div key={idx} className="p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 text-xs text-slate-300 space-y-1">
+                    <span className="text-[10px] font-mono text-purple-400 font-bold uppercase">#0{idx + 1}</span>
+                    <p className="leading-relaxed">{pt}</p>
+                  </div>
                 ))}
-              </ul>
+              </div>
+
+              {/* Code Visualizer Box */}
+              {currentLessonChapter.codeSnippet && (
+                <div className="rounded-2xl border border-slate-800 bg-[#050811] p-4 text-left font-mono text-xs text-emerald-400 overflow-x-auto shadow-inner">
+                  <div className="text-[10px] text-slate-500 pb-2 border-b border-slate-800/80 flex justify-between">
+                    <span>Algorithm Blueprint ({selectedLanguage.toUpperCase()})</span>
+                    <span className="text-purple-400">Topic: {currentTopic.title}</span>
+                  </div>
+                  <pre className="pt-2 leading-relaxed whitespace-pre font-mono">
+                    <code>{currentLessonChapter.codeSnippet}</code>
+                  </pre>
+                </div>
+              )}
+
             </div>
 
-            {/* Advanced */}
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
-              <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 block w-fit">
-                Tier 3: Advanced & Optimization
-              </span>
-              <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc list-inside leading-relaxed">
-                {currentTopic.advancedConcepts.map((c, i) => (
-                  <li key={i}>{c}</li>
-                ))}
-              </ul>
+            {/* Video Player Controls & Progress Scrubber */}
+            <div className="p-4 bg-slate-900/90 backdrop-blur border-t border-slate-800 space-y-3">
+              
+              {/* Scrubber Timeline */}
+              <div className="relative w-full h-2 bg-slate-800 rounded-full overflow-hidden cursor-pointer">
+                <div
+                  style={{ width: `${(currentTime / totalVideoDuration) * 100}%` }}
+                  className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 transition-all duration-300"
+                />
+              </div>
+
+              {/* Controls Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                
+                {/* Play, Pause, Rewind, Fast Forward */}
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleSeek(-10)}
+                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer"
+                    title="Rewind 10s"
+                  >
+                    <Rewind className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                  >
+                    {isPlaying ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current" />}
+                    <span>{isPlaying ? 'Pause' : 'Play Video'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleSeek(10)}
+                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer"
+                    title="Forward 10s"
+                  >
+                    <FastForward className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Speed selector */}
+                <div className="flex items-center space-x-1 bg-slate-800 p-1 rounded-xl">
+                  {[0.75, 1, 1.25, 1.5, 2].map(spd => (
+                    <button
+                      key={spd}
+                      onClick={() => setPlaybackSpeed(spd)}
+                      className={`px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer ${
+                        playbackSpeed === spd ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      {spd}x
+                    </button>
+                  ))}
+                </div>
+
+                {/* Fullscreen Toggle */}
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={toggleFullscreen}
+                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer"
+                    title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                  >
+                    {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                  </button>
+                </div>
+
+              </div>
+
             </div>
 
           </div>
 
-          {/* Important Patterns Checklist */}
-          <div className="p-5 rounded-2xl bg-purple-500/5 border border-purple-500/20 space-y-2">
-            <span className="text-xs font-mono font-bold uppercase text-purple-700 dark:text-purple-300">
-              Essential Problem-Solving Patterns:
+          {/* Chapter Quick Selector Grid */}
+          <div className="space-y-2">
+            <span className="text-xs font-mono font-bold uppercase text-slate-400 block text-left">
+              Video Lesson Chapters (Click to Seek):
             </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
-              {currentTopic.patterns.map((pat, idx) => (
-                <div key={idx} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 flex items-center space-x-2">
-                  <Check className="h-3.5 w-3.5 text-purple-600 shrink-0" />
-                  <span>{pat}</span>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-left">
+              {activeLessons.map((l, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleJumpToChapter(idx)}
+                  className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
+                    activeChapterIdx === idx
+                      ? 'border-purple-600 bg-purple-500/10 text-purple-700 dark:text-purple-300 font-bold'
+                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-purple-400/40'
+                  }`}
+                >
+                  <div className="text-[10px] font-mono uppercase text-slate-400">{l.chapter}</div>
+                  <div className="text-xs line-clamp-1">{l.title}</div>
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Company-Specific Interview Relevance */}
-          <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
-            <h4 className="text-xs font-black uppercase font-mono text-slate-900 dark:text-white flex items-center space-x-2">
-              <HelpCircle className="h-4 w-4 text-purple-600" />
-              <span>{selectedCompany.companyName} Interview Focus for {currentTopic.title}:</span>
-            </h4>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-              {currentTopic.companyRelevance}
-            </p>
-          </div>
-
+          {/* Navigation to Arena */}
           <div className="flex justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
             <button
               onClick={() => setCurrentFlowStep(3)}
@@ -1019,14 +1533,15 @@ export default function CompanyPrepPage() {
               onClick={() => setCurrentFlowStep(5)}
               className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow-md cursor-pointer"
             >
-              <span>Practice in LeetCode-Style Arena</span>
+              <span>Practice Problems in Arena</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
+
         </div>
       )}
 
-      {/* ── STEP 5: LEETCODE-STYLE PROBLEM SOLVING INTERFACE (LARGE FONT, ACCESSIBILITY CONTROLS) ── */}
+      {/* ── STEP 5: LEETCODE-STYLE PROBLEM SOLVING ARENA ── */}
       {currentFlowStep === 5 && selectedCompany && (
         <div className="space-y-5 animate-in fade-in">
           
@@ -1143,7 +1658,7 @@ export default function CompanyPrepPage() {
             <div className={`grid gap-6 items-start ${editorLayout === 'split' ? 'grid-cols-1 lg:grid-cols-12' : 'grid-cols-1'}`}>
               
               {/* ── PROBLEM STATEMENT WITH LARGE READABLE FONT ── */}
-              <div className={`${editorLayout === 'split' ? 'lg:col-span-5' : 'w-full'} p-6 sm:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-6 max-h-[800px] overflow-y-auto`}>
+              <div className={`${editorLayout === 'split' ? 'lg:col-span-5' : 'w-full'} p-6 sm:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-6 max-h-[800px] overflow-y-auto text-left`}>
                 
                 <div className="space-y-2 border-b border-slate-100 dark:border-slate-800 pb-4">
                   <div className="flex items-center space-x-2">
@@ -1214,7 +1729,7 @@ export default function CompanyPrepPage() {
               </div>
 
               {/* ── ONLINE COMPILER & CODE EXECUTION ARENA ── */}
-              <div className={`${editorLayout === 'split' ? 'lg:col-span-7' : 'w-full'} rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden flex flex-col justify-between`}>
+              <div className={`${editorLayout === 'split' ? 'lg:col-span-7' : 'w-full'} rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden flex flex-col justify-between text-left`}>
                 
                 {/* Editor Top Bar */}
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
@@ -1438,7 +1953,7 @@ export default function CompanyPrepPage() {
                 </div>
               </div>
 
-              {/* Weak Topics Analysis */}
+              {/* Weak Topics */}
               <div className="max-w-2xl mx-auto p-5 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-2">
                 <h4 className="text-xs font-mono font-bold uppercase text-purple-700 dark:text-purple-300">
                   Identified Weak Topics for Targeted Revision:
