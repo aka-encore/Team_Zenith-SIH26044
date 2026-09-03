@@ -25,12 +25,13 @@ export function DashboardLayout({ children }) {
   const isFaculty = ['faculty', 'institution', 'academician'].includes(rawRole);
   const role = isFaculty ? 'faculty' : rawRole;
 
-  // Final 9-Item Consolidated Navigation for Students
+  // Consolidated Navigation for Students
   const studentNav = [
     { label: "Dashboard", path: "/student", icon: LayoutDashboard },
     { label: "My Profile", path: "/profile", icon: User },
     { label: "Skills & Assessment", path: "/skills", icon: Target },
     { label: "Skill Gap", path: "/skill-gap", icon: Cpu },
+    { label: "Company Preparation", path: "/company-prep", icon: Building2 },
     { label: "Opportunities", path: "/opportunities", icon: Briefcase },
     { label: "Applications", path: "/applications", icon: FileText },
     { label: "Interviews & Placement", path: "/interviews", icon: Award },

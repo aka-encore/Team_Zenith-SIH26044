@@ -45,11 +45,12 @@ import AdminApplicationsPage from './pages/AdminApplicationsPage';
 import AdminPlacementsPage from './pages/AdminPlacementsPage';
 import AdminNotificationsPage from './pages/AdminNotificationsPage';
 
-// Consolidated 9 Student Portal Pages
+// Consolidated Student Portal Pages
 import StudentDashboardView from './pages/StudentDashboardView';
 import StudentProfilePage from './pages/StudentProfilePage';
 import SkillsAssessmentPage from './pages/SkillsAssessmentPage';
 import SkillGapPage from './pages/SkillGapPage';
+import CompanyPrepPage from './pages/CompanyPrepPage';
 import OpportunityDiscoveryPage from './pages/OpportunityDiscoveryPage';
 import StudentApplicationsPage from './pages/StudentApplicationsPage';
 import StudentInterviewsPage from './pages/StudentInterviewsPage';
@@ -191,6 +192,14 @@ function AppContent() {
         />
         <Route path="/skill-dna" element={<Navigate to="/skill-gap" replace />} />
         <Route path="/industry-demand" element={<Navigate to="/skill-gap" replace />} />
+        <Route 
+          path="/company-prep" 
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <CompanyPrepPage />
+            </ProtectedRoute>
+          } 
+        />
         <Route 
           path="/opportunities" 
           element={
