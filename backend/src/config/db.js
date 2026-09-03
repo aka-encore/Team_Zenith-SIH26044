@@ -16,11 +16,9 @@ try {
 export async function seedDefaultUsersIfEmpty() {
   try {
     const seedAccounts = [
-      { name: "Alex Chen", email: "student@test.com", password: "password123", role: "student" },
       { name: "TechNova Solutions", email: "company@test.com", password: "password123", role: "company" },
       { name: "Zenith Institute Admin", email: "institution@test.com", password: "password123", role: "institution" },
       { name: "Dr. Arvind Sharma", email: "faculty@test.com", password: "password123", role: "faculty" },
-      { name: "Test Faculty (DEV/TEST)", email: "faculty.test@example.com", password: "Test@12345", role: "faculty" },
       { name: "System Admin", email: "admin@test.com", password: "password123", role: "admin" }
     ];
 
@@ -38,17 +36,7 @@ export async function seedDefaultUsersIfEmpty() {
         await user.save();
       }
 
-      if (acc.role === "student") {
-        await StudentProfile.findOneAndUpdate(
-          { userId: user._id },
-          {
-            skills: ["React", "Node.js", "MongoDB", "Java", "Data Structures"],
-            bio: "3rd Year Computer Science Student",
-            academicInformation: { college: "Zenith Institute of Technology & Engineering", degree: "B.Tech", branch: "Computer Science", cgpa: 8.9 }
-          },
-          { upsert: true }
-        );
-      } else if (acc.role === "company") {
+      if (acc.role === "company") {
         await Company.findOneAndUpdate(
           { userId: user._id },
           {
