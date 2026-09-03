@@ -240,13 +240,23 @@ export default function CompanyPrepPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => navigate('/skills')}
-          className="px-5 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl text-xs shadow-lg shadow-purple-600/25 transition flex items-center space-x-2 cursor-pointer relative z-10 shrink-0"
-        >
-          <Zap className="h-4 w-4" />
-          <span>Practice Skill Assessments</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3 relative z-10 shrink-0">
+          <button
+            onClick={() => navigate(`/company-prep/topics?oppId=${selectedOppId}`)}
+            className="px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-2xl text-xs shadow-lg shadow-purple-600/25 transition flex items-center space-x-2 cursor-pointer"
+          >
+            <BookOpen className="h-4 w-4" />
+            <span>Open Topic Learning Studio</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/skills')}
+            className="px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl text-xs border border-slate-200 dark:border-slate-800 shadow-sm transition flex items-center space-x-2 cursor-pointer"
+          >
+            <Zap className="h-4 w-4 text-purple-500" />
+            <span>Skill Assessments</span>
+          </button>
+        </div>
       </div>
 
       {/* ── 1. REAL OPPORTUNITY & COMPANY SELECTOR ── */}
@@ -564,10 +574,21 @@ export default function CompanyPrepPage() {
 
                     </div>
 
-                    {/* Footer Info */}
-                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-400">
-                      <span>Est: {topic.estimatedHours}</span>
-                      <span className="font-bold text-purple-600 dark:text-purple-400">{topic.difficulty}</span>
+                    {/* Footer Info & Topic Learning Action */}
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] font-mono text-slate-400">
+                      <div className="flex items-center space-x-2">
+                        <span>Est: {topic.estimatedHours}</span>
+                        <span>•</span>
+                        <span className="font-bold text-purple-600 dark:text-purple-400">{topic.difficulty}</span>
+                      </div>
+
+                      <button
+                        onClick={() => navigate(`/company-prep/topics?oppId=${selectedOppId}&topicId=${topic.id.includes('array') ? 'arrays' : topic.id.includes('hash') ? 'hashing' : topic.id.includes('tree') ? 'trees' : topic.id.includes('dp') ? 'dp' : 'arrays'}`)}
+                        className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold font-sans transition flex items-center justify-center space-x-1 cursor-pointer shadow-xs"
+                      >
+                        <span>Start 5-Stage Flow</span>
+                        <ArrowRight className="h-3 w-3" />
+                      </button>
                     </div>
                   </div>
                 );

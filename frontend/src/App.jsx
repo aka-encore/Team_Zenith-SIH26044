@@ -51,6 +51,7 @@ import StudentProfilePage from './pages/StudentProfilePage';
 import SkillsAssessmentPage from './pages/SkillsAssessmentPage';
 import SkillGapPage from './pages/SkillGapPage';
 import CompanyPrepPage from './pages/CompanyPrepPage';
+import CompanyTopicLearningPage from './pages/CompanyTopicLearningPage';
 import OpportunityDiscoveryPage from './pages/OpportunityDiscoveryPage';
 import StudentApplicationsPage from './pages/StudentApplicationsPage';
 import StudentInterviewsPage from './pages/StudentInterviewsPage';
@@ -197,6 +198,22 @@ function AppContent() {
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <CompanyPrepPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/company-prep/topics" 
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <CompanyTopicLearningPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/company-prep/learning" 
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <CompanyTopicLearningPage />
             </ProtectedRoute>
           } 
         />
