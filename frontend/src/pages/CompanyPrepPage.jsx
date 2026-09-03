@@ -39,7 +39,7 @@ export default function CompanyPrepPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const playerContainerRef = useRef(null);
 
-  // ── Step 6: LeetCode-Style Coding Arena ──
+  // ── Step 6: Coding Arena ──
   const [problems, setProblems] = useState([]);
   const [selectedProblem, setSelectedProblem] = useState(null);
   const [code, setCode] = useState('');
@@ -161,88 +161,48 @@ export default function CompanyPrepPage() {
   const companyInterviewProfiles = {
     google: {
       focusTopics: ['Trees & BST', 'Graphs', 'Dynamic Programming', 'Recursion'],
-      roundBreakdown: 'Round 1: Screening (Arrays/Strings) → Rounds 2-4: Deep Problem Solving (Trees, Graphs, DP) → Round 5: System Architecture.',
-      difficultyPattern: 'High algorithmic rigor. Heavy emphasis on optimal O(N) or O(log N) time with sub-quadratic space.',
-      interviewQuestions: [
-        'How do you validate a Binary Search Tree without modifying node values?',
-        'Implement an optimal algorithm to find the Longest Path in a Directed Acyclic Graph.',
-        'Given stream of numbers, how do you find the median dynamically in O(log N)?'
-      ]
+      roundBreakdown: 'Screening (Arrays/Strings) → 3 Technical Rounds (Trees, Graphs, DP) → System Design.',
+      difficultyPattern: 'Optimal O(N) or O(log N) time with sub-quadratic auxiliary memory.'
     },
     amazon: {
-      focusTopics: ['Arrays', 'Hash Maps', 'Trees & BST', 'Heap & Priority Queue', 'Sliding Window'],
-      roundBreakdown: 'Online Assessment: 2 Coding Problems → 3-4 Technical Rounds focusing on Trees, Heaps, and Leadership Principles.',
-      difficultyPattern: 'Medium to Hard problems. Strong focus on clean modular code, fast lookups, and heap data structures.',
-      interviewQuestions: [
-        'Design an LRU Cache with O(1) get and put operations.',
-        'Find the Top K Frequent items in a large transaction dataset.',
-        'Implement Course Schedule prerequisite resolution using Topological Sort.'
-      ]
+      focusTopics: ['Arrays', 'Hash Maps', 'Trees & BST', 'Heap & Priority Queue'],
+      roundBreakdown: 'Online Assessment (2 Problems) → Technical Rounds (Trees, Heaps, Data Structures).',
+      difficultyPattern: 'Clean modular code, fast hash lookups, and heap data structures.'
     },
     microsoft: {
       focusTopics: ['Strings', 'Linked List', 'Trees & Graph Traversal', 'Two Pointers'],
-      roundBreakdown: 'Round 1: Online Assessment → Rounds 2-4: In-depth Technical interviews with focus on memory pointers and recursion.',
-      difficultyPattern: 'Medium difficulty with deep questions on recursion call stacks, string parsing, and pointer management.',
-      interviewQuestions: [
-        'Reverse a Linked List in groups of size K.',
-        'Validate if two binary trees are identical or symmetric.',
-        'Find the Lowest Common Ancestor (LCA) in a Binary Tree.'
-      ]
+      roundBreakdown: 'Online Assessment → In-depth Technical interviews on memory pointers and recursion.',
+      difficultyPattern: 'Medium difficulty with focus on recursion call stacks and pointer manipulation.'
     },
     meta: {
       focusTopics: ['Arrays', 'Binary Search', 'Trees & Graphs (BFS/DFS)', 'Two Pointers'],
-      roundBreakdown: 'Screening (2 coding questions in 45 mins) → Onsite (4 rounds of algorithmic speed and optimization).',
-      difficultyPattern: 'Speed and bug-free execution. Expecting optimal solution with dry run in 15-20 minutes per problem.',
-      interviewQuestions: [
-        'Subarray Sum Equals K using Prefix Sums and Hash Map.',
-        'Binary Tree Vertical Order Traversal using BFS queue.',
-        'Search in Rotated Sorted Array in O(log N) time.'
-      ]
+      roundBreakdown: 'Screening (2 questions in 45 mins) → Onsite (Algorithmic speed & optimization).',
+      difficultyPattern: 'Optimal solution with dry run in 15-20 minutes per problem.'
     },
     flipkart: {
-      focusTopics: ['Dynamic Programming', 'Binary Search on Answer', 'Greedy Algorithms', 'Graphs'],
-      roundBreakdown: 'Machine Coding Round → 2-3 Advanced DSA Rounds (DP & Graphs) → Hiring Manager Round.',
-      difficultyPattern: 'Heavy focus on Binary Search variants (search on answer) and 2D dynamic programming.',
-      interviewQuestions: [
-        'Capacity to Ship Packages Within D Days (Binary Search on Answer).',
-        '0/1 Knapsack optimization from O(N*W) space to 1D O(W).'
-      ]
+      focusTopics: ['Dynamic Programming', 'Binary Search on Answer', 'Greedy Algorithms'],
+      roundBreakdown: 'Machine Coding Round → 2-3 Advanced DSA Rounds → Hiring Manager Round.',
+      difficultyPattern: 'Binary Search variants and 2D dynamic programming.'
     },
     tcs: {
       focusTopics: ['Arrays', 'Strings', 'Sorting', 'Binary Search', 'Hashing Basics'],
       roundBreakdown: 'National Qualifier Test (NQT Coding) → Technical & Managerial Interview.',
-      difficultyPattern: 'Easy to Medium difficulty. Tests foundational logic, string manipulation, and standard sorting.',
-      interviewQuestions: [
-        'Find non-repeating characters in a string in O(N).',
-        'Sort an array containing only 0s, 1s, and 2s (Dutch National Flag).'
-      ]
+      difficultyPattern: 'Foundational logic, string manipulation, and standard sorting.'
     },
     infosys: {
       focusTopics: ['Arrays', 'Strings', 'Recursion', 'Basic Dynamic Programming'],
       roundBreakdown: 'HackWithInfy / InfyTQ Online Rounds → Technical Coding Assessment.',
-      difficultyPattern: 'Focus on recursion, greedy heuristics, and basic 1D DP.',
-      interviewQuestions: [
-        'Climbing Stairs and House Robber recurrence formulation.',
-        'Find all permutations of a given string using backtracking.'
-      ]
+      difficultyPattern: 'Recursion, greedy heuristics, and basic 1D DP.'
     },
     wipro: {
       focusTopics: ['Linear Structures', 'String Manipulation', 'Searching & Sorting'],
       roundBreakdown: 'Elite National Talent Hunt (NLTH) → Technical Interview round.',
-      difficultyPattern: 'Easy to Medium foundational questions testing loop efficiency and basic structures.',
-      interviewQuestions: [
-        'Check if two strings are Anagrams using frequency counting.',
-        'Find the second largest number in an unsorted array in O(N) single pass.'
-      ]
+      difficultyPattern: 'Foundational questions testing loop efficiency and basic structures.'
     },
     accenture: {
       focusTopics: ['Array Manipulation', 'Bitwise & Basic Math', 'Strings', 'Hashing'],
-      roundBreakdown: 'Cognitive & Technical Assessment → Coding Assessment (2 Problems) → Technical Interview.',
-      difficultyPattern: 'Focused on efficient array filtering, prefix sums, and frequency tables.',
-      interviewQuestions: [
-        'Find maximum product subarray.',
-        'Count total set bits in integer range.'
-      ]
+      roundBreakdown: 'Cognitive & Technical Assessment → Coding Assessment (2 Problems).',
+      difficultyPattern: 'Array filtering, prefix sums, and frequency tables.'
     }
   };
 
@@ -259,15 +219,15 @@ export default function CompanyPrepPage() {
 
   const currentCompanyProfile = getCompanyProfile();
 
-  // Core DSA Topics
+  // Core DSA Topics organized by progression tiers
   const dsaTopics = [
     {
       id: 'arrays',
       title: 'Arrays & Two Pointers',
       category: 'Linear Structures',
-      tier: 'BEGINNER',
+      tier: 'Beginner',
       description: 'Contiguous memory indexing, dynamic vectors, prefix sums, two pointers, and sliding window optimization.',
-      explanation: 'An Array is a collection of items stored at contiguous memory locations. It is the most fundamental data structure, providing O(1) random access by index arithmetic.',
+      explanation: 'An Array is a collection of items stored at contiguous memory locations. It provides constant O(1) random access time by index calculation.',
       beginnerConcepts: [
         'Contiguous Memory: Elements stored sequentially in RAM.',
         'Base Addressing: Address(i) = Base_Address + i * sizeof(Type).',
@@ -279,161 +239,101 @@ export default function CompanyPrepPage() {
         'Step 2: Swap arr[left] and arr[right].',
         'Step 3: Increment left, decrement right until left >= right.'
       ],
-      patterns: ['Converging Two Pointers (Left & Right)', 'Fast & Slow Pointers', 'Prefix Sum Queries', 'Sliding Window Subarrays'],
-      timeComplexity: 'Access: O(1) • Linear Search: O(N) • Append: O(1) amortized • Insert at Start: O(N)',
-      spaceComplexity: 'O(N) for storing elements. In-place algorithms use O(1) extra space.',
+      patterns: ['Converging Two Pointers', 'Fast & Slow Pointers', 'Prefix Sum Queries', 'Sliding Window Subarrays'],
+      timeComplexity: 'Access: O(1) • Linear Search: O(N) • Append: O(1) amortized',
+      spaceComplexity: 'O(N) for storage. In-place operations require O(1) extra space.',
       commonMistakes: [
-        'Off-by-one errors (accessing arr[N] instead of arr[N-1]).',
+        'Off-by-one index bounds.',
         'Modifying an array while iterating without index adjustment.',
-        'Assuming sorted order when input is unsorted.'
+        'Assuming sorted order on unsorted input.'
       ],
-      realWorldUsage: 'GPU framebuffers, columnar database storage (Apache Arrow), OS process tables, and memory page tables.',
-      interviewRelevance: 'Tested in 50%+ of initial technical screening rounds across all top tech companies.',
-      aiVideoLessons: [
+      interviewRelevance: 'Appears in initial screening rounds across top software engineering roles.',
+      videoLessons: [
         {
-          chapter: '1. What is an Array?',
-          title: 'Definition & Memory Concept',
+          chapter: '1. Fundamentals',
+          title: 'Memory Allocation & Indexing',
           duration: 25,
-          concept: 'Contiguous memory blocks indexed by zero-based offset in constant O(1) time.',
+          concept: 'Contiguous memory layout and constant-time random access.',
           points: [
-            'Address = Base_Address + index * size.',
-            'Direct memory lookup without pointer traversal.',
-            'L1/L2 CPU Cache locality optimization.'
+            'Direct address arithmetic: Base + (index * element_size).',
+            'L1/L2 cache locality benefits.',
+            'Static array bounds vs Dynamic vector resizing.'
           ],
-          codeSnippet: `int arr[5] = {10, 20, 30, 40, 50};\nint val = arr[2]; // Jumps to memory offset in O(1)`
+          codeSnippet: `int arr[5] = {10, 20, 30, 40, 50};\nint val = arr[2]; // O(1) direct offset access`
         },
         {
-          chapter: '2. Memory Concept & Traversal',
-          title: 'Single-Pass Iteration & Guards',
-          duration: 25,
-          concept: 'Visiting every element sequentially in linear O(N) time.',
-          points: [
-            'Loop from i = 0 to N-1.',
-            'Maintain running aggregates (min, max, sum).',
-            'Guard against index out of bounds.'
-          ],
-          codeSnippet: `int maxVal = arr[0];\nfor (int i = 1; i < n; i++) {\n    if (arr[i] > maxVal) maxVal = arr[i];\n}`
-        },
-        {
-          chapter: '3. Searching & Sorting',
-          title: 'Linear vs Binary Search',
+          chapter: '2. Two Pointers',
+          title: 'Converging Pointers Paradigm',
           duration: 30,
-          concept: 'O(N) linear search on unsorted arrays vs O(log N) binary search on sorted arrays.',
+          concept: 'Reducing O(N²) quadratic nested loops to O(N) linear time.',
           points: [
-            'Linear Search: Examine each element sequentially.',
-            'Binary Search: Halve the search space every step on sorted data.'
+            'Start left at 0, right at N-1 on sorted data.',
+            'Increment left when sum is too small; decrement right when too large.',
+            'Eliminates need for auxiliary hash table storage.'
           ],
-          codeSnippet: `int low = 0, high = n - 1;\nwhile (low <= high) {\n    int mid = low + (high - low) / 2;\n    if (arr[mid] == target) return mid;\n    else if (arr[mid] < target) low = mid + 1;\n    else high = mid - 1;\n}`
+          codeSnippet: `int left = 0, right = nums.size() - 1;\nwhile (left < right) {\n    int sum = nums[left] + nums[right];\n    if (sum == target) return {left + 1, right + 1};\n    else if (sum < target) left++;\n    else right--;\n}`
         },
         {
-          chapter: '4. Two Pointer Technique',
-          title: 'Eliminating Nested Loops',
+          chapter: '3. Sliding Window',
+          title: 'Subarray Search Optimization',
           duration: 30,
-          concept: 'Converging pointers reduce quadratic O(N²) pair search to linear O(N).',
+          concept: 'Maintaining running state over contiguous subarrays in O(N).',
           points: [
-            'Start left = 0, right = N-1 on sorted array.',
-            'Evaluate sum = arr[left] + arr[right].',
-            'Increment left if sum < target; decrement right if sum > target.'
+            'Expand right boundary to include new elements.',
+            'Shrink left boundary when constraints are exceeded.'
           ],
-          codeSnippet: `int left = 0, right = n - 1;\nwhile (left < right) {\n    int sum = nums[left] + nums[right];\n    if (sum == target) return {left + 1, right + 1};\n    else if (sum < target) left++;\n    else right--;\n}`
-        },
-        {
-          chapter: '5. Sliding Window Paradigm',
-          title: 'Subarray Optimization',
-          duration: 30,
-          concept: 'Maintaining a window to compute running maximums or distinct substrings in O(N).',
-          points: [
-            'Fixed Window: Slide window of size K by adding right and subtracting left.',
-            'Variable Window: Expand right, shrink left when condition is violated.'
-          ],
-          codeSnippet: `int left = 0, currSum = 0, maxSum = 0;\nfor (int right = 0; right < n; right++) {\n    currSum += arr[right];\n    while (currSum > k) { currSum -= arr[left++]; }\n    maxSum = max(maxSum, currSum);\n}`
-        },
-        {
-          chapter: '6. Complexity & Interview Patterns',
-          title: 'Summary & Corporate Questions',
-          duration: 25,
-          concept: 'Complexity breakdown and key questions asked by product companies.',
-          points: [
-            'Time: O(N) Two Pointer vs O(N log N) Sorting.',
-            'Space: O(1) in-place vs O(N) Hash Table aux.',
-            'Top Patterns: Two Sum II, 3Sum, Trapping Rain Water.'
-          ],
-          codeSnippet: `// Complexity Benchmark: O(N) Time, O(1) Space`
+          codeSnippet: `int left = 0, curr = 0, maxVal = 0;\nfor (int right = 0; right < n; right++) {\n    curr += nums[right];\n    while (curr > target) { curr -= nums[left++]; }\n    maxVal = max(maxVal, curr);\n}`
         }
       ]
     },
     {
       id: 'hashing',
       title: 'Hash Tables & Sets',
-      category: 'Data Structures',
-      tier: 'INTERMEDIATE',
-      description: 'Hash functions, collision resolution, O(1) average lookups, frequency maps, and caching architectures.',
-      explanation: 'A Hash Table is a data structure that implements an associative array abstract data type, mapping keys to values using a Hash Function.',
+      category: 'Lookup Structures',
+      tier: 'Intermediate',
+      description: 'Hash functions, collision resolution, O(1) average lookups, frequency tables, and caching.',
+      explanation: 'A Hash Table maps keys to values using a mathematical hash function, enabling constant-time average lookups, insertions, and deletions.',
       beginnerConcepts: [
-        'Hash Function: Converts arbitrary keys into integer bucket indices.',
-        'Direct Addressing: Enables average constant-time O(1) lookups.',
-        'Separate Chaining vs Open Addressing for collision handling.'
+        'Hash Function: Converts keys into integer bucket indices.',
+        'Collision Resolution: Chaining via linked lists vs Open Addressing.',
+        'Load Factor & Rehashing thresholds.'
       ],
       stepByStepExamples: [
-        'Example: Two Sum using Hash Map.',
-        'Step 1: Initialize empty hash map.',
-        'Step 2: For each number x, compute complement = target - x.',
-        'Step 3: If complement exists in map, return indices. Otherwise store x in map.'
+        'Example: Two Sum using Hash Map in a single pass.',
+        'Step 1: Iterate through each element x.',
+        'Step 2: Compute complement = target - x.',
+        'Step 3: Check if complement exists in map; if not, insert x.'
       ],
-      patterns: ['Complement Lookup (Target - X)', 'Frequency Counting', 'Anagram Grouping', 'Prefix Sum Hash Map'],
-      timeComplexity: 'Average: O(1) Insert/Search/Delete • Worst-Case: O(N) under heavy collisions',
-      spaceComplexity: 'O(N) for storing hash buckets and entries.',
+      patterns: ['Complement Matching', 'Frequency Counting', 'Prefix Sum Hash Map'],
+      timeComplexity: 'Average: O(1) Insert/Search/Delete • Worst-case: O(N)',
+      spaceComplexity: 'O(N) for hash buckets and entry storage.',
       commonMistakes: [
-        'Using unhashable or mutable keys.',
-        'Ignoring worst-case collision degradation.',
-        'Modifying hash map during direct iteration.'
+        'Assuming sorted ordering in unordered maps.',
+        'Ignoring worst-case collision degradation on malicious inputs.'
       ],
-      realWorldUsage: 'Redis in-memory caching, database primary key indexes, and compiler symbol tables.',
-      interviewRelevance: 'Primary optimization tool to transform quadratic O(N²) algorithms into linear O(N).',
-      aiVideoLessons: [
+      interviewRelevance: 'Primary pattern to optimize O(N²) search into linear O(N) runtime.',
+      videoLessons: [
         {
-          chapter: '1. What is a Hash Table?',
-          title: 'Buckets & Hash Functions',
+          chapter: '1. Mechanism',
+          title: 'Buckets & Hash Distribution',
           duration: 25,
-          concept: 'Hash function maps keys to array index buckets for O(1) average retrieval.',
+          concept: 'Uniform distribution of keys into bucket arrays.',
           points: [
-            'h(key) = hash(key) % Bucket_Count.',
-            'Uniform distribution avoids clustering.'
+            'hash_code = hash(key) % capacity.',
+            'O(1) average retrieval vs O(N) worst-case chain traversal.'
           ],
-          codeSnippet: `unordered_map<string, int> freq;\nfreq["apple"] = 5; // O(1) hash bucket insertion`
+          codeSnippet: `unordered_map<string, int> counts;\ncounts["apple"] = 1; // O(1) bucket insertion`
         },
         {
-          chapter: '2. Collisions & Load Factors',
-          title: 'Chaining & Open Addressing',
+          chapter: '2. Frequency Mapping',
+          title: 'Single-Pass Complement Search',
           duration: 30,
-          concept: 'Resolving index collisions using linked list chaining or linear probing.',
+          concept: 'Recording past occurrences for instantaneous lookups.',
           points: [
-            'Separate Chaining: Buckets store linked lists / red-black trees.',
-            'Load Factor = N / Buckets. Re-hashing doubles bucket array when load > 0.75.'
+            'Check map for required complement prior to insertion.',
+            'Eliminates duplicate passes.'
           ],
-          codeSnippet: `// Re-hashing occurs when elements exceed capacity threshold`
-        },
-        {
-          chapter: '3. Frequency Maps & Lookups',
-          title: 'One-Pass Algorithm Design',
-          duration: 30,
-          concept: 'Using hash tables to store past states for O(1) complement matching.',
-          points: [
-            'Check existence before insertion.',
-            'Track frequencies for anagram and uniqueness problems.'
-          ],
-          codeSnippet: `unordered_map<int, int> mp;\nfor (int i = 0; i < n; i++) {\n    int comp = target - nums[i];\n    if (mp.count(comp)) return {mp[comp], i};\n    mp[nums[i]] = i;\n}`
-        },
-        {
-          chapter: '4. Complexity & Interview Patterns',
-          title: 'Subarray Sum & LRU Caches',
-          duration: 25,
-          concept: 'Advanced hashing patterns in enterprise interviews.',
-          points: [
-            'Subarray Sum Equals K: Prefix sum frequency map.',
-            'LRU Cache: Hash Map + Doubly Linked List for O(1) get/put.'
-          ],
-          codeSnippet: `// Subarray Sum Equals K\nmp[0] = 1;\nfor (int x : nums) {\n    curr += x;\n    if (mp.count(curr - k)) total += mp[curr - k];\n    mp[curr]++;\n}`
+          codeSnippet: `unordered_map<int, int> seen;\nfor (int i = 0; i < n; i++) {\n    int complement = target - nums[i];\n    if (seen.count(complement)) return {seen[complement], i};\n    seen[nums[i]] = i;\n}`
         }
       ]
     },
@@ -441,156 +341,96 @@ export default function CompanyPrepPage() {
       id: 'trees',
       title: 'Trees & Binary Search Trees',
       category: 'Hierarchical Structures',
-      tier: 'ADVANCED',
-      description: 'Binary trees, BST invariants, DFS traversals (Inorder, Preorder, Postorder), BFS level order, and Lowest Common Ancestor.',
-      explanation: 'A Tree is a hierarchical acyclic data structure composed of nodes. Binary Search Trees (BST) enforce that all nodes in the left subtree are smaller than the root, and right are larger.',
+      tier: 'Advanced',
+      description: 'Binary trees, BST invariants, DFS traversals (Inorder, Preorder, Postorder), BFS level order, and LCA.',
+      explanation: 'A Tree is a hierarchical non-linear data structure. A Binary Search Tree enforces that left subtree keys are strictly smaller and right are larger.',
       beginnerConcepts: [
-        'TreeNode: Pointer to left child, right child, and value.',
-        'Height vs Depth: Max edges from node to leaf vs root to node.',
+        'TreeNode: Pointer to left child, right child, and stored value.',
+        'Tree Height vs Depth.',
         'BST Invariant: Left < Root < Right.'
       ],
       stepByStepExamples: [
-        'Example: Inorder traversal on BST yields sorted sequence.',
-        'Step 1: Traverse left subtree recursively.',
-        'Step 2: Visit current root node.',
-        'Step 3: Traverse right subtree recursively.'
+        'Example: Inorder traversal on BST.',
+        'Step 1: Recursively traverse left subtree.',
+        'Step 2: Visit root node.',
+        'Step 3: Recursively traverse right subtree.'
       ],
-      patterns: ['Bottom-Up Subtree Return (Max Depth, Diameter)', 'Level Order Traversal (BFS with Queue)', 'BST Min/Max Bound Validation', 'Lowest Common Ancestor (LCA)'],
-      timeComplexity: 'Balanced BST Search/Insert: O(log N) • Skewed Tree: O(N) • Traversals: O(N)',
-      spaceComplexity: 'O(H) call stack auxiliary space, where H = height of tree.',
+      patterns: ['Bottom-Up Recursion (Depth/Diameter)', 'Level Order Traversal (BFS)', 'Lowest Common Ancestor (LCA)'],
+      timeComplexity: 'Balanced BST Search: O(log N) • Traversals: O(N)',
+      spaceComplexity: 'O(H) recursion stack space, where H is tree height.',
       commonMistakes: [
-        'Forgetting null root base condition (`if (!root) return 0`).',
-        'Validating BST by checking only immediate children instead of global min/max bounds.',
-        'Confusing DFS recursion with BFS queue order.'
+        'Missing null root base condition.',
+        'Checking only immediate children instead of global subtree bounds in BST validation.'
       ],
-      realWorldUsage: 'Database B+ tree indexing (MySQL/Postgres), DOM tree rendering in browsers, and Abstract Syntax Trees in compilers.',
-      interviewRelevance: 'Top 3 tested topic in Google, Amazon, and Microsoft hiring loops.',
-      aiVideoLessons: [
+      interviewRelevance: 'Core structural domain tested in algorithmic interview rounds.',
+      videoLessons: [
         {
-          chapter: '1. What is a Binary Tree?',
-          title: 'Hierarchy & Node Pointers',
+          chapter: '1. Structure',
+          title: 'Node Pointers & Traversal Order',
           duration: 25,
-          concept: 'Acyclic connected graph with unique root and binary branch pointers.',
+          concept: 'Recursive decomposition of binary tree nodes.',
           points: [
-            'TreeNode contains val, left, right.',
-            'Leaf nodes have null children.'
-          ],
-          codeSnippet: `struct TreeNode {\n    int val;\n    TreeNode *left, *right;\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};`
-        },
-        {
-          chapter: '2. DFS Traversals (Pre, In, Post)',
-          title: 'Recursive Call Stack Mechanics',
-          duration: 30,
-          concept: 'Order of visiting nodes: Preorder (V-L-R), Inorder (L-V-R), Postorder (L-R-V).',
-          points: [
-            'Inorder on BST produces sorted ascending order.',
-            'Postorder computes bottom-up subtree values (height, diameter).'
+            'Preorder (Root-Left-Right), Inorder (Left-Root-Right), Postorder (Left-Right-Root).',
+            'Inorder on BST produces sorted ascending sequence.'
           ],
           codeSnippet: `void inorder(TreeNode* root) {\n    if (!root) return;\n    inorder(root->left);\n    cout << root->val << " ";\n    inorder(root->right);\n}`
         },
         {
-          chapter: '3. BFS Level Order Traversal',
-          title: 'Queue-Based Layer Processing',
+          chapter: '2. BFS Queue',
+          title: 'Level Order Traversal',
           duration: 30,
-          concept: 'Visiting nodes level by level using a FIFO queue.',
+          concept: 'Processing nodes layer by layer using a FIFO queue.',
           points: [
             'Push root to queue.',
-            'While queue not empty: pop level size nodes and push children.'
+            'Pop level size nodes and enqueue valid children.'
           ],
-          codeSnippet: `queue<TreeNode*> q;\nq.push(root);\nwhile (!q.empty()) {\n    int sz = q.size();\n    for (int i = 0; i < sz; i++) {\n        TreeNode* node = q.front(); q.pop();\n        if (node->left) q.push(node->left);\n        if (node->right) q.push(node->right);\n    }\n}`
-        },
-        {
-          chapter: '4. Complexity & Interview Patterns',
-          title: 'LCA & Path Sum Optimization',
-          duration: 25,
-          concept: 'Core interview patterns for Google and Microsoft.',
-          points: [
-            'Lowest Common Ancestor (LCA) in O(N).',
-            'Binary Tree Maximum Path Sum using global update.'
-          ],
-          codeSnippet: `// LCA: if both subtrees return non-null, current node is the LCA`
+          codeSnippet: `queue<TreeNode*> q;\nq.push(root);\nwhile (!q.empty()) {\n    TreeNode* curr = q.front(); q.pop();\n    if (curr->left) q.push(curr->left);\n    if (curr->right) q.push(curr->right);\n}`
         }
       ]
     },
     {
       id: 'dp',
-      title: 'Dynamic Programming (DP)',
-      category: 'Advanced Algorithms',
-      tier: 'INTERVIEW LEVEL',
-      description: 'Optimal substructure, overlapping subproblems, top-down memoization, and bottom-up tabulation.',
-      explanation: 'Dynamic Programming solves complex optimization problems by breaking them down into overlapping subproblems, solving each once, and caching results.',
+      title: 'Dynamic Programming',
+      category: 'Optimization Algorithms',
+      tier: 'Advanced',
+      description: 'Optimal substructure, overlapping subproblems, memoization, and bottom-up tabulation.',
+      explanation: 'Dynamic Programming solves complex problems by breaking them into overlapping subproblems, solving each once, and caching the results.',
       beginnerConcepts: [
-        'Overlapping Subproblems: The same subproblems evaluated repeatedly in recursion tree.',
-        'Optimal Substructure: Optimal global solution built from optimal subproblem solutions.',
-        'State Definition: Minimal parameters identifying a unique subproblem.'
+        'Overlapping Subproblems: Same subproblem computed multiple times in recursion.',
+        'Optimal Substructure: Optimal solution constructed from subproblem solutions.',
+        'State Definition: Minimal variables that uniquely describe a subproblem.'
       ],
       stepByStepExamples: [
         'Example: Climbing Stairs with DP.',
         'Step 1: dp[1] = 1, dp[2] = 2.',
-        'Step 2: For i = 3 to N: dp[i] = dp[i-1] + dp[i-2].',
-        'Step 3: Return dp[N]. Space can be optimized to O(1) using two variables.'
+        'Step 2: For i = 3 to N: dp[i] = dp[i-1] + dp[i-2].'
       ],
-      patterns: ['1D Linear DP', '0/1 Knapsack & Unbounded Knapsack', '2D Matrix DP (LCS & Edit Distance)', 'State Machine DP'],
-      timeComplexity: 'Time = Number of Subproblem States * Transitions per State.',
-      spaceComplexity: 'Space = Table size + Recursion Call Stack.',
+      patterns: ['1D Linear DP', '0/1 Knapsack', '2D Grid DP', 'Longest Common Subsequence'],
+      timeComplexity: 'Number of states * Transitions per state.',
+      spaceComplexity: 'DP table size + recursion call stack.',
       commonMistakes: [
-        'Incorrect base cases leading to index out of bounds.',
-        'Overlapping state confusion.',
-        'Forgetting memoization return values.'
+        'Incorrect base case assignment.',
+        'Unbounded state memory when only previous 1-2 states are needed.'
       ],
-      realWorldUsage: 'DNA sequence alignment in bioinformatics, Git diff algorithms (Myers LCS), and packet routing protocols.',
-      interviewRelevance: 'The ultimate differentiator in product company bar raiser rounds.',
-      aiVideoLessons: [
+      interviewRelevance: 'Essential differentiator for senior algorithmic problem solving.',
+      videoLessons: [
         {
-          chapter: '1. What is Dynamic Programming?',
-          title: 'Subproblems & Optimal Substructure',
+          chapter: '1. Formulation',
+          title: 'Recurrence Relations & Memoization',
           duration: 25,
-          concept: 'Transforming exponential O(2^N) brute force into polynomial O(N) time.',
+          concept: 'Transforming exponential recursion into polynomial runtime.',
           points: [
-            'Identify overlapping subproblems in recursion tree.',
-            'Define DP state clearly.'
+            'Identify overlapping subproblems.',
+            'Cache subproblem outputs in lookup array.'
           ],
-          codeSnippet: `// Fibonacci brute force O(2^N) -> Memoized DP O(N)`
-        },
-        {
-          chapter: '2. Memoization vs Tabulation',
-          title: 'Top-Down vs Bottom-Up',
-          duration: 30,
-          concept: 'Top-Down recursive caching vs Bottom-Up iterative table filling.',
-          points: [
-            'Top-Down: Recursion + Cache array.',
-            'Bottom-Up: Iterative loop starting from base cases.'
-          ],
-          codeSnippet: `// Bottom-Up DP for Climbing Stairs\nint dp[n+1];\ndp[1] = 1; dp[2] = 2;\nfor (int i = 3; i <= n; i++) dp[i] = dp[i-1] + dp[i-2];`
-        },
-        {
-          chapter: '3. Coin Change & Knapsack',
-          title: 'State Transition Equations',
-          duration: 30,
-          concept: 'Decision states: include vs exclude items.',
-          points: [
-            'dp[i] = min(dp[i], dp[i - coin] + 1).',
-            'Initialize with infinity, base case dp[0] = 0.'
-          ],
-          codeSnippet: `vector<int> dp(amount + 1, amount + 1);\ndp[0] = 0;\nfor (int i = 1; i <= amount; i++) {\n    for (int c : coins) {\n        if (i - c >= 0) dp[i] = min(dp[i], dp[i - c] + 1);\n    }\n}\nreturn dp[amount] > amount ? -1 : dp[amount];`
-        },
-        {
-          chapter: '4. Complexity & Interview Patterns',
-          title: '2D Matrix DP & LIS',
-          duration: 25,
-          concept: 'Longest Common Subsequence and Longest Increasing Subsequence.',
-          points: [
-            '2D Matrix DP: dp[i][j] = dp[i-1][j-1] + 1 if match.',
-            'State compression from O(M*N) to O(N).'
-          ],
-          codeSnippet: `// Complexity: O(M * N) Time, O(N) Space optimized`
+          codeSnippet: `int dp[n+1];\ndp[1] = 1; dp[2] = 2;\nfor (int i = 3; i <= n; i++) {\n    dp[i] = dp[i-1] + dp[i-2];\n}`
         }
       ]
     }
   ];
 
   const currentTopic = dsaTopics.find(t => t.id === selectedTopicId) || dsaTopics[0];
-  const activeLessons = currentTopic.aiVideoLessons || [];
+  const activeLessons = currentTopic.videoLessons || [];
   const currentLessonChapter = activeLessons[activeChapterIdx] || activeLessons[0];
   const totalVideoDuration = activeLessons.reduce((acc, l) => acc + l.duration, 0);
 
@@ -817,34 +657,39 @@ export default function CompanyPrepPage() {
     setCurrentFlowStep(2);
   };
 
+  // Group topics by Tier for clean progression
+  const beginnerTopics = dsaTopics.filter(t => t.tier === 'Beginner');
+  const intermediateTopics = dsaTopics.filter(t => t.tier === 'Intermediate');
+  const advancedTopics = dsaTopics.filter(t => t.tier === 'Advanced');
+
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8 pb-20 text-left px-2 sm:px-4">
+    <div className="w-full max-w-7xl mx-auto space-y-8 pb-20 text-left px-3 sm:px-6">
       
-      {/* ── TOP HEADER & CLEAN TAB NAVIGATION ── */}
+      {/* ── BREADCRUMB & NAVIGATION ── */}
       <header className="border-b border-slate-200 dark:border-slate-800 pb-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-              Company Interview Preparation
+            <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Technical Preparation
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mt-1">
-              {currentFlowStep === 1 && 'Select Target Company'}
-              {currentFlowStep === 2 && `Choose DSA Language`}
-              {currentFlowStep === 3 && `${selectedCompany?.companyName || 'Target'} Interview Roadmap`}
-              {currentFlowStep === 4 && `${currentTopic.title}`}
+              {currentFlowStep === 1 && 'Choose Your Target Company'}
+              {currentFlowStep === 2 && 'Select Coding Language'}
+              {currentFlowStep === 3 && `${selectedCompany?.companyName || 'Company'} Learning Path`}
+              {currentFlowStep === 4 && currentTopic.title}
               {currentFlowStep === 5 && `${currentTopic.title} • Video Lesson`}
-              {currentFlowStep === 6 && `Problem Practice Arena`}
-              {currentFlowStep === 7 && `${selectedCompany?.companyName || 'Target'} Technical Assessment`}
+              {currentFlowStep === 6 && 'Problem Practice Arena'}
+              {currentFlowStep === 7 && `${selectedCompany?.companyName || 'Company'} Assessment`}
             </h1>
             {selectedCompany && currentFlowStep > 1 && (
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Company: <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedCompany.companyName}</span> ({selectedCompany.industry}) • Language: <span className="font-mono font-semibold uppercase text-purple-600 dark:text-purple-400">{selectedLanguage}</span>
+              <p className="text-sm text-slate-500 mt-1">
+                Target: <strong className="text-slate-800 dark:text-slate-200">{selectedCompany.companyName}</strong> ({selectedCompany.industry}) • Language: <span className="font-mono uppercase font-semibold text-purple-600 dark:text-purple-400">{selectedLanguage}</span>
               </p>
             )}
           </div>
 
-          {/* Clean Stepper Tabs */}
-          <nav className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          {/* Minimal Clean Step Bar */}
+          <nav className="flex items-center gap-1.5 overflow-x-auto">
             {[
               { num: 1, label: '1. Company' },
               { num: 2, label: '2. Language' },
@@ -852,7 +697,7 @@ export default function CompanyPrepPage() {
               { num: 4, label: '4. Topic' },
               { num: 5, label: '5. Video' },
               { num: 6, label: '6. Coding' },
-              { num: 7, label: '7. Mock Test' }
+              { num: 7, label: '7. Test' }
             ].map(s => (
               <button
                 key={s.num}
@@ -864,7 +709,7 @@ export default function CompanyPrepPage() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition whitespace-nowrap cursor-pointer disabled:opacity-40 ${
                   currentFlowStep === s.num
                     ? 'bg-purple-600 text-white font-semibold'
-                    : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
                 {s.label}
@@ -874,21 +719,19 @@ export default function CompanyPrepPage() {
         </div>
       </header>
 
-      {/* ── STEP 1: CHOOSE TARGET COMPANY ── */}
+      {/* ── STEP 1: COMPANY SELECTION ── */}
       {currentFlowStep === 1 && (
         <section className="space-y-8 w-full">
-          
-          {/* Header Title & Subtitle */}
           <div className="space-y-1 text-left">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
               Choose Your Target Company
-            </h1>
-            <p className="text-base text-slate-600 dark:text-slate-400">
+            </h2>
+            <p className="text-sm text-slate-500">
               Prepare specifically for your target company's interview pattern.
             </p>
           </div>
 
-          {/* Search Company Input */}
+          {/* Search bar */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="h-4 w-4 absolute left-4 top-3.5 text-slate-400" />
@@ -897,15 +740,15 @@ export default function CompanyPrepPage() {
                 placeholder="Search company by name or industry..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-purple-600 dark:focus:border-purple-500 shadow-xs"
+                className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-purple-600"
               />
             </div>
 
-            <div className="sm:w-72">
+            <div className="sm:w-64">
               <select
                 value={industryFilter}
                 onChange={(e) => setIndustryFilter(e.target.value)}
-                className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-purple-600 dark:focus:border-purple-500 cursor-pointer shadow-xs"
+                className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-purple-600 cursor-pointer"
               >
                 {industries.map(ind => (
                   <option key={ind} value={ind}>
@@ -916,17 +759,17 @@ export default function CompanyPrepPage() {
             </div>
           </div>
 
-          {/* Company Grid / Loading / Empty State */}
+          {/* Clean Company Grid */}
           {loadingCompanies ? (
             <div className="py-24 text-center space-y-3">
-              <RefreshCw className="h-7 w-7 animate-spin text-purple-600 mx-auto" />
-              <p className="text-sm font-medium text-slate-500">Loading companies from database...</p>
+              <RefreshCw className="h-6 w-6 animate-spin text-purple-600 mx-auto" />
+              <p className="text-sm text-slate-500">Loading companies from database...</p>
             </div>
           ) : filteredCompanies.length === 0 ? (
-            <div className="py-20 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 p-8 space-y-2">
+            <div className="py-20 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-8 space-y-2">
               <Building2 className="h-10 w-10 text-slate-400 mx-auto" />
               <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">No companies available yet.</h3>
-              <p className="text-sm text-slate-500">No matching company records found in the database.</p>
+              <p className="text-sm text-slate-400">No matching company records found in the database.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -935,20 +778,19 @@ export default function CompanyPrepPage() {
                 return (
                   <div
                     key={comp._id}
-                    className={`p-7 rounded-2xl border text-left transition flex flex-col justify-between space-y-6 bg-white dark:bg-slate-900 ${
+                    className={`p-6 rounded-2xl border text-left transition flex flex-col justify-between space-y-5 bg-white dark:bg-slate-900 ${
                       isSelected
-                        ? 'border-purple-600 ring-2 ring-purple-600/30 dark:ring-purple-500/30'
-                        : 'border-slate-200 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-500'
+                        ? 'border-purple-600 ring-2 ring-purple-600/20'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
                     }`}
                   >
                     <div className="space-y-4">
-                      {/* Logo Area & Header */}
                       <div className="flex items-start space-x-4">
                         {comp.logoUrl ? (
                           <img
                             src={comp.logoUrl}
                             alt={comp.companyName}
-                            className="w-14 h-14 rounded-xl object-contain bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 shrink-0"
+                            className="w-12 h-12 rounded-xl object-contain bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1 shrink-0"
                             onError={(e) => {
                               e.target.style.display = 'none';
                               e.target.nextSibling.style.display = 'flex';
@@ -958,46 +800,44 @@ export default function CompanyPrepPage() {
                         
                         <div
                           style={{ display: comp.logoUrl ? 'none' : 'flex' }}
-                          className="w-14 h-14 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 items-center justify-center font-bold text-xl border border-purple-100 dark:border-purple-900 shrink-0 uppercase font-mono"
+                          className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 items-center justify-center font-bold text-lg border border-purple-100 dark:border-purple-900 shrink-0 font-mono uppercase"
                         >
                           {comp.companyName.charAt(0)}
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-bold text-slate-900 dark:text-white truncate">
+                          <h3 className="text-lg font-bold text-slate-900 dark:text-white truncate">
                             {comp.companyName}
                           </h3>
-                          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                          <p className="text-xs text-slate-500 mt-0.5 truncate">
                             {comp.industry || 'Technology & Software'}
                           </p>
                         </div>
                       </div>
 
-                      {/* Website link if available */}
                       {comp.website && (
-                        <p className="text-xs text-slate-400 flex items-center space-x-1.5 truncate pt-1">
+                        <p className="text-xs text-slate-400 flex items-center space-x-1.5 truncate">
                           <Globe className="h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{comp.website}</span>
                         </p>
                       )}
                     </div>
 
-                    {/* Action Button */}
-                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                        {comp.opportunityCount > 0 ? `${comp.opportunityCount} Active Roles` : 'Direct Prep'}
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                      <span className="text-xs text-slate-500">
+                        {comp.opportunityCount > 0 ? `${comp.opportunityCount} Roles` : 'Direct Path'}
                       </span>
 
                       <button
                         onClick={() => handleSelectCompany(comp)}
-                        className={`px-5 py-2.5 rounded-xl text-sm font-bold transition flex items-center space-x-1.5 cursor-pointer ${
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer ${
                           isSelected
-                            ? 'bg-purple-600 text-white shadow-sm'
-                            : 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 hover:bg-purple-600 hover:text-white'
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-purple-600 hover:text-white'
                         }`}
                       >
-                        <span>Prepare for {comp.companyName}</span>
-                        <ChevronRight className="h-4 w-4" />
+                        <span>Prepare</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
@@ -1005,19 +845,18 @@ export default function CompanyPrepPage() {
               })}
             </div>
           )}
-
         </section>
       )}
 
-      {/* ── STEP 2: CHOOSE DSA LANGUAGE ── */}
+      {/* ── STEP 2: LANGUAGE SELECTION ── */}
       {currentFlowStep === 2 && selectedCompany && (
-        <section className="max-w-2xl mx-auto space-y-6 py-6">
-          <div className="text-center space-y-1">
+        <section className="max-w-2xl mx-auto space-y-6 py-6 text-left">
+          <div className="space-y-1">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Select Coding Language
+              Select DSA Language
             </h2>
             <p className="text-sm text-slate-500">
-              Pick your preferred language for {selectedCompany.companyName} technical rounds.
+              Choose your primary coding language for {selectedCompany.companyName} interviews.
             </p>
           </div>
 
@@ -1041,11 +880,11 @@ export default function CompanyPrepPage() {
                 }}
                 className={`p-6 rounded-2xl border text-center transition flex flex-col items-center justify-center space-y-2 cursor-pointer bg-white dark:bg-slate-900 hover:border-purple-500 ${
                   selectedLanguage === lang.id
-                    ? 'border-purple-600 ring-2 ring-purple-600/20 bg-purple-50/20 dark:bg-purple-950/20'
+                    ? 'border-purple-600 ring-2 ring-purple-600/20'
                     : 'border-slate-200 dark:border-slate-800'
                 }`}
               >
-                <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center font-mono font-bold text-lg mb-1">
+                <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-lg mb-1">
                   <Code2 className="h-6 w-6" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">
@@ -1061,104 +900,58 @@ export default function CompanyPrepPage() {
           <div className="flex justify-between items-center pt-6 border-t border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setCurrentFlowStep(1)}
-              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition flex items-center space-x-1.5 cursor-pointer"
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
             >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Change Company</span>
+              ← Back to Companies
             </button>
-            <span className="text-xs text-slate-400">
-              Clicking a language continues directly to Roadmap
-            </span>
           </div>
         </section>
       )}
 
-      {/* ── STEP 3: COMPANY-SPECIFIC ROADMAP ── */}
+      {/* ── STEP 3: STRUCTURED LEARNING PATH (ROADMAP) ── */}
       {currentFlowStep === 3 && selectedCompany && (
-        <section className="space-y-8">
+        <section className="space-y-8 text-left">
           
-          {/* Company Hiring & Opportunity Overview */}
-          <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-5">
+          {/* Company Target Summary */}
+          <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                  {selectedCompany.companyName} Profile & Requirements
+                  {selectedCompany.companyName} Preparation Path
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Industry: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedCompany.industry || 'Technology'}</span> • Location: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedCompany.location || 'Remote / Hybrid'}</span>
+                  Industry: {selectedCompany.industry || 'Technology'} • Location: {selectedCompany.location || 'Remote'}
                 </p>
               </div>
 
-              <div className="flex items-center space-x-4 text-xs font-semibold">
-                <span className="text-emerald-600 dark:text-emerald-400">Solved: {solvedCount}</span>
-                <span className="text-purple-600 dark:text-purple-400">Completed: {completedTopicsCount}/{dsaTopics.length} Topics</span>
+              <div className="flex items-center space-x-3 text-xs font-semibold">
+                <span className="text-emerald-600">Solved: {solvedCount}</span>
+                <span className="text-purple-600">Completed: {completedTopicsCount}/{dsaTopics.length}</span>
+                <button
+                  onClick={handleStartMockTest}
+                  className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition cursor-pointer"
+                >
+                  Timed Test
+                </button>
               </div>
             </div>
 
-            {/* Real Opportunities from Database */}
-            {selectedCompany.opportunities && selectedCompany.opportunities.length > 0 ? (
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Active Database Roles & Required Skills ({selectedCompany.opportunities.length})
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Real Database Roles if available */}
+            {selectedCompany.opportunities && selectedCompany.opportunities.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Target Roles ({selectedCompany.opportunities.length})
+                </div>
+                <div className="flex flex-wrap gap-2">
                   {selectedCompany.opportunities.map((opp, idx) => (
-                    <div key={opp._id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h5 className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                          {opp.title}
-                        </h5>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 uppercase font-semibold">
-                          {opp.type}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-1 pt-1">
-                        {(opp.requiredSkills || []).map((skill, si) => (
-                          <span key={si} className="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
+                    <div key={opp._id || idx} className="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+                      <strong className="text-slate-800 dark:text-slate-200">{opp.title}</strong>
+                      <span className="text-slate-400 ml-1.5 uppercase font-mono">({opp.type})</span>
                     </div>
                   ))}
                 </div>
               </div>
-            ) : null}
-
-            {currentCompanyProfile ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm pt-2 border-t border-slate-100 dark:border-slate-800">
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-                    Focus Topics
-                  </h4>
-                  <div className="flex flex-wrap gap-1.5">
-                    {currentCompanyProfile.focusTopics.map((ft, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 text-xs font-medium">
-                        {ft}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-                    Round Breakdown
-                  </h4>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {currentCompanyProfile.roundBreakdown}
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-                    Strategy & Patterns
-                  </h4>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {currentCompanyProfile.difficultyPattern}
-                  </p>
-                </div>
-              </div>
-            ) : null}
+            )}
           </div>
 
           {/* Unsolved Practice Queue */}
@@ -1166,7 +959,7 @@ export default function CompanyPrepPage() {
             <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 space-y-2">
               <h4 className="text-xs font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider flex items-center space-x-1.5">
                 <RotateCcw className="h-3.5 w-3.5" />
-                <span>Unsolved Practice Queue ({unsolvedList.length} problems)</span>
+                <span>Retry Unsolved Problems ({unsolvedList.length})</span>
               </h4>
               <div className="flex flex-wrap gap-2">
                 {unsolvedList.map(u => (
@@ -1182,120 +975,126 @@ export default function CompanyPrepPage() {
                     }}
                     className="px-3 py-1 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-lg hover:border-amber-500 cursor-pointer"
                   >
-                    {u.problemTitle} ↳ Retry
+                    {u.problemTitle} ↳ Try Again
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Core Progressive DSA Roadmap */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                Curriculum Roadmap
-              </h3>
-              <button
-                onClick={handleStartMockTest}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer"
-              >
-                <Clock className="h-3.5 w-3.5" />
-                <span>Launch Mock Test</span>
-              </button>
-            </div>
+          {/* Structured Progression: Beginner -> Intermediate -> Advanced */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+              Curriculum Progression
+            </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {dsaTopics.map(topic => {
-                const isDone = Boolean(completedTopics[`${selectedCompany._id}_${topic.id}`]);
-                return (
-                  <div
-                    key={topic.id}
-                    className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between space-y-4"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
-                          {topic.tier} • {topic.category}
-                        </span>
-
-                        <button
-                          onClick={() => toggleTopicDone(topic.id)}
-                          className="text-xs font-medium flex items-center space-x-1 text-slate-500 hover:text-purple-600 cursor-pointer"
-                        >
-                          {isDone ? (
-                            <>
-                              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Done</span>
-                            </>
-                          ) : (
-                            <>
-                              <Circle className="h-4 w-4 text-slate-400" />
-                              <span>Mark Done</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-
-                      <h4 className="text-lg font-bold text-slate-900 dark:text-white">
-                        {topic.title}
-                      </h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                        {topic.description}
-                      </p>
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                      <button
-                        onClick={() => {
-                          setSelectedTopicId(topic.id);
-                          setCurrentFlowStep(4);
-                        }}
-                        className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-purple-600 hover:text-white text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition cursor-pointer"
-                      >
-                        Topic Breakdown
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setSelectedTopicId(topic.id);
-                          setCurrentFlowStep(5);
-                          setCurrentTime(0);
-                          setIsPlaying(false);
-                          setActiveChapterIdx(0);
-                        }}
-                        className="px-3.5 py-1.5 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-600 hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer"
-                      >
-                        Video Lesson
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setSelectedTopicId(topic.id);
-                          setCurrentFlowStep(6);
-                        }}
-                        className="px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer"
-                      >
-                        Coding Arena
-                      </button>
-                    </div>
+            {[
+              { tierName: 'Beginner Foundations', list: beginnerTopics, badge: 'Phase 1' },
+              { tierName: 'Intermediate Data Structures', list: intermediateTopics, badge: 'Phase 2' },
+              { tierName: 'Advanced Algorithmic Mastery', list: advancedTopics, badge: 'Phase 3' }
+            ].map(group => {
+              if (group.list.length === 0) return null;
+              return (
+                <div key={group.tierName} className="space-y-3">
+                  <div className="flex items-center space-x-2 text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+                    <span>{group.badge}</span>
+                    <span>•</span>
+                    <span>{group.tierName}</span>
                   </div>
-                );
-              })}
-            </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {group.list.map(topic => {
+                      const isDone = Boolean(completedTopics[`${selectedCompany._id}_${topic.id}`]);
+                      return (
+                        <div
+                          key={topic.id}
+                          className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between space-y-4"
+                        >
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-mono font-bold text-slate-400 uppercase">
+                                {topic.category}
+                              </span>
+                              <button
+                                onClick={() => toggleTopicDone(topic.id)}
+                                className="text-xs flex items-center space-x-1 text-slate-400 hover:text-purple-600 cursor-pointer"
+                              >
+                                {isDone ? (
+                                  <>
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                    <span className="text-emerald-600 font-semibold">Done</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Circle className="h-4 w-4 text-slate-400" />
+                                    <span>Mark Done</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+
+                            <h4 className="text-lg font-bold text-slate-900 dark:text-white">
+                              {topic.title}
+                            </h4>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                              {topic.description}
+                            </p>
+                          </div>
+
+                          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedTopicId(topic.id);
+                                setCurrentFlowStep(4);
+                              }}
+                              className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-semibold transition cursor-pointer"
+                            >
+                              Learn Topic
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setSelectedTopicId(topic.id);
+                                setCurrentFlowStep(5);
+                                setCurrentTime(0);
+                                setIsPlaying(false);
+                                setActiveChapterIdx(0);
+                              }}
+                              className="px-3.5 py-1.5 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-600 hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer"
+                            >
+                              Video Lesson
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setSelectedTopicId(topic.id);
+                                setCurrentFlowStep(6);
+                              }}
+                              className="px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer"
+                            >
+                              Code & Practice
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
 
       {/* ── STEP 4: TOPIC LEARNING ── */}
       {currentFlowStep === 4 && selectedCompany && (
-        <section className="space-y-8">
-          
+        <section className="space-y-8 text-left">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
             <div>
-              <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
-                Topic Learning Module
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-600">
+                Core Topic Concept
               </span>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white mt-1">
                 {currentTopic.title}
               </h2>
             </div>
@@ -1308,37 +1107,35 @@ export default function CompanyPrepPage() {
                   setIsPlaying(false);
                   setActiveChapterIdx(0);
                 }}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition cursor-pointer"
               >
                 Watch Video Lesson
               </button>
               <button
                 onClick={() => setCurrentFlowStep(6)}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition cursor-pointer"
               >
-                Solve Problems
+                Practice Problems →
               </button>
             </div>
           </div>
 
-          <div className="space-y-6 leading-relaxed">
-            
+          <div className="space-y-6">
             <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Overview & Explanation
+                Detailed Explanation
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
+              <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed">
                 {currentTopic.explanation}
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
               <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600">
-                  Core Concepts
-                </h3>
-                <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-2 list-disc list-inside">
+                <h4 className="text-sm font-bold text-purple-600 uppercase tracking-wider">
+                  Fundamental Concepts
+                </h4>
+                <ul className="text-sm text-slate-700 dark:text-slate-300 space-y-2 list-disc list-inside">
                   {currentTopic.beginnerConcepts.map((c, i) => (
                     <li key={i}>{c}</li>
                   ))}
@@ -1346,56 +1143,52 @@ export default function CompanyPrepPage() {
               </div>
 
               <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider text-emerald-600">
+                <h4 className="text-sm font-bold text-emerald-600 uppercase tracking-wider">
                   Step-by-Step Example
-                </h3>
-                <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-2 list-disc list-inside">
+                </h4>
+                <ul className="text-sm text-slate-700 dark:text-slate-300 space-y-2 list-disc list-inside">
                   {currentTopic.stepByStepExamples.map((ex, i) => (
                     <li key={i}>{ex}</li>
                   ))}
                 </ul>
               </div>
-
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-sm">
-                <h4 className="font-bold text-slate-900 dark:text-white">Time & Space Complexity</h4>
-                <p className="text-xs text-slate-500 font-mono"><strong>Time:</strong> {currentTopic.timeComplexity}</p>
-                <p className="text-xs text-slate-500 font-mono"><strong>Space:</strong> {currentTopic.spaceComplexity}</p>
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="font-bold text-slate-900 dark:text-white text-sm">Time & Space Complexity</h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-mono"><strong>Time:</strong> {currentTopic.timeComplexity}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-mono"><strong>Space:</strong> {currentTopic.spaceComplexity}</p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-sm">
-                <h4 className="font-bold text-slate-900 dark:text-white">Common Traps & Mistakes</h4>
-                <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside">
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="font-bold text-slate-900 dark:text-white text-sm">Common Mistakes</h4>
+                <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1 list-disc list-inside">
                   {currentTopic.commonMistakes.map((m, i) => (
                     <li key={i}>{m}</li>
                   ))}
                 </ul>
               </div>
 
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-sm">
-                <h4 className="font-bold text-slate-900 dark:text-white">{selectedCompany.companyName} Focus</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                <h4 className="font-bold text-slate-900 dark:text-white text-sm">Interview Importance</h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   {currentTopic.interviewRelevance}
                 </p>
               </div>
-
             </div>
-
           </div>
 
           <div className="flex justify-between items-center pt-6 border-t border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setCurrentFlowStep(3)}
-              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition cursor-pointer"
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
             >
-              ← Back to Roadmap
+              ← Back to Path
             </button>
             <button
               onClick={() => setCurrentFlowStep(6)}
-              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition cursor-pointer"
+              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition cursor-pointer"
             >
               Practice in Coding Arena →
             </button>
@@ -1405,40 +1198,37 @@ export default function CompanyPrepPage() {
 
       {/* ── STEP 5: VIDEO LESSON PLAYER ── */}
       {currentFlowStep === 5 && selectedCompany && (
-        <section className="space-y-6">
-          
+        <section className="space-y-6 text-left">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
             <div>
-              <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+              <span className="text-xs font-bold text-purple-600 uppercase tracking-wider">
                 Video Lesson
               </span>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-0.5">
-                {currentTopic.title} Masterclass
+                {currentTopic.title} Lesson
               </h2>
             </div>
 
             <button
               onClick={() => setCurrentFlowStep(6)}
-              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition cursor-pointer"
             >
               Proceed to Coding Arena →
             </button>
           </div>
 
-          {/* Clean Player Window */}
+          {/* Clean Player Stage */}
           <div
             ref={playerContainerRef}
             className={`rounded-2xl bg-slate-950 text-white border border-slate-800 overflow-hidden flex flex-col justify-between ${
-              isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'min-h-[480px]'
+              isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'min-h-[460px]'
             }`}
           >
-            {/* Top Bar */}
-            <div className="p-4 border-b border-slate-800/80 flex items-center justify-between text-xs font-mono text-slate-400">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
               <span className="font-semibold text-slate-200">{currentLessonChapter.chapter}: {currentLessonChapter.title}</span>
               <span>{formatTimer(currentTime)} / {formatTimer(totalVideoDuration)}</span>
             </div>
 
-            {/* Stage Body */}
             <div className="p-6 sm:p-10 space-y-6 text-left">
               <div>
                 <span className="text-xs font-mono uppercase text-purple-400 font-bold">
@@ -1466,7 +1256,7 @@ export default function CompanyPrepPage() {
               )}
             </div>
 
-            {/* Controls Bar */}
+            {/* Playback Controls */}
             <div className="p-4 bg-slate-900/90 border-t border-slate-800 space-y-3">
               <div className="relative w-full h-1.5 bg-slate-800 rounded-full overflow-hidden cursor-pointer">
                 <div
@@ -1523,7 +1313,6 @@ export default function CompanyPrepPage() {
             </div>
           </div>
 
-          {/* Chapters List */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-left">
             {activeLessons.map((l, idx) => (
               <button
@@ -1543,13 +1332,12 @@ export default function CompanyPrepPage() {
         </section>
       )}
 
-      {/* ── STEP 6: PROFESSIONAL CODING ARENA (LEETCODE STYLE) ── */}
+      {/* ── STEP 6: CODING ARENA ── */}
       {currentFlowStep === 6 && selectedCompany && (
-        <section className="space-y-4">
+        <section className="space-y-4 text-left">
           
-          {/* Top Control Bar: Problem selector & Typography */}
-          <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
-            
+          {/* Top Control Bar */}
+          <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center space-x-2 overflow-x-auto">
               <span className="text-xs font-semibold text-slate-400 uppercase">Problems:</span>
               {problems.map(p => {
@@ -1579,7 +1367,6 @@ export default function CompanyPrepPage() {
               })}
             </div>
 
-            {/* Font & Layout Controls */}
             <div className="flex items-center space-x-3 text-xs font-mono">
               <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
                 <span className="text-slate-400 px-1">Text:</span>
@@ -1638,15 +1425,13 @@ export default function CompanyPrepPage() {
                 ))}
               </div>
             </div>
-
           </div>
 
           {selectedProblem && (
             <div className={`grid gap-5 items-start ${editorLayout === 'split' ? 'grid-cols-1 lg:grid-cols-12' : 'grid-cols-1'}`}>
               
-              {/* ── QUESTION PANEL (LARGE READABLE TEXT) ── */}
+              {/* Problem Statement Area */}
               <div className={`${editorLayout === 'split' ? 'lg:col-span-5' : 'w-full'} p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-6 max-h-[820px] overflow-y-auto`}>
-                
                 <div className="space-y-1.5 border-b border-slate-100 dark:border-slate-800 pb-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
@@ -1686,13 +1471,12 @@ export default function CompanyPrepPage() {
                   </p>
                 </div>
 
-                {/* Examples */}
                 <div className="space-y-3">
                   <h4 className="text-xs font-semibold uppercase text-slate-400">Examples</h4>
                   {selectedProblem.examples.map((ex, idx) => (
                     <div key={idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono space-y-1">
-                      <div><strong className="text-purple-600 dark:text-purple-400">Input:</strong> <code>{ex.input}</code></div>
-                      <div><strong className="text-emerald-600 dark:text-emerald-400">Output:</strong> <code>{ex.output}</code></div>
+                      <div><strong className="text-purple-600">Input:</strong> <code>{ex.input}</code></div>
+                      <div><strong className="text-emerald-600">Output:</strong> <code>{ex.output}</code></div>
                       {ex.explanation && (
                         <p className="text-slate-500 font-sans pt-1 text-[11px]">{ex.explanation}</p>
                       )}
@@ -1700,7 +1484,6 @@ export default function CompanyPrepPage() {
                   ))}
                 </div>
 
-                {/* Constraints */}
                 <div className="space-y-1.5">
                   <h4 className="text-xs font-semibold uppercase text-slate-400">Constraints</h4>
                   <ul className="text-xs font-mono text-slate-500 space-y-1 list-disc list-inside bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
@@ -1709,12 +1492,10 @@ export default function CompanyPrepPage() {
                     ))}
                   </ul>
                 </div>
-
               </div>
 
-              {/* ── CODE EDITOR & CONSOLE ── */}
+              {/* Code Editor & Console */}
               <div className={`${editorLayout === 'split' ? 'lg:col-span-7' : 'w-full'} rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden flex flex-col justify-between`}>
-                
                 <div className="p-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
                   <span>solution.{selectedLanguage === 'cpp' ? 'cpp' : selectedLanguage === 'python' ? 'py' : 'java'}</span>
                   <button
@@ -1799,7 +1580,7 @@ export default function CompanyPrepPage() {
                   {activeConsoleTab === 'output' && (
                     <div>
                       {!codeResult ? (
-                        <p className="text-slate-400 text-center py-3">Run code or submit to view test case execution.</p>
+                        <p className="text-slate-400 text-center py-3">Run code or submit to view test execution results.</p>
                       ) : (
                         <div className="space-y-2">
                           <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
@@ -1828,7 +1609,6 @@ export default function CompanyPrepPage() {
                     </p>
                   )}
                 </div>
-
               </div>
 
             </div>
@@ -1836,10 +1616,9 @@ export default function CompanyPrepPage() {
         </section>
       )}
 
-      {/* ── STEP 7: TIMED MOCK ASSESSMENT ── */}
+      {/* ── STEP 7: TIMED ASSESSMENT ── */}
       {currentFlowStep === 7 && selectedCompany && (
-        <section className="space-y-6">
-          
+        <section className="space-y-6 text-left">
           <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <span className="text-xs font-semibold text-purple-600 uppercase">Assessment</span>
@@ -1867,7 +1646,6 @@ export default function CompanyPrepPage() {
             </div>
           </div>
 
-          {/* Result Card */}
           {mockCompleted && mockResult && (
             <div className="p-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-6 text-center">
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -1906,7 +1684,6 @@ export default function CompanyPrepPage() {
             </div>
           )}
 
-          {/* Active Question in Test */}
           {!mockCompleted && mockSession && (
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
