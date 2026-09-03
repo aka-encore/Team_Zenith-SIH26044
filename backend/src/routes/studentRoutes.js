@@ -10,6 +10,8 @@ import {
   getSkillPassport,
   getDsaPracticeProblems,
   submitDsaProblem,
+  getDsaMockTest,
+  submitDsaMockTest,
   getStudentNotifications, markStudentNotificationAsRead, markAllStudentNotificationsAsRead
 } from '../controllers/studentController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
@@ -28,6 +30,8 @@ router.get('/skill-passport', protect, authorize('student', 'faculty', 'institut
 router.get('/readiness-score', protect, authorize('student'), getCareerReadinessScore);
 router.get('/dsa-problems', protect, authorize('student'), getDsaPracticeProblems);
 router.post('/dsa-submit', protect, authorize('student'), submitDsaProblem);
+router.get('/dsa-mock-test', protect, authorize('student'), getDsaMockTest);
+router.post('/dsa-mock-submit', protect, authorize('student'), submitDsaMockTest);
 
 // 3. Skills CRUD
 router.get('/skills', protect, authorize('student'), getSkills);

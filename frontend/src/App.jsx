@@ -53,6 +53,7 @@ import SkillGapPage from './pages/SkillGapPage';
 import CompanyPrepPage from './pages/CompanyPrepPage';
 import CompanyTopicLearningPage from './pages/CompanyTopicLearningPage';
 import CompanyDsaPracticePage from './pages/CompanyDsaPracticePage';
+import CompanyMockTestPage from './pages/CompanyMockTestPage';
 import OpportunityDiscoveryPage from './pages/OpportunityDiscoveryPage';
 import StudentApplicationsPage from './pages/StudentApplicationsPage';
 import StudentInterviewsPage from './pages/StudentInterviewsPage';
@@ -223,6 +224,14 @@ function AppContent() {
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <CompanyDsaPracticePage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/company-prep/mock-test" 
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <CompanyMockTestPage />
             </ProtectedRoute>
           } 
         />

@@ -114,103 +114,154 @@ export default function CompanyPrepPage() {
     ? Math.round((matchedSkills.length / requiredSkills.length) * 100)
     : 100;
 
-  // DSA Topic curriculum dynamically structured for this company/role
+  // ── Step 2: Language Selection State ('cpp' | 'java' | 'python') ──
+  const [selectedLanguage, setSelectedLanguage] = useState('cpp');
+
+  // Comprehensive 16-Topic Core DSA Roadmap (Beginner -> Intermediate -> Advanced)
   const dsaCurriculum = [
     {
-      id: 'dsa_arrays_strings',
-      category: 'Core Data Structures',
-      title: 'Arrays, Strings & Two Pointers',
+      id: 'dsa_arrays',
+      category: 'Linear Structures',
+      title: 'Arrays',
+      level: 'Beginner to Advanced',
       difficulty: 'Easy - Medium',
-      relevance: 'High',
-      estimatedHours: '4-6 Hours',
-      patterns: ['Two Pointers', 'Sliding Window', 'Prefix Sums', 'String Manipulation'],
-      keyProblems: [
-        'Two Sum / 3Sum Problems',
-        'Longest Substring Without Repeating Characters',
-        'Container With Most Water',
-        'Valid Palindrome & Anagrams'
-      ],
-      description: `Essential problem-solving foundation required for ${selectedOpportunity?.companyId?.companyName || selectedOpportunity?.companyName || 'Corporate'} initial coding rounds.`
+      patterns: ['Traversal', 'Searching', 'Sorting', 'Two Pointer', 'Sliding Window'],
+      description: 'Contiguous memory, index access, prefix sums, and two-pointer search.'
+    },
+    {
+      id: 'dsa_strings',
+      category: 'Linear Structures',
+      title: 'Strings',
+      level: 'Beginner to Intermediate',
+      difficulty: 'Easy - Medium',
+      patterns: ['ASCII/Unicode', 'Palindromes', 'Anagrams', 'String Matching (KMP)'],
+      description: 'Character manipulation, string builder, and substring windows.'
+    },
+    {
+      id: 'dsa_linked_lists',
+      category: 'Linear Structures',
+      title: 'Linked List',
+      level: 'Beginner to Intermediate',
+      difficulty: 'Medium',
+      patterns: ['Singly/Doubly Linked', 'Fast & Slow Pointers', 'Reversal', 'Merge K Lists'],
+      description: 'Dynamic pointer chaining, cycle detection, and memory nodes.'
+    },
+    {
+      id: 'dsa_stack',
+      category: 'Linear Structures',
+      title: 'Stack',
+      level: 'Beginner to Intermediate',
+      difficulty: 'Easy - Medium',
+      patterns: ['LIFO Operations', 'Monotonic Stack', 'Parentheses Validation', 'Min Stack'],
+      description: 'LIFO buffer, expression evaluation, and next greater element.'
+    },
+    {
+      id: 'dsa_queue',
+      category: 'Linear Structures',
+      title: 'Queue',
+      level: 'Beginner to Intermediate',
+      difficulty: 'Easy - Medium',
+      patterns: ['FIFO Operations', 'Circular Queue', 'Deque', 'Sliding Window Maximum'],
+      description: 'FIFO buffers, breadth-first traversal, and streaming window max.'
     },
     {
       id: 'dsa_hashing',
       category: 'Data Structures',
-      title: 'Hash Maps, Sets & Frequency Tables',
+      title: 'Hashing',
+      level: 'Beginner to Intermediate',
       difficulty: 'Easy - Medium',
-      relevance: 'High',
-      estimatedHours: '3-4 Hours',
-      patterns: ['Frequency Counter', 'Fast O(1) Lookups', 'Anagram Grouping'],
-      keyProblems: [
-        'Group Anagrams',
-        'Subarray Sum Equals K',
-        'Top K Frequent Elements',
-        'Longest Consecutive Sequence'
-      ],
-      description: 'Critical for optimizing time complexity in technical interviews.'
+      patterns: ['Hash Maps', 'Hash Sets', 'Collision Resolution', 'Frequency Tables'],
+      description: 'O(1) average lookups, frequency counting, and complement pairing.'
     },
     {
-      id: 'dsa_linked_lists_stacks',
-      category: 'Linear Structures',
-      title: 'Linked Lists, Stacks & Queues',
-      difficulty: 'Medium',
-      relevance: 'Moderate',
-      estimatedHours: '4-5 Hours',
-      patterns: ['Fast & Slow Pointers', 'In-Place Reversal', 'Monotonic Stack'],
-      keyProblems: [
-        'Reverse a Linked List & Detect Cycle',
-        'Merge Two Sorted Lists',
-        'Valid Parentheses & Min Stack',
-        'Daily Temperatures (Monotonic Stack)'
-      ],
-      description: 'Tests memory pointers, recursion, and LIFO/FIFO buffer management.'
+      id: 'dsa_recursion',
+      category: 'Algorithmic Fundamentals',
+      title: 'Recursion',
+      level: 'Beginner to Intermediate',
+      difficulty: 'Easy - Medium',
+      patterns: ['Base Case / Inductive Step', 'Call Stack Frames', 'Divide & Conquer'],
+      description: 'Self-referential execution frames, call stack depth, and recurrence relations.'
     },
     {
-      id: 'dsa_trees_graphs',
-      category: 'Hierarchical & Non-Linear',
-      title: 'Binary Trees, BST & Graph Traversals',
+      id: 'dsa_binary_search',
+      category: 'Search Algorithms',
+      title: 'Binary Search',
+      level: 'Beginner to Advanced',
+      difficulty: 'Easy - Hard',
+      patterns: ['Sorted Arrays', 'Search on Answer', 'Rotated Array', 'Peak Finding'],
+      description: 'O(log N) divide-and-conquer search on monotonic search spaces.'
+    },
+    {
+      id: 'dsa_sorting',
+      category: 'Algorithms',
+      title: 'Sorting',
+      level: 'Beginner to Intermediate',
+      difficulty: 'Easy - Medium',
+      patterns: ['QuickSort', 'MergeSort', 'Counting Sort', 'Custom Comparators'],
+      description: 'O(N log N) divide-and-conquer sorting and stability properties.'
+    },
+    {
+      id: 'dsa_trees',
+      category: 'Hierarchical Structures',
+      title: 'Trees',
+      level: 'Intermediate to Advanced',
       difficulty: 'Medium - Hard',
-      relevance: 'High',
-      estimatedHours: '6-8 Hours',
-      patterns: ['DFS / BFS Traversal', 'Lowest Common Ancestor', 'Topological Sort', 'Shortest Path (Dijkstra)'],
-      keyProblems: [
-        'Maximum Depth & Diameter of Binary Tree',
-        'Binary Tree Level Order Traversal',
-        'Number of Islands & Graph Valid Tree',
-        'Course Schedule (Topological Sort)'
-      ],
-      description: `Core algorithmic track for ${selectedOpportunity?.title || 'Software Engineer'} technical interviews.`
+      patterns: ['Binary Trees', 'Pre/In/Postorder DFS', 'Level-order BFS', 'LCA'],
+      description: 'Acyclic graphs, hierarchical node traversals, and subtree recursions.'
     },
     {
-      id: 'dsa_dp_greedy',
+      id: 'dsa_bst',
+      category: 'Hierarchical Structures',
+      title: 'BST (Binary Search Tree)',
+      level: 'Intermediate to Advanced',
+      difficulty: 'Medium',
+      patterns: ['BST Invariants', 'Inorder Sorting', 'Insertion/Deletion', 'Validation'],
+      description: 'Ordered hierarchical lookup, balanced trees, and range queries.'
+    },
+    {
+      id: 'dsa_heap',
+      category: 'Priority Structures',
+      title: 'Heap (Priority Queue)',
+      level: 'Intermediate to Advanced',
+      difficulty: 'Medium - Hard',
+      patterns: ['Min/Max Heap', 'Top K Elements', 'Median Stream', 'K-way Merge'],
+      description: 'O(log N) priority extractions, complete binary tree array representations.'
+    },
+    {
+      id: 'dsa_graphs',
+      category: 'Non-Linear Structures',
+      title: 'Graphs',
+      level: 'Intermediate to Advanced',
+      difficulty: 'Medium - Hard',
+      patterns: ['Adjacency Lists', 'BFS / DFS', 'Dijkstra', 'Topological Sort'],
+      description: 'Networks of vertices & edges, cycle detection, and shortest paths.'
+    },
+    {
+      id: 'dsa_greedy',
+      category: 'Algorithmic Paradigms',
+      title: 'Greedy',
+      level: 'Intermediate',
+      difficulty: 'Medium',
+      patterns: ['Locally Optimal Choices', 'Interval Scheduling', 'Huffman Coding'],
+      description: 'Making optimal local decisions without backtracking.'
+    },
+    {
+      id: 'dsa_backtracking',
+      category: 'Advanced Paradigms',
+      title: 'Backtracking',
+      level: 'Intermediate to Advanced',
+      difficulty: 'Medium - Hard',
+      patterns: ['N-Queens', 'Sudoku Solver', 'Subsets / Permutations', 'State Pruning'],
+      description: 'Exhaustive state-space search with recursive trial and rollbacks.'
+    },
+    {
+      id: 'dsa_dp',
       category: 'Advanced Algorithms',
-      title: 'Dynamic Programming & Greedy Strategies',
+      title: 'Dynamic Programming',
+      level: 'Intermediate to Advanced',
       difficulty: 'Medium - Hard',
-      relevance: 'High',
-      estimatedHours: '6-8 Hours',
-      patterns: ['0/1 Knapsack', 'Fibonacci Sequences', 'Longest Common Subsequence', 'Interval Scheduling'],
-      keyProblems: [
-        'Climbing Stairs & House Robber',
-        'Coin Change & 0/1 Knapsack',
-        'Longest Increasing Subsequence',
-        'Non-overlapping Intervals'
-      ],
-      description: 'Used in final-round hiring assessments for optimal solution discovery.'
-    },
-    {
-      id: 'dsa_system_db',
-      category: 'System & Database Concepts',
-      title: 'System Design & Database Indexing',
-      difficulty: 'Medium',
-      relevance: 'Essential for Backend / Full Stack',
-      estimatedHours: '4-5 Hours',
-      patterns: ['REST API Design', 'SQL vs NoSQL', 'Database Indexing', 'Caching (Redis)'],
-      keyProblems: [
-        'Design a Scalable URL Shortener / Rate Limiter',
-        'Complex SQL Joins & Aggregations',
-        'Designing Data Models for High Concurrency',
-        'State Management & Microservice Communication'
-      ],
-      description: `Directly aligns with ${requiredSkills.slice(0, 3).join(', ')} stack deliverables.`
+      patterns: ['Memoization (Top-Down)', 'Tabulation (Bottom-Up)', '0/1 Knapsack', 'LCS'],
+      description: 'Optimal substructure and overlapping subproblems optimization.'
     }
   ];
 
@@ -409,13 +460,51 @@ export default function CompanyPrepPage() {
               </div>
 
               <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center space-y-1 shadow-sm">
-                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block">DSA Readiness</span>
+                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block">DSA Roadmap</span>
                 <div className="text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
                   {dsaProgressPercent}%
                 </div>
                 <span className="text-[9px] font-mono text-slate-400">
-                  {completedDsaCount}/{totalDsaTopics} Modules
+                  {completedDsaCount}/{totalDsaTopics} Topics
                 </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── STEP 2: PROGRAMMING LANGUAGE SELECTION (C++, Java, Python) ── */}
+          <div className="p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider font-mono flex items-center space-x-2">
+                  <Code2 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <span>2. Select Your DSA Programming Language</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Choose your preferred language for concept examples, coding editor, and timed assessments.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                {[
+                  { id: 'cpp', label: 'C++', subtitle: 'C++17 / STL' },
+                  { id: 'java', label: 'Java', subtitle: 'Java 17 / Collections' },
+                  { id: 'python', label: 'Python', subtitle: 'Python 3.11' }
+                ].map((lang) => (
+                  <button
+                    key={lang.id}
+                    onClick={() => setSelectedLanguage(lang.id)}
+                    className={`px-4 py-2.5 rounded-2xl border-2 text-xs font-mono font-black transition cursor-pointer flex flex-col items-center ${
+                      selectedLanguage === lang.id
+                        ? 'border-purple-600 bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-purple-400/40'
+                    }`}
+                  >
+                    <span>{lang.label}</span>
+                    <span className={`text-[9px] font-normal ${selectedLanguage === lang.id ? 'text-purple-100' : 'text-slate-400'}`}>
+                      {lang.subtitle}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -655,6 +744,36 @@ export default function CompanyPrepPage() {
               </div>
 
             </div>
+          </div>
+
+          {/* ── STEP 8: TIMED COMPANY-SPECIFIC MOCK ASSESSMENT ── */}
+          <div className="p-6 sm:p-8 rounded-3xl border-2 border-purple-500/40 bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-purple-500/10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] font-mono font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300">
+                  Step 8: Final Milestone
+                </span>
+                <span className="text-xs text-slate-500 font-mono">
+                  Target Company: <strong className="text-slate-900 dark:text-white">{selectedOpportunity.companyId?.companyName || selectedOpportunity.companyName || 'Target Enterprise'}</strong>
+                </span>
+              </div>
+
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                Timed Company-Specific Mock Coding Test
+              </h3>
+
+              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
+                Experience a simulated 45-minute technical hiring assessment with mixed DSA challenges (Easy → Medium → Company Level) tested in {selectedLanguage.toUpperCase()}. Real scores and execution verification recorded on your verified profile.
+              </p>
+            </div>
+
+            <button
+              onClick={() => navigate(`/company-prep/mock-test?oppId=${selectedOppId}&lang=${selectedLanguage}`)}
+              className="px-6 py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black rounded-2xl text-xs shadow-xl shadow-purple-600/30 transition flex items-center space-x-2 cursor-pointer shrink-0"
+            >
+              <Clock className="h-4 w-4" />
+              <span>Launch 45-Min Mock Test ({selectedLanguage.toUpperCase()})</span>
+            </button>
           </div>
 
         </div>

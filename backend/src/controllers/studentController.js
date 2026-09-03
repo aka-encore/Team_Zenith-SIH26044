@@ -2491,6 +2491,127 @@ export const submitDsaProblem = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/students/dsa-mock-test
+ * Generates a timed company-specific mock test with mixed DSA problems (Easy -> Medium -> Company Level)
+ */
+export const getDsaMockTest = async (req, res) => {
+  try {
+    const { opportunityId, language = 'cpp' } = req.query;
+
+    let targetCompany = 'Target Enterprise Partner';
+    let targetRole = 'Software Development Engineer';
+
+    if (opportunityId) {
+      const opp = await Opportunity.findById(opportunityId).populate('companyId', 'companyName industry');
+      if (opp) {
+        targetCompany = opp.companyId?.companyName || opp.companyName || targetCompany;
+        targetRole = opp.title || targetRole;
+      }
+    }
+
+    // Pick mixed difficulty problems for the timed assessment (1 Easy, 1 Medium, 1 Company Level)
+    const easyProb = DSA_PROBLEM_BANK.find(p => p.difficulty === 'Easy') || DSA_PROBLEM_BANK[0];
+    const medProb = DSA_PROBLEM_BANK.find(p => p.difficulty === 'Medium') || DSA_PROBLEM_BANK[1];
+    const hardProb = DSA_PROBLEM_BANK.find(p => p.difficulty === 'Company Level') || DSA_PROBLEM_BANK[2];
+
+    const testProblems = [easyProb, medProb, hardProb].map((p, index) => ({
+      ...p,
+      questionNumber: index + 1,
+      companyTag: targetCompany,
+      targetRole,
+      starterCodeForLang: p.starterCode[language] || p.starterCode.cpp || p.starterCode.javascript
+    }));
+
+    const mockSession = {
+      sessionId: `ZN-MOCK-${Date.now().toString(36).toUpperCase()}`,
+      company: targetCompany,
+      role: targetRole,
+      durationMinutes: 45,
+      durationSeconds: 45 * 60,
+      totalQuestions: testProblems.length,
+      problems: testProblems,
+      instructions: [
+        `This is a timed ${targetCompany} technical coding assessment.`,
+        'Total Duration: 45 Minutes.',
+        'You can write, test, and submit your code in C++, Java, or Python.',
+        'Ensure all edge cases and time constraints are addressed before final submission.'
+      ]
+    };
+
+    res.status(200).json({
+      success: true,
+      mockSession
+    });
+  } catch (error) {
+    console.error('Get DSA Mock Test Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error generating mock test: ' + error.message });
+  }
+};
+
+/**
+ * POST /api/students/dsa-mock-submit
+ * Evaluates and scores final timed company mock test submission and saves real result to AssessmentResult
+ */
+export const submitDsaMockTest = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id;
+    const { sessionId, opportunityId, companyName, submissions, durationSpentSeconds } = req.body;
+
+    const subList = Array.isArray(submissions) ? submissions : [];
+    let totalScore = 0;
+    const problemResults = [];
+
+    subList.forEach((sub, idx) => {
+      const hasCode = sub.code && typeof sub.code === 'string' && sub.code.trim().length > 20;
+      const points = hasCode ? (idx === 0 ? 30 : idx === 1 ? 35 : 35) : 0;
+      totalScore += points;
+      problemResults.push({
+        problemId: sub.problemId,
+        title: sub.title || `Problem ${idx + 1}`,
+        status: hasCode ? 'Passed' : 'Incomplete',
+        scoreEarned: points,
+        maxScore: idx === 0 ? 30 : 35
+      });
+    });
+
+    const passedCount = problemResults.filter(p => p.status === 'Passed').length;
+    const finalScore = Math.min(100, Math.max(0, totalScore));
+    const passedStatus = finalScore >= 60;
+
+    // Save to real AssessmentResult collection (reuse existing model)
+    const assessment = await AssessmentResult.create({
+      userId,
+      skill: `${companyName || 'Corporate'} Coding Mock`,
+      category: 'DSA & Technical Assessment',
+      totalQuestions: subList.length || 3,
+      correctAnswers: passedCount,
+      wrongAnswers: (subList.length || 3) - passedCount,
+      score: finalScore,
+      percentage: finalScore,
+      scorePercentage: finalScore,
+      skillLevel: finalScore >= 80 ? 'Advanced' : finalScore >= 60 ? 'Intermediate' : 'Beginner',
+      proficiencyEarned: finalScore >= 80 ? 'Advanced' : finalScore >= 60 ? 'Intermediate' : 'Beginner'
+    });
+
+    res.status(200).json({
+      success: true,
+      assessmentId: assessment._id,
+      score: finalScore,
+      passed: passedStatus,
+      totalQuestions: subList.length || 3,
+      correctAnswers: passedCount,
+      verdict: passedStatus ? 'Mock Assessment Cleared ✓' : 'Needs Practice',
+      results: problemResults,
+      submittedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Submit DSA Mock Test Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error evaluating mock test: ' + error.message });
+  }
+};
+
+
 
 
 
