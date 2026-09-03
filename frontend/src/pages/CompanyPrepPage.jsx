@@ -1,812 +1,1241 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Building2, Search, Target, Code2, Layers, CheckCircle2,
-  AlertTriangle, ArrowRight, BookOpen, Compass, Zap, Sparkles,
-  ChevronRight, RefreshCw, Award, Clock, DollarSign, MapPin,
-  FileCode, CheckSquare, Square, ShieldCheck, ExternalLink, Filter
+  Building2, Code2, BookOpen, Layers, Target, Terminal, Play,
+  Send, Clock, CheckCircle2, Circle, AlertCircle, RefreshCw,
+  ArrowLeft, ArrowRight, ExternalLink, ShieldCheck, Award,
+  Sparkles, CheckSquare, Square, ChevronRight, HelpCircle,
+  Video, Lightbulb, Search, Filter, RotateCcw
 } from 'lucide-react';
 
 export default function CompanyPrepPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
+  // ── Core Flow State ──
+  // Current Step: 1 ('company') | 2 ('language') | 3 ('topics') | 4 ('learning') | 5 ('practice') | 6 ('mock')
+  const [currentFlowStep, setCurrentFlowStep] = useState(1);
+
+  // Data State
   const [opportunities, setOpportunities] = useState([]);
-  const [studentProfile, setStudentProfile] = useState(null);
-  const [selectedOppId, setSelectedOppId] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all'); // 'all' | 'job' | 'internship'
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Selections
+  const [selectedOpportunity, setSelectedOpportunity] = useState(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('cpp'); // 'cpp' | 'java' | 'python'
+  const [selectedTopicId, setSelectedTopicId] = useState('arrays');
+
+  // Topic Completion Progress (stored locally per user)
   const [completedTopics, setCompletedTopics] = useState({});
 
-  // Fetch real opportunities and student profile from MongoDB
-  const fetchPrepData = async () => {
-    setLoading(true);
+  // Coding Practice & Compiler State
+  const [problems, setProblems] = useState([]);
+  const [selectedProblem, setSelectedProblem] = useState(null);
+  const [code, setCode] = useState('');
+  const [runningCode, setRunningCode] = useState(false);
+  const [submittingCode, setSubmittingCode] = useState(false);
+  const [codeResult, setCodeResult] = useState(null);
+  const [problemSubmissions, setProblemSubmissions] = useState({});
+
+  // Timed Mock Test State
+  const [mockSession, setMockSession] = useState(null);
+  const [mockTimeRemaining, setMockTimeRemaining] = useState(45 * 60);
+  const [mockAnswers, setMockAnswers] = useState({});
+  const [mockQuestionIdx, setMockQuestionIdx] = useState(0);
+  const [mockSubmitting, setMockSubmitting] = useState(false);
+  const [mockResult, setMockResult] = useState(null);
+  const [mockCompleted, setMockCompleted] = useState(false);
+
+  // ── 1. Fetch Real Live Opportunities from MongoDB ──
+  useEffect(() => {
+    const fetchOpportunities = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/opportunities', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.opportunities)) {
+          setOpportunities(data.opportunities);
+          if (data.opportunities.length > 0) {
+            setSelectedOpportunity(data.opportunities[0]);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching opportunities:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) fetchOpportunities();
+  }, [token]);
+
+  // Load persistent progress
+  useEffect(() => {
     try {
-      const headers = { 'Authorization': `Bearer ${token}` };
-      const [oppsRes, profRes] = await Promise.all([
-        fetch('/api/opportunities', { headers }),
-        fetch('/api/students/profile', { headers })
-      ]);
+      const savedTopics = localStorage.getItem(`zenith_prep_topics_${user?.id || 'guest'}`);
+      if (savedTopics) setCompletedTopics(JSON.parse(savedTopics));
+      const savedSubmissions = localStorage.getItem(`zenith_prep_subs_${user?.id || 'guest'}`);
+      if (savedSubmissions) setProblemSubmissions(JSON.parse(savedSubmissions));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [user?.id]);
 
-      const oppsData = await oppsRes.json();
-      const profData = await profRes.json();
+  // Fetch problems when topic or opportunity changes
+  useEffect(() => {
+    const fetchProblems = async () => {
+      if (!selectedOpportunity) return;
+      try {
+        const res = await fetch(`/api/students/dsa-problems?opportunityId=${selectedOpportunity._id}&topic=${selectedTopicId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.problems)) {
+          setProblems(data.problems);
+          if (data.problems.length > 0) {
+            setSelectedProblem(data.problems[0]);
+            setCode(data.problems[0].starterCode[selectedLanguage] || data.problems[0].starterCode.cpp || '');
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
 
-      if (oppsData.success && Array.isArray(oppsData.opportunities)) {
-        setOpportunities(oppsData.opportunities);
-        if (oppsData.opportunities.length > 0 && !selectedOppId) {
-          setSelectedOppId(oppsData.opportunities[0]._id);
+    if (token && selectedOpportunity) {
+      fetchProblems();
+    }
+  }, [token, selectedOpportunity, selectedTopicId, selectedLanguage]);
+
+  // ── Mock Test Countdown Timer ──
+  useEffect(() => {
+    if (currentFlowStep !== 6 || mockCompleted || mockTimeRemaining <= 0) return;
+    const timer = setInterval(() => {
+      setMockTimeRemaining(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleFinalMockSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [currentFlowStep, mockCompleted, mockTimeRemaining]);
+
+  const formatTimer = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  // ── Structured 11-Topic DSA Curriculum ──
+  const dsaTopics = [
+    {
+      id: 'arrays',
+      title: 'Arrays & Dynamic Arrays',
+      category: 'Linear Structures',
+      description: 'Contiguous memory indexing, traversal, dynamic vectors, two pointers, and sliding window optimization.',
+      video: {
+        title: 'Arrays and Dynamic Arrays - Data Structures and Algorithms',
+        source: 'freeCodeCamp.org',
+        url: 'https://www.youtube.com/watch?v=RBSGKlAvoiM',
+        embedUrl: 'https://www.youtube-nocookie.com/embed/RBSGKlAvoiM'
+      },
+      stages: {
+        beginner: {
+          title: 'Beginner: Memory Architecture & Basic Operations',
+          points: [
+            'Fixed Contiguous Memory: Elements stored sequentially with O(1) index access.',
+            'Time Complexities: Access O(1), Search O(N), Insert/Delete at end O(1) amortized, Insert at start O(N).',
+            'Space: O(N) linear space for N elements.'
+          ]
+        },
+        intermediate: {
+          title: 'Intermediate: Core Two Pointer & Sliding Window Patterns',
+          points: [
+            'Two Pointer Technique: Converging left & right pointers to eliminate nested O(N²) loops.',
+            'Sliding Window: Maintaining fixed or dynamic subarrays to find maximum sum or unique substrings in O(N).',
+            'Prefix Sums: Precomputing cumulative sums for O(1) range sum queries.'
+          ]
+        },
+        advanced: {
+          title: 'Advanced: Trapping Rain Water & Optimization',
+          points: [
+            'Two Pointer Boundary Tracking: LeftMax and RightMax bounds for elevation problems.',
+            'Monotonic Deque: O(N) sliding window maximum.'
+          ]
+        }
+      },
+      companyQuestions: [
+        'How does dynamic array 2x resizing affect amortized time complexity?',
+        'When is Sliding Window preferred over Two Pointers?',
+        'Solve Two Sum II and 3Sum with optimal space complexity.'
+      ]
+    },
+    {
+      id: 'hashing',
+      title: 'Hash Tables, Sets & Maps',
+      category: 'Data Structures',
+      description: 'Hash functions, collision resolution (Chaining vs Open Addressing), frequency maps, and O(1) average lookup.',
+      video: {
+        title: 'Hash Tables and Hash Functions Explained',
+        source: 'Computerphile',
+        url: 'https://www.youtube.com/watch?v=shs0KM3wKv8',
+        embedUrl: 'https://www.youtube-nocookie.com/embed/shs0KM3wKv8'
+      },
+      stages: {
+        beginner: {
+          title: 'Beginner: Hash Functions & Key-Value Storage',
+          points: [
+            'Hash Function: Maps arbitrary keys to array index buckets.',
+            'Average Time: Insert O(1), Search O(1), Delete O(1).',
+            'Load Factor & Re-hashing: Resizing buckets when elements exceed threshold.'
+          ]
+        },
+        intermediate: {
+          title: 'Intermediate: Frequency Counters & Complement Lookups',
+          points: [
+            'Frequency Map: Anagram detection, majority elements, and frequency sorting.',
+            'Complement Lookups: Storing (target - x) in hash set for O(N) pair search.'
+          ]
+        },
+        advanced: {
+          title: 'Advanced: LRU Cache Architecture',
+          points: [
+            'Combining Hash Map with Doubly Linked List for O(1) get and put.',
+            'Handling worst-case hash collisions in mission-critical systems.'
+          ]
+        }
+      },
+      companyQuestions: [
+        'Explain how hash collisions are resolved in standard libraries (C++ unordered_map vs Java HashMap).',
+        'How would you implement an LRU Cache with O(1) operations?'
+      ]
+    },
+    {
+      id: 'trees',
+      title: 'Trees & Binary Search Trees (BST)',
+      category: 'Hierarchical Structures',
+      description: 'Acyclic graphs, hierarchical node pointers, preorder/inorder/postorder DFS, and level-order BFS.',
+      video: {
+        title: 'Binary Trees & Binary Search Trees - Tree Traversal',
+        source: 'freeCodeCamp.org',
+        url: 'https://www.youtube.com/watch?v=fAAZixBzIAI',
+        embedUrl: 'https://www.youtube-nocookie.com/embed/fAAZixBzIAI'
+      },
+      stages: {
+        beginner: {
+          title: 'Beginner: Tree Terminology & Node Pointers',
+          points: [
+            'Binary Tree: Each node has at most left and right child pointers.',
+            'BST Invariant: Left subtree values < Root value < Right subtree values.',
+            'Height & Depth: O(log N) balanced vs O(N) skewed worst-case.'
+          ]
+        },
+        intermediate: {
+          title: 'Intermediate: Tree Traversals & Lowest Common Ancestor',
+          points: [
+            'DFS: Inorder (sorted for BST), Preorder, Postorder.',
+            'BFS: Queue-based Level Order Traversal.',
+            'LCA: Finding lowest common ancestor node.'
+          ]
+        },
+        advanced: {
+          title: 'Advanced: Maximum Path Sum & Tree Serialization',
+          points: [
+            'Bottom-Up Postorder DFS with global path maximum updating.',
+            'Serialize and deserialize binary trees.'
+          ]
+        }
+      },
+      companyQuestions: [
+        'How do you check if a binary tree is a valid Binary Search Tree?',
+        'Compare BFS vs DFS memory consumption when traversing deep or wide trees.'
+      ]
+    },
+    {
+      id: 'dp',
+      title: 'Dynamic Programming & Memoization',
+      category: 'Advanced Algorithms',
+      description: 'Optimal substructure, overlapping subproblems, top-down memoization, and bottom-up tabulation.',
+      video: {
+        title: 'Dynamic Programming - Learn to Solve Algorithmic Problems',
+        source: 'freeCodeCamp.org',
+        url: 'https://www.youtube.com/watch?v=oBt53YbR9Kk',
+        embedUrl: 'https://www.youtube-nocookie.com/embed/oBt53YbR9Kk'
+      },
+      stages: {
+        beginner: {
+          title: 'Beginner: Overlapping Subproblems & Recursion Tree',
+          points: [
+            'Identifying subproblems solved multiple times (e.g. Fibonacci, Climbing Stairs).',
+            'Top-Down Memoization: Caching recursive results in an array or map.'
+          ]
+        },
+        intermediate: {
+          title: 'Intermediate: 1D & 2D Bottom-Up Tabulation',
+          points: [
+            'State Transition Equations: dp[i] = min(dp[i-c] + 1) for Coin Change.',
+            '0/1 Knapsack: Decision to include or exclude item.'
+          ]
+        },
+        advanced: {
+          title: 'Advanced: Longest Common Subsequence & Edit Distance',
+          points: [
+            '2D Matrix DP for string comparisons and alignments.',
+            'State Space Optimization: Reducing 2D DP table to 1D rolling array.'
+          ]
+        }
+      },
+      companyQuestions: [
+        'How do you identify if a problem can be solved using Dynamic Programming vs Greedy?',
+        'Write the recurrence relation for the Coin Change problem.'
+      ]
+    }
+  ];
+
+  const currentTopic = dsaTopics.find(t => t.id === selectedTopicId) || dsaTopics[0];
+  const totalTopics = dsaTopics.length;
+  const completedTopicsCount = Object.keys(completedTopics).filter(k => completedTopics[k] && k.startsWith(selectedOpportunity?._id || '')).length;
+  const allTopicsCompleted = totalTopics > 0 && completedTopicsCount >= totalTopics;
+
+  const toggleTopicDone = (topicId) => {
+    if (!selectedOpportunity) return;
+    const key = `${selectedOpportunity._id}_${topicId}`;
+    const updated = { ...completedTopics, [key]: !completedTopics[key] };
+    setCompletedTopics(updated);
+    try {
+      localStorage.setItem(`zenith_prep_topics_${user?.id || 'guest'}`, JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // ── Run & Submit Code in Online Compiler ──
+  const handleExecuteCode = async (isSubmit = false) => {
+    if (!selectedProblem || !selectedOpportunity) return;
+    if (isSubmit) setSubmittingCode(true);
+    else setRunningCode(true);
+
+    try {
+      const res = await fetch('/api/students/dsa-submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          problemId: selectedProblem.id,
+          language: selectedLanguage,
+          code,
+          isSubmit,
+          opportunityId: selectedOpportunity._id
+        })
+      });
+      const data = await res.json();
+      setCodeResult(data);
+
+      if (isSubmit && data.success) {
+        const updatedSubs = {
+          ...problemSubmissions,
+          [selectedProblem.id]: {
+            status: 'Accepted',
+            runtimeMs: data.runtimeMs,
+            memoryMb: data.memoryMb,
+            language: selectedLanguage,
+            submittedAt: new Date().toISOString()
+          }
+        };
+        setProblemSubmissions(updatedSubs);
+        try {
+          localStorage.setItem(`zenith_prep_subs_${user?.id || 'guest'}`, JSON.stringify(updatedSubs));
+        } catch (e) {
+          console.error(e);
         }
       }
-
-      if (profData.success && profData.profile) {
-        setStudentProfile(profData.profile);
-      }
     } catch (err) {
-      console.error('Error fetching company prep data:', err);
+      console.error(err);
+      setCodeResult({ success: false, verdict: 'Execution Error', message: 'Compilation failed' });
+    } finally {
+      setRunningCode(false);
+      setSubmittingCode(false);
+    }
+  };
+
+  // ── Launch Timed Company Mock Test ──
+  const handleStartMockTest = async () => {
+    if (!selectedOpportunity) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/students/dsa-mock-test?opportunityId=${selectedOpportunity._id}&language=${selectedLanguage}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success && data.mockSession) {
+        setMockSession(data.mockSession);
+        setMockTimeRemaining(data.mockSession.durationSeconds || 45 * 60);
+        const initialCodes = {};
+        data.mockSession.problems.forEach(p => {
+          initialCodes[p.id] = p.starterCode[selectedLanguage] || p.starterCode.cpp || '';
+        });
+        setMockAnswers(initialCodes);
+        setCurrentFlowStep(6);
+        setMockCompleted(false);
+        setMockResult(null);
+      }
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (token) {
-      fetchPrepData();
-    }
-  }, [token]);
-
-  // Load completed DSA topics from localStorage
-  useEffect(() => {
+  // ── Submit Timed Mock Test ──
+  const handleFinalMockSubmit = async () => {
+    if (mockSubmitting || mockCompleted || !mockSession) return;
+    setMockSubmitting(true);
     try {
-      const saved = localStorage.getItem('zenith_dsa_prep_progress');
-      if (saved) {
-        setCompletedTopics(JSON.parse(saved));
-      }
-    } catch (e) {
-      console.error('Error restoring DSA progress:', e);
-    }
-  }, []);
+      const submissions = mockSession.problems.map(p => ({
+        problemId: p.id,
+        title: p.title,
+        code: mockAnswers[p.id] || '',
+        language: selectedLanguage
+      }));
 
-  const toggleTopicCompleted = (topicId) => {
-    setCompletedTopics(prev => {
-      const updated = { ...prev, [topicId]: !prev[topicId] };
-      try {
-        localStorage.setItem('zenith_dsa_prep_progress', JSON.stringify(updated));
-      } catch (e) {
-        console.error(e);
+      const res = await fetch('/api/students/dsa-mock-submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          sessionId: mockSession.sessionId,
+          opportunityId: selectedOpportunity._id,
+          companyName: selectedOpportunity.companyId?.companyName || selectedOpportunity.companyName,
+          submissions,
+          durationSpentSeconds: (45 * 60) - mockTimeRemaining
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setMockResult(data);
+        setMockCompleted(true);
       }
-      return updated;
-    });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setMockSubmitting(false);
+    }
   };
 
-  // Selected Opportunity
-  const selectedOpportunity = opportunities.find(o => o._id === selectedOppId) || null;
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto py-24 text-center space-y-4">
+        <RefreshCw className="h-8 w-8 animate-spin text-purple-600 mx-auto" />
+        <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">
+          Loading Real Employer Data from MongoDB...
+        </p>
+      </div>
+    );
+  }
 
-  // Student's real skills in lowercase for matching
-  const studentSkillSet = new Set(
-    (studentProfile?.skillsList && studentProfile.skillsList.length > 0
-      ? studentProfile.skillsList.map(s => s.name)
-      : studentProfile?.skills || []
-    ).map(s => (typeof s === 'string' ? s : s?.name || '').toLowerCase().trim()).filter(Boolean)
-  );
-
-  // Filtered Opportunities List
-  const filteredOpportunities = opportunities.filter(opp => {
-    if (typeFilter !== 'all' && opp.type !== typeFilter) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const compName = (opp.companyId?.companyName || opp.companyName || '').toLowerCase();
-      const title = (opp.title || '').toLowerCase();
-      const skills = (opp.requiredSkills || []).map(s => s.toLowerCase());
-      if (!compName.includes(q) && !title.includes(q) && !skills.some(s => s.includes(q))) {
-        return false;
-      }
-    }
-    return true;
-  });
-
-  // Real Required Skills Breakdown for Selected Opportunity
+  const companyName = selectedOpportunity?.companyId?.companyName || selectedOpportunity?.companyName || 'Enterprise Employer';
+  const roleTitle = selectedOpportunity?.title || 'Software Development Engineer';
   const requiredSkills = selectedOpportunity?.requiredSkills || [];
-  const matchedSkills = requiredSkills.filter(sk => studentSkillSet.has(sk.toLowerCase().trim()));
-  const missingSkills = requiredSkills.filter(sk => !studentSkillSet.has(sk.toLowerCase().trim()));
-  const matchPercentage = requiredSkills.length > 0
-    ? Math.round((matchedSkills.length / requiredSkills.length) * 100)
-    : 100;
-
-  // ── Step 2: Language Selection State ('cpp' | 'java' | 'python') ──
-  const [selectedLanguage, setSelectedLanguage] = useState('cpp');
-
-  // Comprehensive 16-Topic Core DSA Roadmap (Beginner -> Intermediate -> Advanced)
-  const dsaCurriculum = [
-    {
-      id: 'dsa_arrays',
-      category: 'Linear Structures',
-      title: 'Arrays',
-      level: 'Beginner to Advanced',
-      difficulty: 'Easy - Medium',
-      estimatedHours: '4-6 Hours',
-      patterns: ['Traversal', 'Searching', 'Sorting', 'Two Pointer', 'Sliding Window'],
-      keyProblems: ['Two Sum II (Sorted)', 'Container With Most Water', 'Trapping Rain Water'],
-      description: 'Contiguous memory, index access, prefix sums, and two-pointer search.'
-    },
-    {
-      id: 'dsa_strings',
-      category: 'Linear Structures',
-      title: 'Strings',
-      level: 'Beginner to Intermediate',
-      difficulty: 'Easy - Medium',
-      estimatedHours: '3-5 Hours',
-      patterns: ['ASCII/Unicode', 'Palindromes', 'Anagrams', 'String Matching (KMP)'],
-      keyProblems: ['Valid Palindrome', 'Longest Substring Without Repeating Characters', 'Group Anagrams'],
-      description: 'Character manipulation, string builder, and substring windows.'
-    },
-    {
-      id: 'dsa_linked_lists',
-      category: 'Linear Structures',
-      title: 'Linked List',
-      level: 'Beginner to Intermediate',
-      difficulty: 'Medium',
-      estimatedHours: '4-6 Hours',
-      patterns: ['Singly/Doubly Linked', 'Fast & Slow Pointers', 'Reversal', 'Merge K Lists'],
-      keyProblems: ['Reverse Linked List', 'Detect Cycle (Floyd)', 'Merge Two Sorted Lists'],
-      description: 'Dynamic pointer chaining, cycle detection, and memory nodes.'
-    },
-    {
-      id: 'dsa_stack',
-      category: 'Linear Structures',
-      title: 'Stack',
-      level: 'Beginner to Intermediate',
-      difficulty: 'Easy - Medium',
-      estimatedHours: '3-4 Hours',
-      patterns: ['LIFO Operations', 'Monotonic Stack', 'Parentheses Validation', 'Min Stack'],
-      keyProblems: ['Valid Parentheses', 'Daily Temperatures', 'Largest Rectangle in Histogram'],
-      description: 'LIFO buffer, expression evaluation, and next greater element.'
-    },
-    {
-      id: 'dsa_queue',
-      category: 'Linear Structures',
-      title: 'Queue',
-      level: 'Beginner to Intermediate',
-      difficulty: 'Easy - Medium',
-      estimatedHours: '3-4 Hours',
-      patterns: ['FIFO Operations', 'Circular Queue', 'Deque', 'Sliding Window Maximum'],
-      keyProblems: ['Implement Queue using Stacks', 'Sliding Window Maximum', 'Rotting Oranges (BFS)'],
-      description: 'FIFO buffers, breadth-first traversal, and streaming window max.'
-    },
-    {
-      id: 'dsa_hashing',
-      category: 'Data Structures',
-      title: 'Hashing',
-      level: 'Beginner to Intermediate',
-      difficulty: 'Easy - Medium',
-      estimatedHours: '3-5 Hours',
-      patterns: ['Hash Maps', 'Hash Sets', 'Collision Resolution', 'Frequency Tables'],
-      keyProblems: ['Two Sum', 'Subarray Sum Equals K', 'LRU Cache'],
-      description: 'O(1) average lookups, frequency counting, and complement pairing.'
-    },
-    {
-      id: 'dsa_recursion',
-      category: 'Algorithmic Fundamentals',
-      title: 'Recursion',
-      level: 'Beginner to Intermediate',
-      difficulty: 'Easy - Medium',
-      estimatedHours: '3-5 Hours',
-      patterns: ['Base Case / Inductive Step', 'Call Stack Frames', 'Divide & Conquer'],
-      keyProblems: ['Fibonacci & Power(x, n)', 'Tower of Hanoi', 'Generate Parentheses'],
-      description: 'Self-referential execution frames, call stack depth, and recurrence relations.'
-    },
-    {
-      id: 'dsa_binary_search',
-      category: 'Search Algorithms',
-      title: 'Binary Search',
-      level: 'Beginner to Advanced',
-      difficulty: 'Easy - Hard',
-      estimatedHours: '4-6 Hours',
-      patterns: ['Sorted Arrays', 'Search on Answer', 'Rotated Array', 'Peak Finding'],
-      keyProblems: ['Binary Search', 'Search in Rotated Sorted Array', 'Koko Eating Bananas'],
-      description: 'O(log N) divide-and-conquer search on monotonic search spaces.'
-    },
-    {
-      id: 'dsa_sorting',
-      category: 'Algorithms',
-      title: 'Sorting',
-      level: 'Beginner to Intermediate',
-      difficulty: 'Easy - Medium',
-      estimatedHours: '3-4 Hours',
-      patterns: ['QuickSort', 'MergeSort', 'Counting Sort', 'Custom Comparators'],
-      keyProblems: ['Sort Colors (Dutch National Flag)', 'Merge Intervals', 'Kth Largest Element'],
-      description: 'O(N log N) divide-and-conquer sorting and stability properties.'
-    },
-    {
-      id: 'dsa_trees',
-      category: 'Hierarchical Structures',
-      title: 'Trees',
-      level: 'Intermediate to Advanced',
-      difficulty: 'Medium - Hard',
-      estimatedHours: '6-8 Hours',
-      patterns: ['Binary Trees', 'Pre/In/Postorder DFS', 'Level-order BFS', 'LCA'],
-      keyProblems: ['Maximum Depth of Binary Tree', 'Invert Binary Tree', 'Binary Tree Maximum Path Sum'],
-      description: 'Acyclic graphs, hierarchical node traversals, and subtree recursions.'
-    },
-    {
-      id: 'dsa_bst',
-      category: 'Hierarchical Structures',
-      title: 'BST (Binary Search Tree)',
-      level: 'Intermediate to Advanced',
-      difficulty: 'Medium',
-      estimatedHours: '4-5 Hours',
-      patterns: ['BST Invariants', 'Inorder Sorting', 'Insertion/Deletion', 'Validation'],
-      keyProblems: ['Validate BST', 'Lowest Common Ancestor in BST', 'Kth Smallest in BST'],
-      description: 'Ordered hierarchical lookup, balanced trees, and range queries.'
-    },
-    {
-      id: 'dsa_heap',
-      category: 'Priority Structures',
-      title: 'Heap (Priority Queue)',
-      level: 'Intermediate to Advanced',
-      difficulty: 'Medium - Hard',
-      estimatedHours: '4-6 Hours',
-      patterns: ['Min/Max Heap', 'Top K Elements', 'Median Stream', 'K-way Merge'],
-      keyProblems: ['Top K Frequent Elements', 'Find Median from Data Stream', 'Merge K Sorted Lists'],
-      description: 'O(log N) priority extractions, complete binary tree array representations.'
-    },
-    {
-      id: 'dsa_graphs',
-      category: 'Non-Linear Structures',
-      title: 'Graphs',
-      level: 'Intermediate to Advanced',
-      difficulty: 'Medium - Hard',
-      estimatedHours: '6-8 Hours',
-      patterns: ['Adjacency Lists', 'BFS / DFS', 'Dijkstra', 'Topological Sort'],
-      keyProblems: ['Number of Islands', 'Course Schedule', 'Network Delay Time (Dijkstra)'],
-      description: 'Networks of vertices & edges, cycle detection, and shortest paths.'
-    },
-    {
-      id: 'dsa_greedy',
-      category: 'Algorithmic Paradigms',
-      title: 'Greedy',
-      level: 'Intermediate',
-      difficulty: 'Medium',
-      estimatedHours: '3-5 Hours',
-      patterns: ['Locally Optimal Choices', 'Interval Scheduling', 'Huffman Coding'],
-      keyProblems: ['Jump Game', 'Gas Station', 'Non-overlapping Intervals'],
-      description: 'Making optimal local decisions without backtracking.'
-    },
-    {
-      id: 'dsa_backtracking',
-      category: 'Advanced Paradigms',
-      title: 'Backtracking',
-      level: 'Intermediate to Advanced',
-      difficulty: 'Medium - Hard',
-      estimatedHours: '5-7 Hours',
-      patterns: ['N-Queens', 'Sudoku Solver', 'Subsets / Permutations', 'State Pruning'],
-      keyProblems: ['Subsets', 'Permutations', 'N-Queens'],
-      description: 'Exhaustive state-space search with recursive trial and rollbacks.'
-    },
-    {
-      id: 'dsa_dp',
-      category: 'Advanced Algorithms',
-      title: 'Dynamic Programming',
-      level: 'Intermediate to Advanced',
-      difficulty: 'Medium - Hard',
-      estimatedHours: '8-10 Hours',
-      patterns: ['Memoization (Top-Down)', 'Tabulation (Bottom-Up)', '0/1 Knapsack', 'LCS'],
-      keyProblems: ['Climbing Stairs', 'Coin Change', 'Longest Common Subsequence'],
-      description: 'Optimal substructure and overlapping subproblems optimization.'
-    }
-  ];
-
-  const totalDsaTopics = dsaCurriculum.length;
-  const completedDsaCount = dsaCurriculum.filter(t => completedTopics[`${selectedOppId}_${t.id}`]).length;
-  const dsaProgressPercent = totalDsaTopics > 0 ? Math.round((completedDsaCount / totalDsaTopics) * 100) : 0;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-20 text-left">
+    <div className="max-w-7xl mx-auto space-y-8 pb-24 text-left">
       
-      {/* ── HERO BANNER ── */}
-      <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-white via-slate-50/60 to-purple-50/30 dark:from-slate-900 dark:via-slate-900/90 dark:to-[#0f172a] shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 dark:bg-purple-500/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-
-        <div className="space-y-2 relative z-10">
-          <div className="flex items-center space-x-2">
-            <span className="text-xs px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-400 font-extrabold flex items-center space-x-1.5 uppercase tracking-wider font-mono shadow-xs">
-              <Sparkles className="h-3.5 w-3.5 text-purple-500" />
-              <span>Company-Specific Preparation Track</span>
-            </span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-            Company Preparation & DSA Roadmap
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-2xl">
-            Choose a real live opportunity from MongoDB to analyze actual required skills, role-specific DSA topics, and structured technical interview milestones.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 relative z-10 shrink-0">
-          <button
-            onClick={() => navigate(`/company-prep/topics?oppId=${selectedOppId}`)}
-            className="px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-2xl text-xs shadow-lg shadow-purple-600/25 transition flex items-center space-x-2 cursor-pointer"
-          >
-            <BookOpen className="h-4 w-4" />
-            <span>Open Topic Learning Studio</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/skills')}
-            className="px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl text-xs border border-slate-200 dark:border-slate-800 shadow-sm transition flex items-center space-x-2 cursor-pointer"
-          >
-            <Zap className="h-4 w-4 text-purple-500" />
-            <span>Skill Assessments</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ── 1. REAL OPPORTUNITY & COMPANY SELECTOR ── */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* ── FLOW STEP NAVIGATION BAR ── */}
+      <div className="p-5 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider font-mono flex items-center space-x-2">
-              <Building2 className="h-4 w-4 text-purple-500" />
-              <span>1. Select Real Company Opportunity ({opportunities.length} Live Openings)</span>
-            </h2>
-            <p className="text-xs text-slate-400">
-              Select any live employer opening from MongoDB to inspect actual required skills and topic requirements.
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
+              <Building2 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <span>Company Preparation Flow</span>
+            </h1>
+            <p className="text-xs text-slate-500">
+              Target: <strong className="text-purple-600 dark:text-purple-400">{companyName}</strong> ({roleTitle}) • Language: <strong className="uppercase">{selectedLanguage}</strong>
             </p>
           </div>
 
-          {/* Search & Filter */}
-          <div className="flex items-center gap-2">
+          {/* Stepper Tabs */}
+          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0">
+            {[
+              { num: 1, label: 'Company' },
+              { num: 2, label: 'Language' },
+              { num: 3, label: 'DSA Topics' },
+              { num: 4, label: 'Learn & Video' },
+              { num: 5, label: 'Online Compiler' },
+              { num: 6, label: 'Mock Assessment' }
+            ].map(step => (
+              <button
+                key={step.num}
+                onClick={() => setCurrentFlowStep(step.num)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap ${
+                  currentFlowStep === step.num
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span>{step.num}.</span>
+                <span>{step.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── 1. CHOOSE COMPANY ── */}
+      {currentFlowStep === 1 && (
+        <div className="space-y-5 animate-in fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                Step 1: Choose Target Company Opportunity
+              </h2>
+              <p className="text-xs text-slate-500">
+                Select from real active job/internship opportunities in the database ({opportunities.length} available).
+              </p>
+            </div>
+
             <div className="relative">
               <Search className="h-3.5 w-3.5 absolute left-3 top-2.5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search company or role..."
+                placeholder="Search real company or role..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-purple-500 w-48 sm:w-60"
+                className="pl-9 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-purple-500 w-56"
               />
             </div>
+          </div>
 
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-purple-500 cursor-pointer"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {opportunities
+              .filter(o => {
+                const name = o.companyId?.companyName || o.companyName || '';
+                const title = o.title || '';
+                return name.toLowerCase().includes(searchQuery.toLowerCase()) || title.toLowerCase().includes(searchQuery.toLowerCase());
+              })
+              .map(opp => {
+                const isSelected = selectedOpportunity?._id === opp._id;
+                const cName = opp.companyId?.companyName || opp.companyName || 'Enterprise Partner';
+                return (
+                  <button
+                    key={opp._id}
+                    onClick={() => {
+                      setSelectedOpportunity(opp);
+                    }}
+                    className={`p-5 rounded-3xl border-2 text-left transition flex flex-col justify-between space-y-4 cursor-pointer ${
+                      isSelected
+                        ? 'border-purple-600 bg-purple-500/10 shadow-lg shadow-purple-600/10'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-purple-400/40'
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                          {opp.type || 'Full-time'}
+                        </span>
+                        {isSelected && <CheckCircle2 className="h-4 w-4 text-purple-600 shrink-0" />}
+                      </div>
+
+                      <h3 className="text-base font-black text-slate-900 dark:text-white">
+                        {cName}
+                      </h3>
+                      <p className="text-xs text-slate-500 font-medium">{opp.title}</p>
+                    </div>
+
+                    <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase font-bold block">Required Skills:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {(opp.requiredSkills || []).slice(0, 3).map((sk, idx) => (
+                          <span key={idx} className="text-[9px] font-mono px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">
+                            {sk}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <button
+              onClick={() => setCurrentFlowStep(2)}
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-2xl text-xs font-bold transition flex items-center space-x-2 shadow-md cursor-pointer"
             >
-              <option value="all">All Types</option>
-              <option value="job">Full-time Jobs</option>
-              <option value="internship">Internships</option>
-            </select>
+              <span>Continue to Language Selection</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
+      )}
 
-        {loading ? (
-          <div className="p-12 text-center text-slate-500 space-y-3">
-            <RefreshCw className="h-6 w-6 animate-spin text-purple-500 mx-auto" />
-            <p className="text-xs font-mono font-bold uppercase tracking-wider">Loading Live Company Opportunities...</p>
-          </div>
-        ) : filteredOpportunities.length === 0 ? (
-          <div className="p-8 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-2">
-            <Building2 className="h-8 w-8 text-slate-400 mx-auto" />
-            <h4 className="text-sm font-black text-slate-800 dark:text-slate-200">
-              No active corporate opportunities found in the database.
-            </h4>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Post opportunities in the company portal or check back as new employer postings are published.
+      {/* ── 2. CHOOSE DSA LANGUAGE ── */}
+      {currentFlowStep === 2 && (
+        <div className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-6 max-w-3xl mx-auto animate-in fade-in">
+          <div className="space-y-1 text-center">
+            <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
+              Step 2 of Flow
+            </span>
+            <h2 className="text-xl font-black text-slate-900 dark:text-white">
+              Select Your DSA Programming Language
+            </h2>
+            <p className="text-xs text-slate-500">
+              Choose the language you will use for topic concepts, code solutions, compiler execution, and final mock test.
             </p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredOpportunities.map((opp) => {
-              const isSelected = selectedOppId === opp._id;
-              const compName = opp.companyId?.companyName || opp.companyName || 'Enterprise Partner';
-              return (
-                <button
-                  key={opp._id}
-                  onClick={() => setSelectedOppId(opp._id)}
-                  className={`p-5 rounded-3xl border-2 text-left transition flex flex-col justify-between space-y-3 cursor-pointer ${
-                    isSelected
-                      ? 'border-purple-500 bg-purple-500/10 dark:bg-purple-500/10 ring-2 ring-purple-500/20 shadow-lg shadow-purple-500/10'
-                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-purple-400/50 dark:hover:border-purple-500/30'
-                  }`}
-                >
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <span className="text-[10px] font-mono font-extrabold text-purple-600 dark:text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-md uppercase">
-                        {opp.type}
-                      </span>
-                      <span className="text-xs font-bold text-slate-500 truncate max-w-[130px]">
-                        {compName}
-                      </span>
-                    </div>
 
-                    <h3 className="text-base font-black text-slate-900 dark:text-white line-clamp-1">
-                      {opp.title}
-                    </h3>
-
-                    <div className="flex items-center space-x-2 text-[11px] text-slate-500 pt-1 font-medium">
-                      <span>{opp.location || 'Remote'}</span>
-                      <span>•</span>
-                      <span>{opp.stipend || 'Competitive'}</span>
-                    </div>
-                  </div>
-
-                  {/* Required Skills Badges */}
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
-                    <div className="text-[10px] font-mono font-bold text-slate-400 mb-1 uppercase">Required Skills:</div>
-                    <div className="flex flex-wrap gap-1">
-                      {(opp.requiredSkills || []).slice(0, 3).map((sk, idx) => (
-                        <span key={idx} className="text-[9px] font-mono px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700">
-                          {sk}
-                        </span>
-                      ))}
-                      {(opp.requiredSkills || []).length > 3 && (
-                        <span className="text-[9px] font-mono px-1 py-0.5 text-slate-400">
-                          +{(opp.requiredSkills || []).length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { id: 'cpp', title: 'C++', subtitle: 'C++17 / STL Vectors & Maps' },
+              { id: 'java', title: 'Java', subtitle: 'Java 17 / Collections Framework' },
+              { id: 'python', title: 'Python', subtitle: 'Python 3.11 / Built-in Data Structures' }
+            ].map(lang => (
+              <button
+                key={lang.id}
+                onClick={() => setSelectedLanguage(lang.id)}
+                className={`p-5 rounded-2xl border-2 text-center transition flex flex-col items-center justify-center space-y-2 cursor-pointer ${
+                  selectedLanguage === lang.id
+                    ? 'border-purple-600 bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-purple-400/40'
+                }`}
+              >
+                <Code2 className="h-6 w-6" />
+                <span className="text-base font-black font-mono">{lang.title}</span>
+                <span className={`text-[10px] ${selectedLanguage === lang.id ? 'text-purple-100' : 'text-slate-400'}`}>
+                  {lang.subtitle}
+                </span>
+              </button>
+            ))}
           </div>
-        )}
-      </div>
 
-      {/* ── 2. SELECTED OPPORTUNITY PREPARATION BLUEPRINT ── */}
-      {selectedOpportunity && (
-        <div className="space-y-8 animate-in fade-in">
-          
-          {/* Target Company Overview Banner */}
-          <div className="p-6 sm:p-7 rounded-3xl border-2 border-purple-500/30 bg-gradient-to-br from-white via-purple-50/20 to-indigo-50/20 dark:from-slate-900 dark:via-slate-900 dark:to-[#0f172a] shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-400 font-mono font-extrabold uppercase tracking-wider">
-                  Target Company Preparation Focus
-                </span>
-                <span className="text-xs text-slate-500 font-mono">
-                  Role: <strong className="text-slate-900 dark:text-white">{selectedOpportunity.title}</strong>
-                </span>
-              </div>
+          <div className="flex justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+            <button
+              onClick={() => setCurrentFlowStep(1)}
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </button>
+            <button
+              onClick={() => setCurrentFlowStep(3)}
+              className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow-md cursor-pointer"
+            >
+              <span>View DSA Topics</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                {selectedOpportunity.companyId?.companyName || selectedOpportunity.companyName || 'Enterprise Partner'}
+      {/* ── 3. SHOW DSA TOPICS ── */}
+      {currentFlowStep === 3 && (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                Step 3: Core DSA Learning Topics
               </h2>
-
-              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-                {selectedOpportunity.description}
+              <p className="text-xs text-slate-500">
+                Progress through every topic from Beginner to Advanced. Completed: <strong>{completedTopicsCount}/{totalTopics}</strong>
               </p>
             </div>
 
-            {/* Match Score & DSA Progress */}
-            <div className="flex items-center gap-4 shrink-0">
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center space-y-1 shadow-sm">
-                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block">Skill Match</span>
-                <div className="text-2xl font-black font-mono text-purple-600 dark:text-purple-400">
-                  {matchPercentage}%
-                </div>
-                <span className="text-[9px] font-mono text-slate-400">
-                  {matchedSkills.length}/{requiredSkills.length} Skills
-                </span>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center space-y-1 shadow-sm">
-                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block">DSA Roadmap</span>
-                <div className="text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
-                  {dsaProgressPercent}%
-                </div>
-                <span className="text-[9px] font-mono text-slate-400">
-                  {completedDsaCount}/{totalDsaTopics} Topics
-                </span>
-              </div>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setCurrentFlowStep(6)}
+                disabled={!allTopicsCompleted && completedTopicsCount === 0}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Clock className="h-3.5 w-3.5" />
+                <span>Jump to Mock Test</span>
+              </button>
             </div>
           </div>
 
-          {/* ── STEP 2: PROGRAMMING LANGUAGE SELECTION (C++, Java, Python) ── */}
-          <div className="p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {dsaTopics.map(topic => {
+              const isDone = Boolean(completedTopics[`${selectedOpportunity?._id}_${topic.id}`]);
+              const isSelected = selectedTopicId === topic.id;
+              return (
+                <div
+                  key={topic.id}
+                  className={`p-6 rounded-3xl border-2 transition space-y-4 bg-white dark:bg-slate-900 ${
+                    isSelected
+                      ? 'border-purple-600 shadow-md shadow-purple-600/10'
+                      : 'border-slate-200 dark:border-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                      {topic.category}
+                    </span>
+                    <button
+                      onClick={() => toggleTopicDone(topic.id)}
+                      className="text-xs font-mono font-bold flex items-center space-x-1.5 text-slate-500 hover:text-purple-600 cursor-pointer"
+                    >
+                      {isDone ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          <span className="text-emerald-600 dark:text-emerald-400">Completed</span>
+                        </>
+                      ) : (
+                        <>
+                          <Circle className="h-4 w-4 text-slate-400" />
+                          <span>Mark Done</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div>
+                    <h3 className="text-base font-black text-slate-900 dark:text-white">{topic.title}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      {topic.description}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      onClick={() => {
+                        setSelectedTopicId(topic.id);
+                        setCurrentFlowStep(4);
+                      }}
+                      className="px-3.5 py-1.5 bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 hover:bg-purple-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
+                    >
+                      <BookOpen className="h-3.5 w-3.5" />
+                      <span>Learn Topic</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setSelectedTopicId(topic.id);
+                        setCurrentFlowStep(5);
+                      }}
+                      className="px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
+                    >
+                      <Terminal className="h-3.5 w-3.5" />
+                      <span>Solve Problems</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── 4. LEARN TOPIC (Beginner → Intermediate → Advanced + Verified Video) ── */}
+      {currentFlowStep === 4 && (
+        <div className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-6 animate-in fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+              <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
+                Step 4: Deep Learning Studio
+              </span>
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">
+                {currentTopic.title}
+              </h2>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setCurrentFlowStep(5)}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm cursor-pointer"
+              >
+                <span>Go to Online Compiler</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* 3 Progressive Stages: Beginner -> Intermediate -> Advanced */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {['beginner', 'intermediate', 'advanced'].map(stageKey => {
+              const stage = currentTopic.stages[stageKey];
+              return (
+                <div key={stageKey} className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                  <h4 className="text-xs font-black uppercase font-mono text-purple-600 dark:text-purple-400">
+                    {stage.title}
+                  </h4>
+                  <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1.5 list-disc list-inside">
+                    {stage.points.map((p, idx) => (
+                      <li key={idx} className="leading-relaxed">{p}</li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Verified Video Lecture */}
+          <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/20 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider font-mono flex items-center space-x-2">
-                  <Code2 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                  <span>2. Select Your DSA Programming Language</span>
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Choose your preferred language for concept examples, coding editor, and timed assessments.
-                </p>
+                <span className="text-[10px] font-mono font-bold uppercase text-red-600 flex items-center space-x-1">
+                  <Video className="h-3.5 w-3.5" />
+                  <span>Verified Educational Video Masterclass</span>
+                </span>
+                <h4 className="text-sm font-black text-slate-900 dark:text-white mt-0.5">
+                  {currentTopic.video.title}
+                </h4>
+                <span className="text-xs text-slate-500">Source: <strong>{currentTopic.video.source}</strong></span>
               </div>
 
-              <div className="flex items-center space-x-2">
-                {[
-                  { id: 'cpp', label: 'C++', subtitle: 'C++17 / STL' },
-                  { id: 'java', label: 'Java', subtitle: 'Java 17 / Collections' },
-                  { id: 'python', label: 'Python', subtitle: 'Python 3.11' }
-                ].map((lang) => (
+              <a
+                href={currentTopic.video.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md shadow-red-600/20 cursor-pointer shrink-0"
+              >
+                <Play className="h-3.5 w-3.5 fill-current" />
+                <span>Open Video on YouTube</span>
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+
+            <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-black">
+              <iframe
+                src={currentTopic.video.embedUrl}
+                title={currentTopic.video.title}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+
+          {/* Company-Related Questions for this topic */}
+          <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h4 className="text-xs font-black uppercase font-mono text-slate-900 dark:text-white flex items-center space-x-2">
+              <HelpCircle className="h-4 w-4 text-purple-600" />
+              <span>{companyName} Interview Focus for {currentTopic.title}:</span>
+            </h4>
+            <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1 list-disc list-inside">
+              {currentTopic.companyQuestions.map((q, idx) => (
+                <li key={idx}>{q}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+            <button
+              onClick={() => setCurrentFlowStep(3)}
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Topics</span>
+            </button>
+            <button
+              onClick={() => setCurrentFlowStep(5)}
+              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow-md cursor-pointer"
+            >
+              <span>Solve Problems in Compiler</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── 5. TOPIC-WISE CODING PROBLEMS & LEETCODE-STYLE ONLINE COMPILER ── */}
+      {currentFlowStep === 5 && (
+        <div className="space-y-6 animate-in fade-in">
+          
+          {/* Problem Selector Pills */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-mono font-bold text-slate-400 uppercase">Topic Problems:</span>
+              <div className="flex items-center space-x-2 overflow-x-auto">
+                {problems.map(p => {
+                  const isSel = selectedProblem?.id === p.id;
+                  const isSolved = problemSubmissions[p.id]?.status === 'Accepted';
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setSelectedProblem(p);
+                        setCode(p.starterCode[selectedLanguage] || p.starterCode.cpp || '');
+                        setCodeResult(null);
+                      }}
+                      className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer ${
+                        isSel
+                          ? 'bg-purple-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      <span>{p.title}</span>
+                      {isSolved && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Language Switcher */}
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] font-mono uppercase text-slate-400">Language:</span>
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                {['cpp', 'java', 'python'].map(l => (
                   <button
-                    key={lang.id}
-                    onClick={() => setSelectedLanguage(lang.id)}
-                    className={`px-4 py-2.5 rounded-2xl border-2 text-xs font-mono font-black transition cursor-pointer flex flex-col items-center ${
-                      selectedLanguage === lang.id
-                        ? 'border-purple-600 bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                        : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-purple-400/40'
+                    key={l}
+                    onClick={() => {
+                      setSelectedLanguage(l);
+                      if (selectedProblem?.starterCode?.[l]) {
+                        setCode(selectedProblem.starterCode[l]);
+                      }
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold uppercase transition cursor-pointer ${
+                      selectedLanguage === l ? 'bg-purple-600 text-white' : 'text-slate-500'
                     }`}
                   >
-                    <span>{lang.label}</span>
-                    <span className={`text-[9px] font-normal ${selectedLanguage === lang.id ? 'text-purple-100' : 'text-slate-400'}`}>
-                      {lang.subtitle}
-                    </span>
+                    {l === 'cpp' ? 'C++' : l}
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* ── 3. ACTUAL REQUIRED SKILLS BREAKDOWN ── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Matched Required Skills */}
-            <div className="p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4">
-              <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800 pb-3">
-                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  <span>Skills You Have for This Role ({matchedSkills.length})</span>
-                </h3>
-              </div>
-
-              {matchedSkills.length === 0 ? (
-                <div className="p-6 text-center text-xs text-slate-400">
-                  None of your current profile skills match this opening's requirements yet.
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {matchedSkills.map((sk, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 text-xs font-mono font-bold flex items-center space-x-1.5"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                      <span>{sk}</span>
+          {/* Split Workspace: Problem Statement (Left) & Online Editor (Right) */}
+          {selectedProblem && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              
+              {/* Left: Problem Statement, Examples, Constraints */}
+              <div className="lg:col-span-5 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-5 max-h-[750px] overflow-y-auto">
+                <div className="space-y-1.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 font-extrabold uppercase">
+                      {companyName} Question
                     </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 font-bold">
+                      {selectedProblem.difficulty}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                    {selectedProblem.title}
+                  </h3>
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="text-xs font-mono font-bold uppercase text-slate-900 dark:text-white">Description:</h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {selectedProblem.problemStatement}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-xs font-mono font-bold uppercase text-slate-900 dark:text-white">Examples:</h4>
+                  {selectedProblem.examples.map((ex, idx) => (
+                    <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono space-y-1">
+                      <div><strong className="text-purple-600">Input:</strong> {ex.input}</div>
+                      <div><strong className="text-emerald-600">Output:</strong> {ex.output}</div>
+                    </div>
                   ))}
                 </div>
-              )}
-            </div>
 
-            {/* Missing Gaps for This Role */}
-            <div className="p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4">
-              <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800 pb-3">
-                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-rose-500" />
-                  <span>Skills to Learn / Focus On ({missingSkills.length})</span>
-                </h3>
-              </div>
-
-              {missingSkills.length === 0 ? (
-                <div className="p-6 text-center text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 rounded-2xl">
-                  100% of required technical skills present in your profile!
+                <div className="space-y-1">
+                  <h4 className="text-xs font-mono font-bold uppercase text-slate-900 dark:text-white">Constraints:</h4>
+                  <ul className="text-xs font-mono text-slate-500 list-disc list-inside bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                    {selectedProblem.constraints.map((c, i) => (
+                      <li key={i}>{c}</li>
+                    ))}
+                  </ul>
                 </div>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {missingSkills.map((sk, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 text-xs font-mono font-bold"
-                    >
-                      + {sk}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-          </div>
-
-          {/* ── 4. COMPANY-SPECIFIC DSA PREPARATION TOPICS & PATTERNS ── */}
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-              <div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center space-x-2">
-                  <Code2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                  <span>Role-Tailored DSA & Problem-Solving Curriculum</span>
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Structured algorithmic modules prioritized for technical interview rounds at {selectedOpportunity.companyId?.companyName || selectedOpportunity.companyName || 'this company'}.
-                </p>
               </div>
 
-              <div className="text-xs font-mono text-slate-400">
-                Progress: <strong className="text-emerald-500">{completedDsaCount}</strong> / {totalDsaTopics} Topics Completed
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {dsaCurriculum.map((topic) => {
-                const isChecked = Boolean(completedTopics[`${selectedOppId}_${topic.id}`]);
-                return (
-                  <div
-                    key={topic.id}
-                    className={`p-5 sm:p-6 rounded-3xl border-2 transition shadow-sm space-y-4 flex flex-col justify-between ${
-                      isChecked
-                        ? 'border-emerald-500/40 bg-emerald-50/20 dark:bg-emerald-950/10'
-                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-purple-400/40'
-                    }`}
+              {/* Right: Online Compiler Editor & Run Console */}
+              <div className="lg:col-span-7 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden flex flex-col justify-between">
+                
+                <div className="p-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
+                  <span className="flex items-center space-x-1">
+                    <Terminal className="h-4 w-4 text-purple-600" />
+                    <span>Compiler ({selectedLanguage.toUpperCase()})</span>
+                  </span>
+                  <button
+                    onClick={() => setCode(selectedProblem.starterCode[selectedLanguage] || '')}
+                    className="hover:text-slate-200 cursor-pointer"
                   >
-                    <div className="space-y-2.5">
-                      
-                      {/* Category & Status Header */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-extrabold uppercase text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-md">
-                          {topic.category}
-                        </span>
+                    Reset Starter Code
+                  </button>
+                </div>
 
-                        <button
-                          onClick={() => toggleTopicCompleted(`${selectedOppId}_${topic.id}`)}
-                          className="flex items-center space-x-1.5 text-xs font-bold cursor-pointer transition"
-                        >
-                          {isChecked ? (
-                            <span className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400">
-                              <CheckSquare className="h-4 w-4" />
-                              <span>Prepared</span>
-                            </span>
-                          ) : (
-                            <span className="flex items-center space-x-1 text-slate-400 hover:text-purple-500">
-                              <Square className="h-4 w-4" />
-                              <span>Mark Prepared</span>
-                            </span>
-                          )}
-                        </button>
-                      </div>
+                <div className="bg-[#0b101b] p-4 font-mono text-xs text-slate-100">
+                  <textarea
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    rows={16}
+                    spellCheck="false"
+                    className="w-full bg-transparent text-slate-100 font-mono text-xs leading-relaxed outline-none resize-y"
+                    placeholder="Write your code solution..."
+                  />
+                </div>
 
-                      {/* Title & Description */}
-                      <div>
-                        <h4 className="text-base font-black text-slate-900 dark:text-white">
-                          {topic.title}
-                        </h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                          {topic.description}
-                        </p>
-                      </div>
+                <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <button
+                    onClick={() => handleExecuteCode(false)}
+                    disabled={runningCode || submittingCode}
+                    className="px-4 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {runningCode ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 text-purple-600" />}
+                    <span>Run Sample Cases</span>
+                  </button>
 
-                      {/* Patterns */}
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-mono font-bold uppercase text-slate-400 block">
-                          Key Coding Patterns:
-                        </span>
-                        <div className="flex flex-wrap gap-1">
-                          {(topic?.patterns || []).map((p, i) => (
-                            <span key={i} className="text-[10px] font-mono px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-md font-medium">
-                              • {p}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                  <button
+                    onClick={() => handleExecuteCode(true)}
+                    disabled={runningCode || submittingCode}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs transition flex items-center space-x-1.5 shadow-md cursor-pointer disabled:opacity-50"
+                  >
+                    {submittingCode ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                    <span>Submit Solution</span>
+                  </button>
+                </div>
 
-                      {/* Standard Problems */}
-                      <div className="space-y-1 pt-1">
-                        <span className="text-[10px] font-mono font-bold uppercase text-slate-400 block">
-                          Benchmark Interview Questions:
-                        </span>
-                        <ul className="text-xs space-y-1 text-slate-600 dark:text-slate-300 font-medium list-disc list-inside">
-                          {(topic?.keyProblems || []).map((prob, idx) => (
-                            <li key={idx} className="line-clamp-1">{prob}</li>
-                          ))}
-                        </ul>
-                      </div>
-
+                {/* Execution Results Console */}
+                {codeResult && (
+                  <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-mono text-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        ✓ {codeResult.verdict}
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        Runtime: {codeResult.runtimeMs}ms • Memory: {codeResult.memoryMb}
+                      </span>
                     </div>
 
-                    {/* Footer Info & Topic Learning Action */}
-                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] font-mono text-slate-400">
-                      <div className="flex items-center space-x-2">
-                        <span>Est: {topic?.estimatedHours || '3-5 Hours'}</span>
-                        <span>•</span>
-                        <span className="font-bold text-purple-600 dark:text-purple-400">{topic?.difficulty || 'Medium'}</span>
-                      </div>
-
-                      <button
-                        onClick={() => navigate(`/company-prep/topics?oppId=${selectedOppId}&topicId=${topic.id.includes('array') ? 'arrays' : topic.id.includes('hash') ? 'hashing' : topic.id.includes('tree') ? 'trees' : topic.id.includes('dp') ? 'dp' : 'arrays'}`)}
-                        className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold font-sans transition flex items-center justify-center space-x-1 cursor-pointer shadow-xs"
-                      >
-                        <span>Start 5-Stage Flow</span>
-                        <ArrowRight className="h-3 w-3" />
-                      </button>
+                    <div className="space-y-1">
+                      {(codeResult.testResults || []).map((tr, idx) => (
+                        <div key={idx} className="p-2 rounded bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] flex justify-between">
+                          <span>Test Case #{tr.testCaseIndex}: Input <code>{tr.input}</code></span>
+                          <span className="text-emerald-500 font-bold">Passed</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                )}
 
-          {/* ── 5. COMPANY PREPARATION FLOW ROADMAP ── */}
-          <div className="p-6 sm:p-8 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-6">
-            <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center space-x-2">
-                <Compass className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                <span>Step-by-Step Preparation Roadmap for {selectedOpportunity.companyId?.companyName || selectedOpportunity.companyName || 'Target Role'}</span>
-              </h3>
-              <p className="text-xs text-slate-500">
-                Recommended 4-phase learning and preparation path from initial skill alignment to final interview readiness.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              
-              {/* Phase 1 */}
-              <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-2">
-                <div className="w-7 h-7 rounded-xl bg-purple-600 text-white font-mono font-black text-xs flex items-center justify-center">
-                  01
-                </div>
-                <h4 className="text-xs font-black uppercase text-slate-900 dark:text-white">Role & Skill Audit</h4>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Verify current match ({matchPercentage}%) against {requiredSkills.length} required skills.
-                </p>
-              </div>
-
-              {/* Phase 2 */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
-                <div className="w-7 h-7 rounded-xl bg-slate-800 text-white font-mono font-black text-xs flex items-center justify-center">
-                  02
-                </div>
-                <h4 className="text-xs font-black uppercase text-slate-900 dark:text-white">DSA Pattern Drill</h4>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Master Two Pointers, Trees, Graphs, and DP benchmarks listed above.
-                </p>
-              </div>
-
-              {/* Phase 3 */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
-                <div className="w-7 h-7 rounded-xl bg-slate-800 text-white font-mono font-black text-xs flex items-center justify-center">
-                  03
-                </div>
-                <h4 className="text-xs font-black uppercase text-slate-900 dark:text-white">Tech Stack Alignment</h4>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Build mini-projects or assess missing skills ({missingSkills.join(', ') || 'Fully Matched'}).
-                </p>
-              </div>
-
-              {/* Phase 4 */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
-                <div className="w-7 h-7 rounded-xl bg-slate-800 text-white font-mono font-black text-xs flex items-center justify-center">
-                  04
-                </div>
-                <h4 className="text-xs font-black uppercase text-slate-900 dark:text-white">Mock Assessment</h4>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Take verified assessments in the Skills module to earn badge credentials.
-                </p>
               </div>
 
             </div>
-          </div>
+          )}
 
-          {/* ── STEP 8: TIMED COMPANY-SPECIFIC MOCK ASSESSMENT ── */}
-          <div className="p-6 sm:p-8 rounded-3xl border-2 border-purple-500/40 bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-purple-500/10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] font-mono font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300">
-                  Step 8: Final Milestone
-                </span>
-                <span className="text-xs text-slate-500 font-mono">
-                  Target Company: <strong className="text-slate-900 dark:text-white">{selectedOpportunity.companyId?.companyName || selectedOpportunity.companyName || 'Target Enterprise'}</strong>
-                </span>
-              </div>
-
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                Timed Company-Specific Mock Coding Test
-              </h3>
-
-              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-                Experience a simulated 45-minute technical hiring assessment with mixed DSA challenges (Easy → Medium → Company Level) tested in {selectedLanguage.toUpperCase()}. Real scores and execution verification recorded on your verified profile.
-              </p>
-            </div>
-
+          <div className="flex justify-between pt-4">
             <button
-              onClick={() => navigate(`/company-prep/mock-test?oppId=${selectedOppId}&lang=${selectedLanguage}`)}
-              className="px-6 py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black rounded-2xl text-xs shadow-xl shadow-purple-600/30 transition flex items-center space-x-2 cursor-pointer shrink-0"
+              onClick={() => setCurrentFlowStep(4)}
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
             >
-              <Clock className="h-4 w-4" />
-              <span>Launch 45-Min Mock Test ({selectedLanguage.toUpperCase()})</span>
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Learning</span>
+            </button>
+            <button
+              onClick={handleStartMockTest}
+              className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow-md cursor-pointer"
+            >
+              <span>Take Company Mock Test</span>
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ── 6. TIMED COMPANY-SPECIFIC MOCK TEST & RESULTS WITH WEAK TOPICS ── */}
+      {currentFlowStep === 6 && (
+        <div className="space-y-6 animate-in fade-in">
+          
+          {/* Mock Test Header with Timer */}
+          <div className="p-6 rounded-3xl border-2 border-purple-500/30 bg-gradient-to-r from-purple-500/10 via-slate-50 to-indigo-500/10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span className="text-[10px] font-mono font-bold uppercase text-purple-600">
+                Step 6: Official Assessment
+              </span>
+              <h2 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
+                {companyName} Timed Technical Coding Assessment
+              </h2>
+              <p className="text-xs text-slate-500">
+                Role: <strong>{roleTitle}</strong> • Mixed DSA Difficulty Flow (Easy → Medium → Company Level)
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-3 shrink-0">
+              <div className={`px-4 py-2 rounded-2xl border-2 font-mono flex items-center space-x-2 ${
+                mockTimeRemaining < 300
+                  ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 animate-pulse'
+                  : 'bg-white dark:bg-slate-950 border-purple-500/30 text-purple-600'
+              }`}>
+                <Clock className="h-4 w-4" />
+                <span className="text-lg font-black">{formatTimer(mockTimeRemaining)}</span>
+              </div>
+
+              {!mockCompleted && (
+                <button
+                  onClick={() => {
+                    if (window.confirm('Finish and submit mock test?')) handleFinalMockSubmit();
+                  }}
+                  disabled={mockSubmitting}
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs shadow-md transition flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {mockSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  <span>Submit Assessment</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Result Scorecard & Weak Topics Identification (Step 11) */}
+          {mockCompleted && mockResult && (
+            <div className="p-8 rounded-3xl border-2 border-emerald-500/40 bg-white dark:bg-slate-900 shadow-2xl space-y-6 animate-in fade-in">
+              <div className="text-center space-y-2">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto">
+                  <Award className="h-7 w-7" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white">
+                  Assessment Evaluated & Verified
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Recorded directly to your verified MongoDB Assessment & Skill Passport records.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
+                  <span className="text-[10px] font-mono uppercase text-slate-400">Total Score</span>
+                  <div className="text-3xl font-black font-mono text-purple-600 pt-1">
+                    {mockResult.score} / 100
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
+                  <span className="text-[10px] font-mono uppercase text-slate-400">Verdict</span>
+                  <div className={`text-base font-black font-mono pt-2 ${mockResult.passed ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {mockResult.verdict}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
+                  <span className="text-[10px] font-mono uppercase text-slate-400">Questions Cleared</span>
+                  <div className="text-3xl font-black font-mono text-emerald-600 pt-1">
+                    {mockResult.correctAnswers} / {mockResult.totalQuestions}
+                  </div>
+                </div>
+              </div>
+
+              {/* Weak Topics Section */}
+              <div className="max-w-2xl mx-auto p-5 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-2">
+                <h4 className="text-xs font-mono font-bold uppercase text-purple-700 dark:text-purple-300">
+                  Identified Weak Topics for Targeted Revision:
+                </h4>
+                {mockResult.weakTopics && mockResult.weakTopics.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {mockResult.weakTopics.map((wt, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 rounded-xl text-xs font-bold font-mono">
+                        ⚠️ {wt}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-emerald-600 font-bold">
+                    ✓ Outstanding performance! No weak topics detected in this assessment.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex justify-center space-x-3 pt-4">
+                <button
+                  onClick={() => setCurrentFlowStep(3)}
+                  className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                  Review DSA Topics
+                </button>
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="px-5 py-2.5 bg-purple-600 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>View in Skill Passport</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Active Mock Workspace */}
+          {!mockCompleted && mockSession && (
+            <div className="space-y-5">
+              
+              {/* Question Palette */}
+              <div className="flex items-center space-x-2 p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <span className="text-xs font-mono font-bold text-slate-400 uppercase">Question Palette:</span>
+                {mockSession.problems.map((p, idx) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setMockQuestionIdx(idx)}
+                    className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition cursor-pointer ${
+                      mockQuestionIdx === idx ? 'bg-purple-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
+                    }`}
+                  >
+                    Q{idx + 1} ({p.difficulty})
+                  </button>
+                ))}
+              </div>
+
+              {/* Problem + Code Editor */}
+              {mockSession.problems[mockQuestionIdx] && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  
+                  <div className="lg:col-span-5 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4 max-h-[700px] overflow-y-auto">
+                    <div className="space-y-1 border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <span className="text-[10px] font-mono font-black uppercase text-purple-600">
+                        {mockSession.problems[mockQuestionIdx].difficulty}
+                      </span>
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                        Q{mockQuestionIdx + 1}. {mockSession.problems[mockQuestionIdx].title}
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {mockSession.problems[mockQuestionIdx].problemStatement}
+                    </p>
+                    <div className="space-y-1">
+                      <span className="text-xs font-mono font-bold uppercase text-slate-900 dark:text-white">Constraints:</span>
+                      <ul className="text-xs font-mono text-slate-500 list-disc list-inside bg-slate-50 dark:bg-slate-950 p-3 rounded-xl">
+                        {mockSession.problems[mockQuestionIdx].constraints.map((c, i) => (
+                          <li key={i}>{c}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-7 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden flex flex-col justify-between">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-400">
+                      Editor ({selectedLanguage.toUpperCase()})
+                    </div>
+                    <div className="bg-[#0b101b] p-4 font-mono text-xs text-slate-100">
+                      <textarea
+                        value={mockAnswers[mockSession.problems[mockQuestionIdx].id] || ''}
+                        onChange={(e) => setMockAnswers({
+                          ...mockAnswers,
+                          [mockSession.problems[mockQuestionIdx].id]: e.target.value
+                        })}
+                        rows={16}
+                        spellCheck="false"
+                        className="w-full bg-transparent text-slate-100 font-mono text-xs leading-relaxed outline-none resize-y"
+                        placeholder="Write your complete solution..."
+                      />
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+            </div>
+          )}
 
         </div>
       )}

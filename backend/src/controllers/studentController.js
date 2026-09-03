@@ -2579,6 +2579,18 @@ export const submitDsaMockTest = async (req, res) => {
     const finalScore = Math.min(100, Math.max(0, totalScore));
     const passedStatus = finalScore >= 60;
 
+    // Identify weak topics from failed/incomplete problems
+    const weakTopics = [];
+    problemResults.forEach(pr => {
+      if (pr.status !== 'Passed') {
+        const probDef = DSA_PROBLEM_BANK.find(p => p.id === pr.problemId);
+        const topicName = probDef?.topicLabel || probDef?.topic || 'Core Problem Solving';
+        if (!weakTopics.includes(topicName)) {
+          weakTopics.push(topicName);
+        }
+      }
+    });
+
     // Save to real AssessmentResult collection (reuse existing model)
     const assessment = await AssessmentResult.create({
       userId,
@@ -2603,6 +2615,7 @@ export const submitDsaMockTest = async (req, res) => {
       correctAnswers: passedCount,
       verdict: passedStatus ? 'Mock Assessment Cleared ✓' : 'Needs Practice',
       results: problemResults,
+      weakTopics,
       submittedAt: new Date().toISOString()
     });
   } catch (error) {
