@@ -89,7 +89,18 @@ export const updateProfile = async (req, res) => {
       certifications,
       resumeUrl,
       socialLinks,
-      achievements
+      achievements,
+      // Flat fields sent by frontend
+      college,
+      department,
+      course,
+      degree,
+      branch,
+      year,
+      cgpa,
+      github,
+      linkedin,
+      portfolio
     } = req.body;
 
     // ── 1. FIELD VALIDATION ──
@@ -102,14 +113,14 @@ export const updateProfile = async (req, res) => {
       }
     }
 
-    if (phone !== undefined && phone.trim() !== '') {
+    if (phone !== undefined && phone !== null && phone.trim() !== '') {
       const cleanPhone = phone.trim().replace(/[\s\-\(\)\+]/g, '');
       if (cleanPhone.length < 7 || cleanPhone.length > 15 || !/^\d+$/.test(cleanPhone)) {
         return res.status(400).json({ success: false, message: 'Please enter a valid phone number (7-15 digits).' });
       }
     }
 
-    if (dateOfBirth !== undefined && dateOfBirth.trim() !== '') {
+    if (dateOfBirth !== undefined && dateOfBirth !== null && dateOfBirth.trim() !== '') {
       const dobDate = new Date(dateOfBirth);
       if (isNaN(dobDate.getTime())) {
         return res.status(400).json({ success: false, message: 'Invalid Date of Birth format.' });
@@ -119,117 +130,115 @@ export const updateProfile = async (req, res) => {
       }
     }
 
-    if (academicInformation) {
-      const { college, department, course, year, cgpa } = academicInformation;
+    // Determine academic info from nested object or flat payload properties
+    const incomingAcademic = academicInformation || (
+      (college !== undefined || department !== undefined || course !== undefined || degree !== undefined || branch !== undefined || year !== undefined || cgpa !== undefined)
+        ? { college, department: department || branch, course: course || degree, degree, branch, year, cgpa }
+        : null
+    );
 
-      if (college !== undefined && !college.trim()) {
-        return res.status(400).json({ success: false, message: 'College / Institution name is required.' });
-      }
-      if (department !== undefined && !department.trim()) {
-        return res.status(400).json({ success: false, message: 'Department is required.' });
-      }
-      if (course !== undefined && !course.trim()) {
-        return res.status(400).json({ success: false, message: 'Course is required.' });
-      }
-      if (year !== undefined && !year.toString().trim()) {
-        return res.status(400).json({ success: false, message: 'Academic Year is required.' });
-      }
-
-      if (cgpa !== undefined && cgpa !== null && cgpa !== '') {
-        const numCgpa = parseFloat(cgpa);
-        if (isNaN(numCgpa) || numCgpa < 0 || numCgpa > 10) {
-          return res.status(400).json({ success: false, message: 'CGPA must be a valid number between 0.0 and 10.0.' });
-        }
+    if (incomingAcademic && incomingAcademic.cgpa !== undefined && incomingAcademic.cgpa !== null && incomingAcademic.cgpa !== '') {
+      const numCgpa = parseFloat(incomingAcademic.cgpa);
+      if (isNaN(numCgpa) || numCgpa < 0 || numCgpa > 10) {
+        return res.status(400).json({ success: false, message: 'CGPA must be a valid number between 0.0 and 10.0.' });
       }
     }
 
     // ── 2. UPDATE USER MODEL ──
+    const userUpdates = {};
     if (name && name.trim()) {
-      await User.findByIdAndUpdate(userId, { name: name.trim() });
+      userUpdates.name = name.trim();
+    }
+    if (profilePhoto && profilePhoto.trim()) {
+      userUpdates.avatarUrl = profilePhoto.trim();
+    }
+    if (Object.keys(userUpdates).length > 0) {
+      await User.findByIdAndUpdate(userId, userUpdates);
     }
 
     // ── 3. UPDATE OR INITIALIZE STUDENT PROFILE ──
-    let profile = await StudentProfile.findOne({ userId });
-    if (!profile) {
-      profile = new StudentProfile({ userId });
+    const updateDoc = {};
+
+    if (phone !== undefined) updateDoc.phone = (phone || '').trim();
+    if (dateOfBirth !== undefined) updateDoc.dateOfBirth = (dateOfBirth || '').trim();
+    if (profilePhoto !== undefined) updateDoc.profilePhoto = (profilePhoto || '').trim();
+    if (bio !== undefined) updateDoc.bio = (bio || '').trim();
+
+    if (incomingAcademic) {
+      if (incomingAcademic.college !== undefined) updateDoc['academicInformation.college'] = (incomingAcademic.college || '').trim();
+      if ((incomingAcademic.department || incomingAcademic.branch) !== undefined) {
+        updateDoc['academicInformation.department'] = (incomingAcademic.department || incomingAcademic.branch || '').trim();
+        updateDoc['academicInformation.branch'] = (incomingAcademic.department || incomingAcademic.branch || '').trim();
+      }
+      if ((incomingAcademic.course || incomingAcademic.degree) !== undefined) {
+        updateDoc['academicInformation.course'] = (incomingAcademic.course || incomingAcademic.degree || '').trim();
+        updateDoc['academicInformation.degree'] = (incomingAcademic.course || incomingAcademic.degree || '').trim();
+      }
+      if (incomingAcademic.year !== undefined) {
+        updateDoc['academicInformation.year'] = incomingAcademic.year ? incomingAcademic.year.toString().trim() : '';
+      }
+      if (incomingAcademic.cgpa !== undefined) {
+        updateDoc['academicInformation.cgpa'] = (incomingAcademic.cgpa !== null && incomingAcademic.cgpa !== '') ? parseFloat(incomingAcademic.cgpa) : null;
+      }
     }
 
-    // Personal Information
-    if (phone !== undefined) profile.phone = phone.trim();
-    if (dateOfBirth !== undefined) profile.dateOfBirth = dateOfBirth.trim();
-    if (profilePhoto !== undefined) profile.profilePhoto = profilePhoto.trim();
-    if (bio !== undefined) profile.bio = bio.trim();
+    const incomingSocial = socialLinks || (
+      (github !== undefined || linkedin !== undefined || portfolio !== undefined)
+        ? { github, linkedin, portfolio }
+        : null
+    );
 
-    // Academic Information
-    if (academicInformation) {
-      const a = academicInformation;
-      const prev = profile.academicInformation || {};
-      profile.academicInformation = {
-        college: a.college !== undefined ? a.college.trim() : (prev.college || ''),
-        department: a.department !== undefined ? a.department.trim() : (prev.department || ''),
-        course: a.course !== undefined ? a.course.trim() : (prev.course || ''),
-        degree: a.course !== undefined ? a.course.trim() : (prev.degree || ''),
-        branch: a.department !== undefined ? a.department.trim() : (prev.branch || ''),
-        year: a.year !== undefined ? a.year.toString().trim() : (prev.year || ''),
-        cgpa: a.cgpa !== undefined && a.cgpa !== null && a.cgpa !== '' ? parseFloat(a.cgpa) : prev.cgpa
-      };
+    if (incomingSocial) {
+      if (incomingSocial.github !== undefined) updateDoc['socialLinks.github'] = (incomingSocial.github || '').trim();
+      if (incomingSocial.linkedin !== undefined) updateDoc['socialLinks.linkedin'] = (incomingSocial.linkedin || '').trim();
+      if (incomingSocial.portfolio !== undefined) updateDoc['socialLinks.portfolio'] = (incomingSocial.portfolio || '').trim();
     }
 
-    // Skills
     if (skills !== undefined) {
-      profile.skills = Array.isArray(skills) 
+      updateDoc.skills = Array.isArray(skills) 
         ? skills.map(s => typeof s === 'string' ? s.trim() : s).filter(Boolean)
-        : (typeof skills === 'string' ? skills.split(',').map(s => s.trim()).filter(Boolean) : profile.skills);
+        : (typeof skills === 'string' ? skills.split(',').map(s => s.trim()).filter(Boolean) : []);
     }
 
     if (softSkills !== undefined) {
-      profile.softSkills = Array.isArray(softSkills)
+      updateDoc.softSkills = Array.isArray(softSkills)
         ? softSkills.map(s => typeof s === 'string' ? s.trim() : s).filter(Boolean)
-        : (typeof softSkills === 'string' ? softSkills.split(',').map(s => s.trim()).filter(Boolean) : profile.softSkills);
+        : (typeof softSkills === 'string' ? softSkills.split(',').map(s => s.trim()).filter(Boolean) : []);
     }
 
-    // Projects
     if (projects !== undefined && Array.isArray(projects)) {
-      profile.projects = projects.map(p => ({
+      updateDoc.projects = projects.map(p => ({
         title: (p.title || '').trim(),
         description: (p.description || '').trim(),
         technologies: Array.isArray(p.technologies) 
           ? p.technologies.map(t => t.trim()).filter(Boolean)
           : (typeof p.technologies === 'string' ? p.technologies.split(',').map(t => t.trim()).filter(Boolean) : []),
-        link: (p.link || '').trim()
+        link: (p.link || p.githubUrl || '').trim(),
+        githubUrl: (p.githubUrl || p.link || '').trim(),
+        liveUrl: (p.liveUrl || '').trim(),
+        duration: (p.duration || '').trim()
       }));
     }
 
-    // Certifications
     if (certifications !== undefined && Array.isArray(certifications)) {
-      profile.certifications = certifications.map(c => ({
+      updateDoc.certifications = certifications.map(c => ({
         title: (c.title || '').trim(),
         issuer: (c.issuer || '').trim(),
-        date: (c.date || '').trim(),
+        issueDate: (c.issueDate || c.date || '').trim(),
+        date: (c.date || c.issueDate || '').trim(),
+        credentialId: (c.credentialId || '').trim(),
         credentialUrl: (c.credentialUrl || '').trim()
       }));
     }
 
-    // Resume
-    if (resumeUrl !== undefined) profile.resumeUrl = resumeUrl.trim();
+    if (resumeUrl !== undefined) updateDoc.resumeUrl = (resumeUrl || '').trim();
+    if (achievements !== undefined && Array.isArray(achievements)) updateDoc.achievements = achievements;
 
-    // Social Links
-    if (socialLinks !== undefined) {
-      profile.socialLinks = {
-        github: (socialLinks.github || '').trim(),
-        linkedin: (socialLinks.linkedin || '').trim(),
-        portfolio: (socialLinks.portfolio || '').trim()
-      };
-    }
-
-    if (achievements !== undefined) {
-      profile.achievements = Array.isArray(achievements) ? achievements : profile.achievements;
-    }
-
-    await profile.save();
-
-    // Re-fetch populated profile from MongoDB
-    const updatedProfile = await StudentProfile.findOne({ userId }).populate('userId', 'name email role avatarUrl emailVerified');
+    const updatedProfile = await StudentProfile.findOneAndUpdate(
+      { userId },
+      { $set: updateDoc },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    ).populate('userId', 'name email role avatarUrl emailVerified');
 
     res.status(200).json({
       success: true,

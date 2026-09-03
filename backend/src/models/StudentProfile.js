@@ -4,18 +4,16 @@ import mongoose from 'mongoose';
 const SkillItemSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Skill name is required'],
+    default: '',
     trim: true
   },
   category: {
     type: String,
-    required: [true, 'Category is required'],
-    default: 'Frontend',
+    default: 'Technical',
     trim: true
   },
   proficiency: {
     type: String,
-    required: [true, 'Proficiency level is required'],
     enum: ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
     default: 'Intermediate'
   }
@@ -27,12 +25,12 @@ const SkillItemSchema = new mongoose.Schema({
 const CertificationSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, 'Certificate name is required'],
+    default: '',
     trim: true
   },
   issuer: {
     type: String,
-    required: [true, 'Issuing organization is required'],
+    default: '',
     trim: true
   },
   issueDate: {
@@ -63,12 +61,12 @@ const CertificationSchema = new mongoose.Schema({
 const ProjectSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, 'Project title is required'],
+    default: '',
     trim: true
   },
   description: {
     type: String,
-    required: [true, 'Project description is required'],
+    default: '',
     trim: true
   },
   technologies: {

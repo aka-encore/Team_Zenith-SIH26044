@@ -571,8 +571,8 @@ export const getUserProfile = async (req, res) => {
 // PUT /api/auth/profile
 export const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user?._id || req.body.userId;
-    const { name, avatarUrl } = req.body;
+    const userId = req.user?._id || req.user?.id || req.body.userId;
+    const { name, avatarUrl, phone, institution, department, bio } = req.body;
 
     if (!userId) {
       return res.status(401).json({ success: false, message: 'Authentication required' });
@@ -593,6 +593,29 @@ export const updateUserProfile = async (req, res) => {
     }
 
     await user.save();
+
+    // Also sync StudentProfile or Company if role is student or company
+    if (user.role === 'student') {
+      const studentUpdate = {};
+      if (phone !== undefined) studentUpdate.phone = (phone || '').trim();
+      if (bio !== undefined) studentUpdate.bio = (bio || '').trim();
+      if (institution !== undefined) studentUpdate['academicInformation.college'] = (institution || '').trim();
+      if (department !== undefined) studentUpdate['academicInformation.department'] = (department || '').trim();
+      if (avatarUrl !== undefined) studentUpdate.profilePhoto = (avatarUrl || '').trim();
+      if (Object.keys(studentUpdate).length > 0) {
+        await StudentProfile.findOneAndUpdate({ userId }, { $set: studentUpdate }, { upsert: true });
+      }
+    } else if (user.role === 'company') {
+      const companyUpdate = {};
+      if (name && name.trim()) companyUpdate.companyName = name.trim();
+      if (phone !== undefined) companyUpdate.contactPhone = (phone || '').trim();
+      if (bio !== undefined) companyUpdate.description = (bio || '').trim();
+      if (institution !== undefined) companyUpdate.location = (institution || '').trim();
+      if (avatarUrl !== undefined) companyUpdate.logoUrl = (avatarUrl || '').trim();
+      if (Object.keys(companyUpdate).length > 0) {
+        await Company.findOneAndUpdate({ userId }, { $set: companyUpdate }, { upsert: true });
+      }
+    }
 
     res.status(200).json({
       success: true,

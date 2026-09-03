@@ -7,9 +7,22 @@ import { matchSkills } from '../utils/matchingEngine.js';
 
 export const getProfile = async (req, res) => {
   try {
-    const profile = await Company.findOne({ userId: req.user.id }).populate('userId', 'name email role');
+    let profile = await Company.findOne({ userId: req.user.id }).populate('userId', 'name email role');
     if (!profile) {
-      return res.status(404).json({ success: false, message: 'Company profile not found' });
+      profile = await Company.create({
+        userId: req.user.id,
+        companyName: req.user.name || 'Company Name',
+        industry: 'Technology',
+        description: '',
+        website: '',
+        location: '',
+        hrName: req.user.name || 'HR Team',
+        contactEmail: req.user.email || '',
+        contactPhone: '',
+        companySize: '11-50 employees',
+        foundedYear: new Date().getFullYear().toString()
+      });
+      profile = await Company.findById(profile._id).populate('userId', 'name email role');
     }
     res.status(200).json({ success: true, profile });
   } catch (error) {
@@ -25,34 +38,34 @@ export const updateProfile = async (req, res) => {
       hrName, contactPhone, contactEmail, hrEmail, companySize, foundedYear 
     } = req.body;
     
-    const profile = await Company.findOne({ userId: req.user.id });
+    let profile = await Company.findOne({ userId: req.user.id });
     if (!profile) {
-      return res.status(404).json({ success: false, message: 'Company profile not found' });
+      profile = new Company({ userId: req.user.id });
     }
 
-    if (companyName) {
+    if (companyName && companyName.trim()) {
       profile.companyName = companyName.trim();
       await User.findByIdAndUpdate(req.user.id, { name: companyName.trim() });
     }
-    if (logoUrl !== undefined) profile.logoUrl = logoUrl.trim();
-    if (industry !== undefined) profile.industry = industry.trim();
-    if (description !== undefined) profile.description = description.trim();
-    if (website !== undefined) profile.website = website.trim();
-    if (location !== undefined) profile.location = location.trim();
-    if (hrName !== undefined) profile.hrName = hrName.trim();
-    if (contactPhone !== undefined) profile.contactPhone = contactPhone.trim();
+    if (logoUrl !== undefined) profile.logoUrl = (logoUrl || '').trim();
+    if (industry !== undefined) profile.industry = (industry || '').trim();
+    if (description !== undefined) profile.description = (description || '').trim();
+    if (website !== undefined) profile.website = (website || '').trim();
+    if (location !== undefined) profile.location = (location || '').trim();
+    if (hrName !== undefined) profile.hrName = (hrName || '').trim();
+    if (contactPhone !== undefined) profile.contactPhone = (contactPhone || '').trim();
     if (contactEmail !== undefined || hrEmail !== undefined) {
       profile.contactEmail = (contactEmail || hrEmail || '').trim();
     }
-    if (companySize !== undefined) profile.companySize = companySize.trim();
-    if (foundedYear !== undefined) profile.foundedYear = foundedYear.toString().trim();
+    if (companySize !== undefined) profile.companySize = (companySize || '').trim();
+    if (foundedYear !== undefined) profile.foundedYear = foundedYear ? foundedYear.toString().trim() : '';
 
     await profile.save();
     const updatedProfile = await Company.findOne({ userId: req.user.id }).populate('userId', 'name email role');
     res.status(200).json({ success: true, message: 'Company profile updated successfully!', profile: updatedProfile });
   } catch (error) {
     console.error('Update Company Profile Error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error updating company profile' });
+    res.status(500).json({ success: false, message: 'Server error updating company profile: ' + error.message });
   }
 };
 

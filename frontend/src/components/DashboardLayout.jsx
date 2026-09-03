@@ -214,17 +214,21 @@ export function DashboardLayout({ children }) {
         <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
           <div className="flex items-center space-x-3">
             
-            {/* Sidebar Toggle Button (Opens sidebar when closed) */}
+            {/* Sidebar Toggle Button (Opens/Closes sidebar cleanly) */}
             <button
               onClick={() => setSidebarOpen(prev => !prev)}
-              className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition cursor-pointer text-xs font-bold shadow-xs"
-              title="Toggle Dashboard Menu"
+              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-xs font-bold shadow-xs flex items-center justify-center"
+              title={sidebarOpen ? "Close Menu" : "Open Menu"}
+              aria-label="Toggle Navigation Menu"
             >
-              <Menu className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-              <span className="hidden sm:inline">{sidebarOpen ? 'Hide Menu' : 'Menu'}</span>
+              {sidebarOpen ? (
+                <X className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+              ) : (
+                <Menu className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+              )}
             </button>
 
-            <span className="text-xs font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-wider hidden sm:inline-block">
+            <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider hidden sm:inline-block">
               {role === 'admin' ? 'Admin Command Center' : `${role} Workspace`}
             </span>
           </div>
@@ -248,12 +252,16 @@ export function DashboardLayout({ children }) {
                 <span className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 block transition truncate max-w-[140px]">{user?.name || user?.email}</span>
                 <span className="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 font-bold uppercase">{user?.status || 'Active'}</span>
               </div>
-              <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center text-xs overflow-hidden shadow-xs">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-xs overflow-hidden shadow-xs relative">
                 {user?.avatarUrl || user?.profilePhoto ? (
-                  <img src={user.avatarUrl || user.profilePhoto} alt={user?.name || "Profile"} className="w-full h-full object-cover" />
-                ) : (
-                  user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'
-                )}
+                  <img 
+                    src={user.avatarUrl || user.profilePhoto} 
+                    alt={user?.name || "Profile"} 
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    className="w-full h-full object-cover" 
+                  />
+                ) : null}
+                <span className="select-none">{user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}</span>
               </div>
             </button>
           </div>
