@@ -1,6 +1,7 @@
 import StudentProfile from '../models/StudentProfile.js';
 import User from '../models/User.js';
 import Opportunity from '../models/Opportunity.js';
+import Company from '../models/Company.js';
 import Application from '../models/Application.js';
 import AssessmentResult from '../models/AssessmentResult.js';
 import { matchSkills, analyzeSkillGap } from '../utils/matchingEngine.js';
@@ -2623,6 +2624,67 @@ export const submitDsaMockTest = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error evaluating mock test: ' + error.message });
   }
 };
+
+/**
+ * GET /api/students/companies
+ * Retrieves real companies with their real opportunities count, industry, website, and required skills
+ */
+export const getCompanyPrepCompanies = async (req, res) => {
+  try {
+    const opportunities = await Opportunity.find({ isActive: { $ne: false } })
+      .populate('companyId', 'companyName industry website logoUrl location description')
+      .lean();
+
+    // Aggregate by company
+    const companyMap = new Map();
+
+    opportunities.forEach(opp => {
+      const compId = opp.companyId?._id?.toString() || opp.companyName || 'General';
+      const compName = opp.companyId?.companyName || opp.companyName || 'Enterprise Partner';
+      const industry = opp.companyId?.industry || 'Technology & Engineering';
+      const website = opp.companyId?.website || '';
+      const location = opp.companyId?.location || opp.location || 'Remote / Hybrid';
+      const logoUrl = opp.companyId?.logoUrl || '';
+      const description = opp.companyId?.description || opp.description || '';
+
+      if (!companyMap.has(compId)) {
+        companyMap.set(compId, {
+          _id: compId,
+          companyName: compName,
+          industry,
+          website,
+          location,
+          logoUrl,
+          description,
+          opportunityCount: 0,
+          opportunities: []
+        });
+      }
+
+      const item = companyMap.get(compId);
+      item.opportunityCount += 1;
+      item.opportunities.push({
+        _id: opp._id,
+        title: opp.title,
+        type: opp.type || 'job',
+        requiredSkills: opp.requiredSkills || [],
+        stipend: opp.stipend || ''
+      });
+    });
+
+    const companies = Array.from(companyMap.values());
+
+    res.status(200).json({
+      success: true,
+      count: companies.length,
+      companies
+    });
+  } catch (error) {
+    console.error('Get Company Prep Companies Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error loading real companies: ' + error.message });
+  }
+};
+
 
 
 

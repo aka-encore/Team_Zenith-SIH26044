@@ -6,7 +6,7 @@ import {
   Send, Clock, CheckCircle2, Circle, AlertCircle, RefreshCw,
   ArrowLeft, ArrowRight, ExternalLink, ShieldCheck, Award,
   Sparkles, CheckSquare, Square, ChevronRight, HelpCircle,
-  Video, Lightbulb, Search, Filter, RotateCcw
+  Video, Lightbulb, Search, Filter, Globe, Briefcase
 } from 'lucide-react';
 
 export default function CompanyPrepPage() {
@@ -14,24 +14,24 @@ export default function CompanyPrepPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // ── Core Flow State ──
-  // Current Step: 1 ('company') | 2 ('language') | 3 ('topics') | 4 ('learning') | 5 ('practice') | 6 ('mock')
+  // ── Flow Step: 1 ('company') | 2 ('language') | 3 ('topics') | 4 ('learning') | 5 ('practice') | 6 ('mock') ──
   const [currentFlowStep, setCurrentFlowStep] = useState(1);
 
-  // Data State
-  const [opportunities, setOpportunities] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // ── Step 1: Real Database Companies ──
+  const [companies, setCompanies] = useState([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [industryFilter, setIndustryFilter] = useState('all');
+  const [selectedCompany, setSelectedCompany] = useState(null);
 
-  // Selections
-  const [selectedOpportunity, setSelectedOpportunity] = useState(null);
+  // ── Step 2: DSA Language Selection ──
   const [selectedLanguage, setSelectedLanguage] = useState('cpp'); // 'cpp' | 'java' | 'python'
-  const [selectedTopicId, setSelectedTopicId] = useState('arrays');
 
-  // Topic Completion Progress (stored locally per user)
+  // ── Step 3: DSA Topic Selection ──
+  const [selectedTopicId, setSelectedTopicId] = useState('arrays');
   const [completedTopics, setCompletedTopics] = useState({});
 
-  // Coding Practice & Compiler State
+  // ── Step 5: Online Compiler & Practice State ──
   const [problems, setProblems] = useState([]);
   const [selectedProblem, setSelectedProblem] = useState(null);
   const [code, setCode] = useState('');
@@ -40,7 +40,7 @@ export default function CompanyPrepPage() {
   const [codeResult, setCodeResult] = useState(null);
   const [problemSubmissions, setProblemSubmissions] = useState({});
 
-  // Timed Mock Test State
+  // ── Step 6: Timed Mock Test State ──
   const [mockSession, setMockSession] = useState(null);
   const [mockTimeRemaining, setMockTimeRemaining] = useState(45 * 60);
   const [mockAnswers, setMockAnswers] = useState({});
@@ -49,49 +49,50 @@ export default function CompanyPrepPage() {
   const [mockResult, setMockResult] = useState(null);
   const [mockCompleted, setMockCompleted] = useState(false);
 
-  // ── 1. Fetch Real Live Opportunities from MongoDB ──
-  useEffect(() => {
-    const fetchOpportunities = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch('/api/opportunities', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (data.success && Array.isArray(data.opportunities)) {
-          setOpportunities(data.opportunities);
-          if (data.opportunities.length > 0) {
-            setSelectedOpportunity(data.opportunities[0]);
-          }
+  // Fetch real companies with live opportunities from MongoDB
+  const fetchCompanies = async () => {
+    setLoadingCompanies(true);
+    try {
+      const res = await fetch('/api/students/companies', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.companies)) {
+        setCompanies(data.companies);
+        if (data.companies.length > 0 && !selectedCompany) {
+          setSelectedCompany(data.companies[0]);
         }
-      } catch (err) {
-        console.error('Error fetching opportunities:', err);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching companies:', err);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  };
 
-    if (token) fetchOpportunities();
+  useEffect(() => {
+    if (token) fetchCompanies();
   }, [token]);
 
-  // Load persistent progress
+  // Load persistent progress from localStorage
   useEffect(() => {
     try {
       const savedTopics = localStorage.getItem(`zenith_prep_topics_${user?.id || 'guest'}`);
       if (savedTopics) setCompletedTopics(JSON.parse(savedTopics));
-      const savedSubmissions = localStorage.getItem(`zenith_prep_subs_${user?.id || 'guest'}`);
-      if (savedSubmissions) setProblemSubmissions(JSON.parse(savedSubmissions));
+      const savedSubs = localStorage.getItem(`zenith_prep_subs_${user?.id || 'guest'}`);
+      if (savedSubs) setProblemSubmissions(JSON.parse(savedSubs));
     } catch (e) {
       console.error(e);
     }
   }, [user?.id]);
 
-  // Fetch problems when topic or opportunity changes
+  // Fetch problems when topic or company changes
   useEffect(() => {
     const fetchProblems = async () => {
-      if (!selectedOpportunity) return;
+      if (!selectedCompany) return;
       try {
-        const res = await fetch(`/api/students/dsa-problems?opportunityId=${selectedOpportunity._id}&topic=${selectedTopicId}`, {
+        const firstOppId = selectedCompany.opportunities?.[0]?._id || '';
+        const res = await fetch(`/api/students/dsa-problems?opportunityId=${firstOppId}&topic=${selectedTopicId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -107,12 +108,12 @@ export default function CompanyPrepPage() {
       }
     };
 
-    if (token && selectedOpportunity) {
+    if (token && selectedCompany) {
       fetchProblems();
     }
-  }, [token, selectedOpportunity, selectedTopicId, selectedLanguage]);
+  }, [token, selectedCompany, selectedTopicId, selectedLanguage]);
 
-  // ── Mock Test Countdown Timer ──
+  // Countdown timer for Mock Test
   useEffect(() => {
     if (currentFlowStep !== 6 || mockCompleted || mockTimeRemaining <= 0) return;
     const timer = setInterval(() => {
@@ -134,7 +135,7 @@ export default function CompanyPrepPage() {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  // ── Structured 11-Topic DSA Curriculum ──
+  // Structured Core DSA Topics
   const dsaTopics = [
     {
       id: 'arrays',
@@ -149,7 +150,7 @@ export default function CompanyPrepPage() {
       },
       stages: {
         beginner: {
-          title: 'Beginner: Memory Architecture & Basic Operations',
+          title: 'Beginner: Memory Architecture & Indexing',
           points: [
             'Fixed Contiguous Memory: Elements stored sequentially with O(1) index access.',
             'Time Complexities: Access O(1), Search O(N), Insert/Delete at end O(1) amortized, Insert at start O(N).',
@@ -157,7 +158,7 @@ export default function CompanyPrepPage() {
           ]
         },
         intermediate: {
-          title: 'Intermediate: Core Two Pointer & Sliding Window Patterns',
+          title: 'Intermediate: Two Pointer & Sliding Window',
           points: [
             'Two Pointer Technique: Converging left & right pointers to eliminate nested O(N²) loops.',
             'Sliding Window: Maintaining fixed or dynamic subarrays to find maximum sum or unique substrings in O(N).',
@@ -239,7 +240,7 @@ export default function CompanyPrepPage() {
           ]
         },
         intermediate: {
-          title: 'Intermediate: Tree Traversals & Lowest Common Ancestor',
+          title: 'Intermediate: Tree Traversals & LCA',
           points: [
             'DFS: Inorder (sorted for BST), Preorder, Postorder.',
             'BFS: Queue-based Level Order Traversal.',
@@ -301,13 +302,11 @@ export default function CompanyPrepPage() {
   ];
 
   const currentTopic = dsaTopics.find(t => t.id === selectedTopicId) || dsaTopics[0];
-  const totalTopics = dsaTopics.length;
-  const completedTopicsCount = Object.keys(completedTopics).filter(k => completedTopics[k] && k.startsWith(selectedOpportunity?._id || '')).length;
-  const allTopicsCompleted = totalTopics > 0 && completedTopicsCount >= totalTopics;
+  const completedTopicsCount = Object.keys(completedTopics).filter(k => completedTopics[k] && k.startsWith(selectedCompany?._id || '')).length;
 
   const toggleTopicDone = (topicId) => {
-    if (!selectedOpportunity) return;
-    const key = `${selectedOpportunity._id}_${topicId}`;
+    if (!selectedCompany) return;
+    const key = `${selectedCompany._id}_${topicId}`;
     const updated = { ...completedTopics, [key]: !completedTopics[key] };
     setCompletedTopics(updated);
     try {
@@ -317,13 +316,14 @@ export default function CompanyPrepPage() {
     }
   };
 
-  // ── Run & Submit Code in Online Compiler ──
+  // Run & Submit Code in Online Compiler
   const handleExecuteCode = async (isSubmit = false) => {
-    if (!selectedProblem || !selectedOpportunity) return;
+    if (!selectedProblem || !selectedCompany) return;
     if (isSubmit) setSubmittingCode(true);
     else setRunningCode(true);
 
     try {
+      const firstOppId = selectedCompany.opportunities?.[0]?._id || '';
       const res = await fetch('/api/students/dsa-submit', {
         method: 'POST',
         headers: {
@@ -335,7 +335,7 @@ export default function CompanyPrepPage() {
           language: selectedLanguage,
           code,
           isSubmit,
-          opportunityId: selectedOpportunity._id
+          opportunityId: firstOppId
         })
       });
       const data = await res.json();
@@ -368,12 +368,13 @@ export default function CompanyPrepPage() {
     }
   };
 
-  // ── Launch Timed Company Mock Test ──
+  // Launch Timed Mock Test
   const handleStartMockTest = async () => {
-    if (!selectedOpportunity) return;
-    setLoading(true);
+    if (!selectedCompany) return;
+    setLoadingCompanies(true);
     try {
-      const res = await fetch(`/api/students/dsa-mock-test?opportunityId=${selectedOpportunity._id}&language=${selectedLanguage}`, {
+      const firstOppId = selectedCompany.opportunities?.[0]?._id || '';
+      const res = await fetch(`/api/students/dsa-mock-test?opportunityId=${firstOppId}&language=${selectedLanguage}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -392,15 +393,16 @@ export default function CompanyPrepPage() {
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      setLoadingCompanies(false);
     }
   };
 
-  // ── Submit Timed Mock Test ──
+  // Final Mock Submit
   const handleFinalMockSubmit = async () => {
     if (mockSubmitting || mockCompleted || !mockSession) return;
     setMockSubmitting(true);
     try {
+      const firstOppId = selectedCompany.opportunities?.[0]?._id || '';
       const submissions = mockSession.problems.map(p => ({
         problemId: p.id,
         title: p.title,
@@ -416,8 +418,8 @@ export default function CompanyPrepPage() {
         },
         body: JSON.stringify({
           sessionId: mockSession.sessionId,
-          opportunityId: selectedOpportunity._id,
-          companyName: selectedOpportunity.companyId?.companyName || selectedOpportunity.companyName,
+          opportunityId: firstOppId,
+          companyName: selectedCompany.companyName,
           submissions,
           durationSpentSeconds: (45 * 60) - mockTimeRemaining
         })
@@ -435,164 +437,210 @@ export default function CompanyPrepPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="max-w-4xl mx-auto py-24 text-center space-y-4">
-        <RefreshCw className="h-8 w-8 animate-spin text-purple-600 mx-auto" />
-        <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">
-          Loading Real Employer Data from MongoDB...
-        </p>
-      </div>
-    );
-  }
+  // Filtered companies for Step 1
+  const industries = ['all', ...new Set(companies.map(c => c.industry).filter(Boolean))];
+  const filteredCompanies = companies.filter(c => {
+    const matchesSearch = c.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          c.industry.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesIndustry = industryFilter === 'all' || c.industry === industryFilter;
+    return matchesSearch && matchesIndustry;
+  });
 
-  const companyName = selectedOpportunity?.companyId?.companyName || selectedOpportunity?.companyName || 'Enterprise Employer';
-  const roleTitle = selectedOpportunity?.title || 'Software Development Engineer';
-  const requiredSkills = selectedOpportunity?.requiredSkills || [];
+  // Handle company card click (selects and advances to Step 2)
+  const handleSelectCompany = (comp) => {
+    setSelectedCompany(comp);
+    setCurrentFlowStep(2); // Automatically advance to DSA Language Selection Step
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-24 text-left">
       
-      {/* ── FLOW STEP NAVIGATION BAR ── */}
-      <div className="p-5 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
-              <Building2 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              <span>Company Preparation Flow</span>
-            </h1>
+      {/* ── TOP HEADER / CURRENT STEP INDICATOR ── */}
+      <div className="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center space-x-2 text-xs font-mono text-purple-600 dark:text-purple-400 font-bold uppercase">
+            <span>Company Preparation</span>
+            <span>/</span>
+            <span>Step {currentFlowStep} of 6</span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
+            {currentFlowStep === 1 && 'Choose Target Company'}
+            {currentFlowStep === 2 && 'Select DSA Programming Language'}
+            {currentFlowStep === 3 && `DSA Learning Roadmap for ${selectedCompany?.companyName || 'Company'}`}
+            {currentFlowStep === 4 && `Topic Learning: ${currentTopic.title}`}
+            {currentFlowStep === 5 && `Online Compiler & Practice`}
+            {currentFlowStep === 6 && `Timed Mock Assessment`}
+          </h1>
+          {selectedCompany && currentFlowStep > 1 && (
             <p className="text-xs text-slate-500">
-              Target: <strong className="text-purple-600 dark:text-purple-400">{companyName}</strong> ({roleTitle}) • Language: <strong className="uppercase">{selectedLanguage}</strong>
+              Selected Company: <strong className="text-slate-900 dark:text-white">{selectedCompany.companyName}</strong> ({selectedCompany.industry})
             </p>
-          </div>
+          )}
+        </div>
 
-          {/* Stepper Tabs */}
-          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0">
-            {[
-              { num: 1, label: 'Company' },
-              { num: 2, label: 'Language' },
-              { num: 3, label: 'DSA Topics' },
-              { num: 4, label: 'Learn & Video' },
-              { num: 5, label: 'Online Compiler' },
-              { num: 6, label: 'Mock Assessment' }
-            ].map(step => (
-              <button
-                key={step.num}
-                onClick={() => setCurrentFlowStep(step.num)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap ${
-                  currentFlowStep === step.num
-                    ? 'bg-purple-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <span>{step.num}.</span>
-                <span>{step.label}</span>
-              </button>
-            ))}
-          </div>
+        {/* Stepper Navigation */}
+        <div className="flex items-center space-x-1.5 overflow-x-auto">
+          {[
+            { num: 1, label: '1. Choose Company' },
+            { num: 2, label: '2. Language' },
+            { num: 3, label: '3. Topics' },
+            { num: 4, label: '4. Learn' },
+            { num: 5, label: '5. Compiler' },
+            { num: 6, label: '6. Mock Test' }
+          ].map(s => (
+            <button
+              key={s.num}
+              onClick={() => {
+                if (s.num > 1 && !selectedCompany) return;
+                setCurrentFlowStep(s.num);
+              }}
+              disabled={s.num > 1 && !selectedCompany}
+              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition whitespace-nowrap cursor-pointer disabled:opacity-40 ${
+                currentFlowStep === s.num
+                  ? 'bg-purple-600 text-white shadow-xs'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* ── 1. CHOOSE COMPANY ── */}
+      {/* ── STEP 1: CHOOSE COMPANY (REAL DATABASE DATA ONLY) ── */}
       {currentFlowStep === 1 && (
-        <div className="space-y-5 animate-in fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-black text-slate-900 dark:text-white">
-                Step 1: Choose Target Company Opportunity
-              </h2>
-              <p className="text-xs text-slate-500">
-                Select from real active job/internship opportunities in the database ({opportunities.length} available).
-              </p>
-            </div>
-
-            <div className="relative">
-              <Search className="h-3.5 w-3.5 absolute left-3 top-2.5 text-slate-400" />
+        <div className="space-y-6 animate-in fade-in">
+          
+          {/* Search & Filter Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div className="relative flex-1 max-w-md">
+              <Search className="h-4 w-4 absolute left-3.5 top-3 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search real company or role..."
+                placeholder="Search company name or industry..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-purple-500 w-56"
+                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-purple-500 font-medium"
               />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4 text-purple-500 shrink-0" />
+              <select
+                value={industryFilter}
+                onChange={(e) => setIndustryFilter(e.target.value)}
+                className="px-3 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-purple-500 cursor-pointer"
+              >
+                {industries.map(ind => (
+                  <option key={ind} value={ind}>
+                    {ind === 'all' ? 'All Industries' : ind}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {opportunities
-              .filter(o => {
-                const name = o.companyId?.companyName || o.companyName || '';
-                const title = o.title || '';
-                return name.toLowerCase().includes(searchQuery.toLowerCase()) || title.toLowerCase().includes(searchQuery.toLowerCase());
-              })
-              .map(opp => {
-                const isSelected = selectedOpportunity?._id === opp._id;
-                const cName = opp.companyId?.companyName || opp.companyName || 'Enterprise Partner';
+          {/* Loading State */}
+          {loadingCompanies ? (
+            <div className="py-20 text-center space-y-3">
+              <RefreshCw className="h-8 w-8 animate-spin text-purple-600 mx-auto" />
+              <p className="text-xs font-mono font-bold text-slate-500 uppercase">
+                Loading Real Companies from Database...
+              </p>
+            </div>
+          ) : filteredCompanies.length === 0 ? (
+            <div className="p-12 text-center rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 space-y-2">
+              <Building2 className="h-8 w-8 text-slate-400 mx-auto" />
+              <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">No matching companies found</h3>
+              <p className="text-xs text-slate-400">Try adjusting your search query or filter.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredCompanies.map(comp => {
+                const isSelected = selectedCompany?._id === comp._id;
                 return (
                   <button
-                    key={opp._id}
-                    onClick={() => {
-                      setSelectedOpportunity(opp);
-                    }}
-                    className={`p-5 rounded-3xl border-2 text-left transition flex flex-col justify-between space-y-4 cursor-pointer ${
+                    key={comp._id}
+                    onClick={() => handleSelectCompany(comp)}
+                    className={`p-6 rounded-3xl border-2 text-left transition flex flex-col justify-between space-y-4 cursor-pointer bg-white dark:bg-slate-900 group ${
                       isSelected
-                        ? 'border-purple-600 bg-purple-500/10 shadow-lg shadow-purple-600/10'
-                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-purple-400/40'
+                        ? 'border-purple-600 shadow-lg shadow-purple-600/10'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-purple-500/50 hover:shadow-md'
                     }`}
                   >
+                    {/* Header */}
                     <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400">
-                          {opp.type || 'Full-time'}
-                        </span>
-                        {isSelected && <CheckCircle2 className="h-4 w-4 text-purple-600 shrink-0" />}
-                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2.5">
+                          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-base border border-purple-500/20 shrink-0">
+                            {comp.companyName.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-purple-600 transition">
+                              {comp.companyName}
+                            </h3>
+                            <span className="text-xs text-slate-500 font-medium">
+                              {comp.industry}
+                            </span>
+                          </div>
+                        </div>
 
-                      <h3 className="text-base font-black text-slate-900 dark:text-white">
-                        {cName}
-                      </h3>
-                      <p className="text-xs text-slate-500 font-medium">{opp.title}</p>
+                        {isSelected && (
+                          <CheckCircle2 className="h-5 w-5 text-purple-600 shrink-0" />
+                        )}
+                      </div>
                     </div>
 
-                    <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <span className="text-[10px] font-mono text-slate-400 uppercase font-bold block">Required Skills:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {(opp.requiredSkills || []).slice(0, 3).map((sk, idx) => (
-                          <span key={idx} className="text-[9px] font-mono px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">
-                            {sk}
-                          </span>
-                        ))}
+                    {/* Meta details: Website + Job Count */}
+                    <div className="space-y-2.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-500">
+                      
+                      {/* Website */}
+                      {comp.website ? (
+                        <div className="flex items-center space-x-1.5 text-purple-600 dark:text-purple-400 font-mono text-[11px] truncate">
+                          <Globe className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{comp.website}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-1.5 text-slate-400 font-mono text-[11px]">
+                          <Globe className="h-3.5 w-3.5 shrink-0" />
+                          <span>Website: Not Listed</span>
+                        </div>
+                      )}
+
+                      {/* Job Count */}
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-xs font-bold">
+                          <Briefcase className="h-3.5 w-3.5" />
+                          <span>{comp.opportunityCount} Active {comp.opportunityCount === 1 ? 'Opening' : 'Openings'}</span>
+                        </span>
+
+                        <span className="text-xs font-bold text-purple-600 dark:text-purple-400 flex items-center space-x-0.5 group-hover:translate-x-1 transition-transform">
+                          <span>Select</span>
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </span>
                       </div>
+
                     </div>
                   </button>
                 );
               })}
-          </div>
-
-          <div className="flex justify-end pt-4">
-            <button
-              onClick={() => setCurrentFlowStep(2)}
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-2xl text-xs font-bold transition flex items-center space-x-2 shadow-md cursor-pointer"
-            >
-              <span>Continue to Language Selection</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── 2. CHOOSE DSA LANGUAGE ── */}
-      {currentFlowStep === 2 && (
+      {/* ── STEP 2: CHOOSE DSA LANGUAGE (C++, Java, Python) ── */}
+      {currentFlowStep === 2 && selectedCompany && (
         <div className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-6 max-w-3xl mx-auto animate-in fade-in">
           <div className="space-y-1 text-center">
             <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
               Step 2 of Flow
             </span>
             <h2 className="text-xl font-black text-slate-900 dark:text-white">
-              Select Your DSA Programming Language
+              Choose DSA Programming Language for {selectedCompany.companyName}
             </h2>
             <p className="text-xs text-slate-500">
-              Choose the language you will use for topic concepts, code solutions, compiler execution, and final mock test.
+              Select the language for code walkthroughs, online compiler, and final technical assessment.
             </p>
           </div>
 
@@ -600,12 +648,12 @@ export default function CompanyPrepPage() {
             {[
               { id: 'cpp', title: 'C++', subtitle: 'C++17 / STL Vectors & Maps' },
               { id: 'java', title: 'Java', subtitle: 'Java 17 / Collections Framework' },
-              { id: 'python', title: 'Python', subtitle: 'Python 3.11 / Built-in Data Structures' }
+              { id: 'python', title: 'Python', subtitle: 'Python 3.11 / Built-in Structures' }
             ].map(lang => (
               <button
                 key={lang.id}
                 onClick={() => setSelectedLanguage(lang.id)}
-                className={`p-5 rounded-2xl border-2 text-center transition flex flex-col items-center justify-center space-y-2 cursor-pointer ${
+                className={`p-6 rounded-2xl border-2 text-center transition flex flex-col items-center justify-center space-y-2 cursor-pointer ${
                   selectedLanguage === lang.id
                     ? 'border-purple-600 bg-purple-600 text-white shadow-md shadow-purple-600/30'
                     : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-purple-400/40'
@@ -626,56 +674,50 @@ export default function CompanyPrepPage() {
               className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Back</span>
+              <span>Change Company</span>
             </button>
             <button
               onClick={() => setCurrentFlowStep(3)}
               className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow-md cursor-pointer"
             >
-              <span>View DSA Topics</span>
+              <span>View DSA Roadmap</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* ── 3. SHOW DSA TOPICS ── */}
-      {currentFlowStep === 3 && (
+      {/* ── STEP 3: SHOW DSA TOPICS ── */}
+      {currentFlowStep === 3 && selectedCompany && (
         <div className="space-y-6 animate-in fade-in">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-black text-slate-900 dark:text-white">
-                Step 3: Core DSA Learning Topics
+                Step 3: Core DSA Learning Roadmap
               </h2>
               <p className="text-xs text-slate-500">
-                Progress through every topic from Beginner to Advanced. Completed: <strong>{completedTopicsCount}/{totalTopics}</strong>
+                Topics structured from Beginner to Advanced. Completed: <strong>{completedTopicsCount}/{dsaTopics.length}</strong>
               </p>
             </div>
 
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => setCurrentFlowStep(6)}
-                disabled={!allTopicsCompleted && completedTopicsCount === 0}
-                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+                onClick={handleStartMockTest}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer"
               >
                 <Clock className="h-3.5 w-3.5" />
-                <span>Jump to Mock Test</span>
+                <span>Launch Mock Test</span>
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {dsaTopics.map(topic => {
-              const isDone = Boolean(completedTopics[`${selectedOpportunity?._id}_${topic.id}`]);
-              const isSelected = selectedTopicId === topic.id;
+              const isDone = Boolean(completedTopics[`${selectedCompany._id}_${topic.id}`]);
               return (
                 <div
                   key={topic.id}
-                  className={`p-6 rounded-3xl border-2 transition space-y-4 bg-white dark:bg-slate-900 ${
-                    isSelected
-                      ? 'border-purple-600 shadow-md shadow-purple-600/10'
-                      : 'border-slate-200 dark:border-slate-800'
-                  }`}
+                  className="p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400">
@@ -736,13 +778,13 @@ export default function CompanyPrepPage() {
         </div>
       )}
 
-      {/* ── 4. LEARN TOPIC (Beginner → Intermediate → Advanced + Verified Video) ── */}
-      {currentFlowStep === 4 && (
+      {/* ── STEP 4: LEARN TOPIC (Beginner → Intermediate → Advanced + Video) ── */}
+      {currentFlowStep === 4 && selectedCompany && (
         <div className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-6 animate-in fade-in">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
               <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
-                Step 4: Deep Learning Studio
+                Step 4: Topic Mastery
               </span>
               <h2 className="text-xl font-black text-slate-900 dark:text-white">
                 {currentTopic.title}
@@ -760,7 +802,6 @@ export default function CompanyPrepPage() {
             </div>
           </div>
 
-          {/* 3 Progressive Stages: Beginner -> Intermediate -> Advanced */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {['beginner', 'intermediate', 'advanced'].map(stageKey => {
               const stage = currentTopic.stages[stageKey];
@@ -779,7 +820,7 @@ export default function CompanyPrepPage() {
             })}
           </div>
 
-          {/* Verified Video Lecture */}
+          {/* Video Lecture */}
           <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/20 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
@@ -816,11 +857,11 @@ export default function CompanyPrepPage() {
             </div>
           </div>
 
-          {/* Company-Related Questions for this topic */}
+          {/* Company Interview Questions */}
           <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
             <h4 className="text-xs font-black uppercase font-mono text-slate-900 dark:text-white flex items-center space-x-2">
               <HelpCircle className="h-4 w-4 text-purple-600" />
-              <span>{companyName} Interview Focus for {currentTopic.title}:</span>
+              <span>{selectedCompany.companyName} Interview Questions for {currentTopic.title}:</span>
             </h4>
             <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1 list-disc list-inside">
               {currentTopic.companyQuestions.map((q, idx) => (
@@ -835,24 +876,23 @@ export default function CompanyPrepPage() {
               className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Back to Topics</span>
+              <span>Back to Roadmap</span>
             </button>
             <button
               onClick={() => setCurrentFlowStep(5)}
               className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow-md cursor-pointer"
             >
-              <span>Solve Problems in Compiler</span>
+              <span>Solve in Online Compiler</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* ── 5. TOPIC-WISE CODING PROBLEMS & LEETCODE-STYLE ONLINE COMPILER ── */}
-      {currentFlowStep === 5 && (
+      {/* ── STEP 5: ONLINE COMPILER & PROBLEM PRACTICE ── */}
+      {currentFlowStep === 5 && selectedCompany && (
         <div className="space-y-6 animate-in fade-in">
           
-          {/* Problem Selector Pills */}
           <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
             <div className="flex items-center space-x-2">
               <span className="text-xs font-mono font-bold text-slate-400 uppercase">Topic Problems:</span>
@@ -869,9 +909,7 @@ export default function CompanyPrepPage() {
                         setCodeResult(null);
                       }}
                       className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer ${
-                        isSel
-                          ? 'bg-purple-600 text-white shadow-xs'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        isSel ? 'bg-purple-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700'
                       }`}
                     >
                       <span>{p.title}</span>
@@ -882,7 +920,6 @@ export default function CompanyPrepPage() {
               </div>
             </div>
 
-            {/* Language Switcher */}
             <div className="flex items-center space-x-2">
               <span className="text-[10px] font-mono uppercase text-slate-400">Language:</span>
               <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
@@ -906,16 +943,14 @@ export default function CompanyPrepPage() {
             </div>
           </div>
 
-          {/* Split Workspace: Problem Statement (Left) & Online Editor (Right) */}
           {selectedProblem && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               
-              {/* Left: Problem Statement, Examples, Constraints */}
               <div className="lg:col-span-5 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-5 max-h-[750px] overflow-y-auto">
                 <div className="space-y-1.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <div className="flex items-center space-x-2">
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 font-extrabold uppercase">
-                      {companyName} Question
+                      {selectedCompany.companyName} Question
                     </span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 font-bold">
                       {selectedProblem.difficulty}
@@ -926,12 +961,9 @@ export default function CompanyPrepPage() {
                   </h3>
                 </div>
 
-                <div className="space-y-1">
-                  <h4 className="text-xs font-mono font-bold uppercase text-slate-900 dark:text-white">Description:</h4>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {selectedProblem.problemStatement}
-                  </p>
-                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {selectedProblem.problemStatement}
+                </p>
 
                 <div className="space-y-2">
                   <h4 className="text-xs font-mono font-bold uppercase text-slate-900 dark:text-white">Examples:</h4>
@@ -945,7 +977,7 @@ export default function CompanyPrepPage() {
 
                 <div className="space-y-1">
                   <h4 className="text-xs font-mono font-bold uppercase text-slate-900 dark:text-white">Constraints:</h4>
-                  <ul className="text-xs font-mono text-slate-500 list-disc list-inside bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <ul className="text-xs font-mono text-slate-500 list-disc list-inside bg-slate-50 dark:bg-slate-950 p-3 rounded-xl">
                     {selectedProblem.constraints.map((c, i) => (
                       <li key={i}>{c}</li>
                     ))}
@@ -953,7 +985,6 @@ export default function CompanyPrepPage() {
                 </div>
               </div>
 
-              {/* Right: Online Compiler Editor & Run Console */}
               <div className="lg:col-span-7 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden flex flex-col justify-between">
                 
                 <div className="p-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
@@ -965,7 +996,7 @@ export default function CompanyPrepPage() {
                     onClick={() => setCode(selectedProblem.starterCode[selectedLanguage] || '')}
                     className="hover:text-slate-200 cursor-pointer"
                   >
-                    Reset Starter Code
+                    Reset Code
                   </button>
                 </div>
 
@@ -984,7 +1015,7 @@ export default function CompanyPrepPage() {
                   <button
                     onClick={() => handleExecuteCode(false)}
                     disabled={runningCode || submittingCode}
-                    className="px-4 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-4 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
                   >
                     {runningCode ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 text-purple-600" />}
                     <span>Run Sample Cases</span>
@@ -1000,7 +1031,6 @@ export default function CompanyPrepPage() {
                   </button>
                 </div>
 
-                {/* Execution Results Console */}
                 {codeResult && (
                   <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-mono text-xs space-y-2">
                     <div className="flex items-center justify-between">
@@ -1047,21 +1077,20 @@ export default function CompanyPrepPage() {
         </div>
       )}
 
-      {/* ── 6. TIMED COMPANY-SPECIFIC MOCK TEST & RESULTS WITH WEAK TOPICS ── */}
-      {currentFlowStep === 6 && (
+      {/* ── STEP 6: TIMED MOCK ASSESSMENT & RESULTS (WITH WEAK TOPICS) ── */}
+      {currentFlowStep === 6 && selectedCompany && (
         <div className="space-y-6 animate-in fade-in">
           
-          {/* Mock Test Header with Timer */}
           <div className="p-6 rounded-3xl border-2 border-purple-500/30 bg-gradient-to-r from-purple-500/10 via-slate-50 to-indigo-500/10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <span className="text-[10px] font-mono font-bold uppercase text-purple-600">
                 Step 6: Official Assessment
               </span>
               <h2 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
-                {companyName} Timed Technical Coding Assessment
+                {selectedCompany.companyName} Timed Technical Coding Assessment
               </h2>
               <p className="text-xs text-slate-500">
-                Role: <strong>{roleTitle}</strong> • Mixed DSA Difficulty Flow (Easy → Medium → Company Level)
+                Industry: <strong>{selectedCompany.industry}</strong> • Mixed DSA Difficulty (Easy → Medium → Company Level)
               </p>
             </div>
 
@@ -1090,7 +1119,7 @@ export default function CompanyPrepPage() {
             </div>
           </div>
 
-          {/* Result Scorecard & Weak Topics Identification (Step 11) */}
+          {/* Results + Weak Topics */}
           {mockCompleted && mockResult && (
             <div className="p-8 rounded-3xl border-2 border-emerald-500/40 bg-white dark:bg-slate-900 shadow-2xl space-y-6 animate-in fade-in">
               <div className="text-center space-y-2">
@@ -1128,7 +1157,7 @@ export default function CompanyPrepPage() {
                 </div>
               </div>
 
-              {/* Weak Topics Section */}
+              {/* Weak Topics */}
               <div className="max-w-2xl mx-auto p-5 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-2">
                 <h4 className="text-xs font-mono font-bold uppercase text-purple-700 dark:text-purple-300">
                   Identified Weak Topics for Targeted Revision:
@@ -1166,11 +1195,10 @@ export default function CompanyPrepPage() {
             </div>
           )}
 
-          {/* Active Mock Workspace */}
+          {/* Active Mock Questions */}
           {!mockCompleted && mockSession && (
             <div className="space-y-5">
               
-              {/* Question Palette */}
               <div className="flex items-center space-x-2 p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
                 <span className="text-xs font-mono font-bold text-slate-400 uppercase">Question Palette:</span>
                 {mockSession.problems.map((p, idx) => (
@@ -1186,7 +1214,6 @@ export default function CompanyPrepPage() {
                 ))}
               </div>
 
-              {/* Problem + Code Editor */}
               {mockSession.problems[mockQuestionIdx] && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                   
