@@ -2,7 +2,7 @@ import Opportunity from '../models/Opportunity.js';
 import Company from '../models/Company.js';
 import StudentProfile from '../models/StudentProfile.js';
 import Application from '../models/Application.js';
-import { calculateCompatibility } from '../utils/matchingEngine.js';
+import { matchSkills, calculateCompatibility } from '../utils/matchingEngine.js';
 
 const parseSkills = (requiredSkills) =>
   typeof requiredSkills === 'string'
@@ -20,18 +20,50 @@ const companyOfUser = async (userId, res) => {
 
 export const createOpportunity = async (req, res) => {
   try {
-    const company = await Company.findOne({ userId: req.user.id });
-    if (!company) {
-      return res.status(404).json({ success: false, message: 'Company profile not found. Please complete your profile first.' });
-    }
-    if (company.verificationStatus !== 'verified') {
-      return res.status(403).json({
-        success: false,
-        message: 'Access Denied: Your company account is pending administrator verification approval.'
-      });
+    const userId = req.user?.id || req.user?._id;
+    let companyId = null;
+
+    if (req.user?.role === 'company') {
+      const company = await Company.findOne({ userId });
+      if (!company) {
+        return res.status(404).json({ success: false, message: 'Company profile not found. Please complete your profile first.' });
+      }
+      if (company.verificationStatus !== 'verified') {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: Your company account is pending administrator verification approval.'
+        });
+      }
+      companyId = company._id;
+    } else if (['admin', 'faculty', 'institution'].includes(req.user?.role)) {
+      // Faculty/Admin can specify companyId or use a primary partner company
+      if (req.body.companyId) {
+        companyId = req.body.companyId;
+      } else {
+        let firstComp = await Company.findOne({});
+        if (!firstComp) {
+          const compUser = await User.findOne({ role: 'company' });
+          if (compUser) {
+            firstComp = await Company.create({
+              userId: compUser._id,
+              companyName: 'Institutional Campus Partner',
+              industry: 'Technology',
+              location: 'Bengaluru',
+              verificationStatus: 'verified'
+            });
+          }
+        }
+        companyId = firstComp?._id;
+      }
+    } else {
+      return res.status(403).json({ success: false, message: 'Not authorized to create opportunities' });
     }
 
-    const { title, type, description, requiredSkills, location, stipend, duration } = req.body;
+    const { 
+      title, type, description, requiredSkills, location, stipend, duration,
+      deadline, minCgpa, eligibleBranches, eligibleYears, isPlacementDrive, driveName
+    } = req.body;
+
     if (!title || !type || !description || !requiredSkills || requiredSkills.length === 0) {
       return res.status(400).json({
         success: false,
@@ -40,20 +72,33 @@ export const createOpportunity = async (req, res) => {
     }
 
     const opportunity = await Opportunity.create({
-      companyId: company._id,
+      companyId,
       title: title.trim(),
       type,
       description: description.trim(),
       requiredSkills: parseSkills(requiredSkills),
       location: location ? location.trim() : 'Remote',
       stipend: stipend ? stipend.trim() : 'Competitive',
-      duration: duration ? duration.trim() : ''
+      duration: duration ? duration.trim() : '',
+      deadline: deadline ? new Date(deadline) : null,
+      minCgpa: minCgpa ? Number(minCgpa) : null,
+      eligibleBranches: Array.isArray(eligibleBranches) ? eligibleBranches : (typeof eligibleBranches === 'string' && eligibleBranches.trim() ? eligibleBranches.split(',').map(s => s.trim()) : []),
+      eligibleYears: Array.isArray(eligibleYears) ? eligibleYears : (typeof eligibleYears === 'string' && eligibleYears.trim() ? eligibleYears.split(',').map(s => s.trim()) : []),
+      isPlacementDrive: Boolean(isPlacementDrive),
+      driveName: driveName ? driveName.trim() : '',
+      status: 'open'
     });
 
-    res.status(201).json({ success: true, message: 'Opportunity posted successfully!', opportunity });
+    const populated = await Opportunity.findById(opportunity._id).populate('companyId', 'companyName industry location logo');
+
+    res.status(201).json({
+      success: true,
+      message: 'Placement Opportunity / Drive created successfully!',
+      opportunity: populated
+    });
   } catch (error) {
     console.error('Create Opportunity Error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error posting opportunity' });
+    res.status(500).json({ success: false, message: 'Server error creating opportunity: ' + error.message });
   }
 };
 
@@ -61,6 +106,7 @@ export const getOpportunities = async (req, res) => {
   try {
     const query = { status: 'open' };
     if (req.query.type) query.type = req.query.type;
+    if (req.query.isPlacementDrive) query.isPlacementDrive = req.query.isPlacementDrive === 'true';
     if (req.query.skills) {
       const skillsQuery = req.query.skills.split(',').map(s => s.trim()).filter(Boolean);
       if (skillsQuery.length) {
@@ -72,20 +118,93 @@ export const getOpportunities = async (req, res) => {
       .populate('companyId', 'companyName industry location logo website')
       .sort({ createdAt: -1 });
 
-    const studentProfile = req.user?.role === 'student'
-      ? await StudentProfile.findOne({ userId: req.user.id })
+    const userId = req.user?.id || req.user?._id;
+    const studentProfile = req.user?.role === 'student' && userId
+      ? await StudentProfile.findOne({ userId })
+      : null;
+
+    const studentBranch = (studentProfile?.academicInformation?.branch || studentProfile?.academicInformation?.department || '').toLowerCase().trim();
+    const studentYear = (studentProfile?.academicInformation?.year || studentProfile?.academicInformation?.yearOfStudy || '').toLowerCase().trim();
+    const studentCgpa = studentProfile?.academicInformation?.cgpa !== null && studentProfile?.academicInformation?.cgpa !== undefined
+      ? Number(studentProfile.academicInformation.cgpa)
       : null;
 
     const formatted = opportunities.map(opp => {
       const obj = opp.toObject();
-      obj.compatibilityScore = studentProfile ? calculateCompatibility(studentProfile, opp) : null;
+      if (studentProfile) {
+        const match = matchSkills(studentProfile, opp);
+        obj.matchPercentage = match.matchPercentage;
+        obj.matchedSkills = match.matchedSkills;
+        obj.missingSkills = match.missingSkills;
+        obj.compatibilityScore = match.matchPercentage;
+
+        // Check real eligibility (Department, Year, CGPA, Skills)
+        const isBranchEligible = (!opp.eligibleBranches || opp.eligibleBranches.length === 0) ||
+          (studentBranch ? opp.eligibleBranches.some(b => studentBranch.includes(b.toLowerCase().trim()) || b.toLowerCase().trim().includes(studentBranch)) : true);
+
+        const isYearEligible = (!opp.eligibleYears || opp.eligibleYears.length === 0) ||
+          (studentYear ? opp.eligibleYears.some(y => studentYear.includes(y.toLowerCase().trim()) || y.toLowerCase().trim().includes(studentYear)) : true);
+
+        const isCgpaEligible = (!opp.minCgpa) || (studentCgpa !== null && studentCgpa >= opp.minCgpa);
+
+        const isSkillsEligible = match.matchedSkills.length > 0 || (opp.requiredSkills || []).length === 0;
+
+        obj.isEligible = Boolean(isBranchEligible && isYearEligible && isCgpaEligible);
+        obj.eligibility = {
+          isBranchEligible,
+          isYearEligible,
+          isCgpaEligible,
+          isSkillsEligible,
+          minCgpa: opp.minCgpa,
+          eligibleBranches: opp.eligibleBranches || [],
+          eligibleYears: opp.eligibleYears || []
+        };
+      } else {
+        obj.matchPercentage = null;
+        obj.matchedSkills = [];
+        obj.missingSkills = opp.requiredSkills || [];
+        obj.compatibilityScore = null;
+        obj.isEligible = true;
+      }
       return obj;
     });
 
     res.status(200).json({ success: true, count: formatted.length, opportunities: formatted });
   } catch (error) {
     console.error('Get Opportunities Error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error retrieving opportunities' });
+    res.status(500).json({ success: false, message: 'Server error retrieving opportunities: ' + error.message });
+  }
+};
+
+export const getOpportunityMatch = async (req, res) => {
+  try {
+    const opportunity = await Opportunity.findById(req.params.id)
+      .populate('companyId', 'companyName industry location logo website');
+
+    if (!opportunity) {
+      return res.status(404).json({ success: false, message: 'Opportunity not found' });
+    }
+
+    const studentProfile = await StudentProfile.findOne({ userId: req.user.id });
+    if (!studentProfile) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    const match = matchSkills(studentProfile, opportunity);
+
+    res.status(200).json({
+      success: true,
+      opportunityId: opportunity._id,
+      opportunityTitle: opportunity.title,
+      matchPercentage: match.matchPercentage,
+      matchedSkills: match.matchedSkills,
+      missingSkills: match.missingSkills,
+      totalRequiredSkills: match.totalRequiredSkills,
+      studentSkills: match.studentSkills
+    });
+  } catch (error) {
+    console.error('Get Opportunity Match Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error computing opportunity match' });
   }
 };
 

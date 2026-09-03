@@ -39,6 +39,7 @@ export default function StudentProfilePage() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
 
   // ── 2. Personal & Academic Edit Modal State ──
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -153,8 +154,9 @@ export default function StudentProfilePage() {
   }, [token]);
 
   // ── PHOTO UPLOAD HANDLERS ──
-  const handlePhotoSelect = (e) => {
+  const handlePhotoSelect = async (e) => {
     const file = e.target.files?.[0];
+    if (e.target) e.target.value = '';
     if (!file) return;
 
     if (!file.type.match(/^image\/(jpeg|jpg|png|webp|gif)$/i)) {
@@ -167,9 +169,44 @@ export default function StudentProfilePage() {
       return;
     }
 
-    setSelectedFile(file);
+    setAvatarLoadFailed(false);
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
+    setUploadingPhoto(true);
+    setErrorMsg('');
+
+    try {
+      const data = new FormData();
+      data.append('photo', file);
+
+      const res = await fetch('/api/students/upload-photo', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: data
+      });
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) throw new Error(resData.message || 'Failed to upload photo');
+
+      setProfile(prev => ({
+        ...prev,
+        profilePhoto: resData.photoUrl,
+        userId: { ...(prev?.userId || {}), avatarUrl: resData.photoUrl }
+      }));
+      if (updateUser) {
+        updateUser({ avatarUrl: resData.photoUrl });
+      }
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setAvatarLoadFailed(false);
+      setSuccessMsg('Profile photo uploaded and updated successfully!');
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err) {
+      setErrorMsg(err.message || 'Error uploading profile photo');
+      setPreviewUrl(null);
+    } finally {
+      setUploadingPhoto(false);
+    }
   };
 
   const handleUploadPhoto = async () => {
@@ -190,10 +227,17 @@ export default function StudentProfilePage() {
       const resData = await res.json();
       if (!res.ok || !resData.success) throw new Error(resData.message || 'Failed to upload photo');
 
-      setProfile(prev => ({ ...prev, profilePhoto: resData.photoUrl }));
-      updateUser({ avatarUrl: resData.photoUrl });
+      setProfile(prev => ({
+        ...prev,
+        profilePhoto: resData.photoUrl,
+        userId: { ...(prev?.userId || {}), avatarUrl: resData.photoUrl }
+      }));
+      if (updateUser) {
+        updateUser({ avatarUrl: resData.photoUrl });
+      }
       setSelectedFile(null);
       setPreviewUrl(null);
+      setAvatarLoadFailed(false);
       setSuccessMsg('Profile photo updated successfully!');
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err) {
@@ -204,6 +248,26 @@ export default function StudentProfilePage() {
   };
 
   // ── PROFILE UPDATE HANDLER ──
+  const openEditModal = () => {
+    if (profile) {
+      setFormData({
+        name: profile.userId?.name || authUser?.name || '',
+        phone: profile.phone || '',
+        dateOfBirth: profile.dateOfBirth || '',
+        bio: profile.bio || '',
+        college: profile.academicInformation?.college || '',
+        department: profile.academicInformation?.department || profile.academicInformation?.branch || '',
+        course: profile.academicInformation?.course || profile.academicInformation?.degree || '',
+        year: profile.academicInformation?.year || '',
+        cgpa: profile.academicInformation?.cgpa !== null && profile.academicInformation?.cgpa !== undefined ? profile.academicInformation.cgpa : '',
+        github: profile.socialLinks?.github || '',
+        linkedin: profile.socialLinks?.linkedin || '',
+        portfolio: profile.socialLinks?.portfolio || ''
+      });
+    }
+    setEditModalOpen(true);
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -215,11 +279,23 @@ export default function StudentProfilePage() {
         phone: formData.phone.trim(),
         dateOfBirth: formData.dateOfBirth.trim(),
         bio: formData.bio.trim(),
+        academicInformation: {
+          college: formData.college.trim(),
+          department: formData.department.trim(),
+          course: formData.course.trim(),
+          year: formData.year.trim(),
+          cgpa: formData.cgpa !== '' && formData.cgpa !== null && formData.cgpa !== undefined ? parseFloat(formData.cgpa) : null
+        },
+        socialLinks: {
+          github: formData.github.trim(),
+          linkedin: formData.linkedin.trim(),
+          portfolio: formData.portfolio.trim()
+        },
         college: formData.college.trim(),
         department: formData.department.trim(),
         course: formData.course.trim(),
         year: formData.year.trim(),
-        cgpa: formData.cgpa ? parseFloat(formData.cgpa) : null,
+        cgpa: formData.cgpa !== '' && formData.cgpa !== null && formData.cgpa !== undefined ? parseFloat(formData.cgpa) : null,
         github: formData.github.trim(),
         linkedin: formData.linkedin.trim(),
         portfolio: formData.portfolio.trim()
@@ -237,8 +313,27 @@ export default function StudentProfilePage() {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || 'Failed to update profile');
 
-      setProfile(data.profile);
-      updateUser({ name: formData.name.trim() });
+      if (data.profile) {
+        const p = data.profile;
+        setProfile(p);
+        setFormData({
+          name: p.userId?.name || formData.name || '',
+          phone: p.phone || '',
+          dateOfBirth: p.dateOfBirth || '',
+          bio: p.bio || '',
+          college: p.academicInformation?.college || '',
+          department: p.academicInformation?.department || p.academicInformation?.branch || '',
+          course: p.academicInformation?.course || p.academicInformation?.degree || '',
+          year: p.academicInformation?.year || '',
+          cgpa: p.academicInformation?.cgpa !== null && p.academicInformation?.cgpa !== undefined ? p.academicInformation.cgpa : '',
+          github: p.socialLinks?.github || '',
+          linkedin: p.socialLinks?.linkedin || '',
+          portfolio: p.socialLinks?.portfolio || ''
+        });
+      }
+      if (updateUser && formData.name.trim()) {
+        updateUser({ name: formData.name.trim() });
+      }
       setEditModalOpen(false);
       setSuccessMsg('Profile updated and saved to MongoDB!');
       setTimeout(() => setSuccessMsg(''), 4000);
@@ -505,24 +600,40 @@ export default function StudentProfilePage() {
       />
 
       {/* ── 1. HERO PROFILE HEADER CARD ── */}
-      <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white via-slate-50/60 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-[#0b1120] shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="p-6 sm:p-8 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 dark:bg-emerald-500/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
 
         <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 relative z-10 text-center sm:text-left">
           
           {/* Avatar with Camera Overlay */}
           <div className="relative group shrink-0">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl border-4 border-white dark:border-slate-800 shadow-xl overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
-              {currentPhoto ? (
-                <img src={currentPhoto} alt={displayName} className="w-full h-full object-cover" />
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl border-4 border-white dark:border-slate-800 shadow-xl overflow-hidden bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white text-3xl font-black relative">
+              {uploadingPhoto && (
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center space-y-1 z-20">
+                  <Loader2 className="h-6 w-6 text-white animate-spin" />
+                  <span className="text-[9px] font-bold text-white uppercase tracking-wider">Saving...</span>
+                </div>
+              )}
+
+              {currentPhoto && !avatarLoadFailed ? (
+                <img 
+                  src={currentPhoto} 
+                  alt={displayName} 
+                  onError={() => setAvatarLoadFailed(true)}
+                  className="w-full h-full object-cover" 
+                />
               ) : (
-                <User className="h-12 w-12 text-slate-400" />
+                <span className="select-none tracking-tight">{displayName?.charAt(0)?.toUpperCase() || 'S'}</span>
               )}
             </div>
 
             <button
-              onClick={() => photoInputRef.current?.click()}
-              className="absolute -bottom-2 -right-2 p-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30 transition cursor-pointer"
+              onClick={() => {
+                setAvatarLoadFailed(false);
+                photoInputRef.current?.click();
+              }}
+              disabled={uploadingPhoto}
+              className="absolute -bottom-2 -right-2 p-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white shadow-lg shadow-emerald-600/30 transition cursor-pointer"
               title="Upload Profile Photo"
             >
               <Camera className="h-4 w-4" />
@@ -531,8 +642,8 @@ export default function StudentProfilePage() {
 
           <div className="space-y-1.5">
             <div className="flex items-center space-x-2 justify-center sm:justify-start">
-              <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-extrabold flex items-center space-x-1.5 uppercase tracking-wider font-mono">
-                <Sparkles className="h-3.5 w-3.5" />
+              <span className="text-xs px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/20 text-emerald-800 dark:text-emerald-400 font-extrabold flex items-center space-x-1.5 uppercase tracking-wider font-mono shadow-xs">
+                <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Verified Student Record</span>
               </span>
             </div>
@@ -541,20 +652,20 @@ export default function StudentProfilePage() {
               {displayName}
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-bold">
               {profile?.academicInformation?.department || 'Computer Science'} • {profile?.academicInformation?.college || 'SkillNexus AI Institute'}
             </p>
 
-            <div className="flex items-center space-x-3 text-xs text-slate-400 justify-center sm:justify-start pt-1 font-mono">
+            <div className="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400 justify-center sm:justify-start pt-1 font-mono font-medium">
               <span className="flex items-center space-x-1">
-                <Mail className="h-3.5 w-3.5 text-emerald-500" />
+                <Mail className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>{displayEmail}</span>
               </span>
               {profile?.phone && (
                 <>
                   <span>•</span>
                   <span className="flex items-center space-x-1">
-                    <Phone className="h-3.5 w-3.5 text-blue-500" />
+                    <Phone className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
                     <span>{profile.phone}</span>
                   </span>
                 </>
@@ -577,7 +688,7 @@ export default function StudentProfilePage() {
           )}
 
           <button
-            onClick={() => setEditModalOpen(true)}
+            onClick={openEditModal}
             className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 font-bold rounded-2xl text-xs shadow-md transition flex items-center space-x-2 cursor-pointer"
           >
             <Edit3 className="h-4 w-4" />
@@ -638,87 +749,91 @@ export default function StudentProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* Personal Information */}
-            <div className="glass-card p-6 sm:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div className="p-6 sm:p-7 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4">
+              <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800 pb-3">
                 <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-                  <User className="h-4 w-4 text-emerald-500" />
+                  <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    <User className="h-4 w-4" />
+                  </div>
                   <span>Personal Information</span>
                 </h3>
-                <button onClick={() => setEditModalOpen(true)} className="text-xs text-emerald-600 dark:text-emerald-400 font-bold hover:underline">
+                <button onClick={openEditModal} className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-xs font-bold transition cursor-pointer">
                   Edit
                 </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-1">
-                  <span className="text-slate-400 font-bold">Full Name</span>
+                <div className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 space-y-1">
+                  <span className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">Full Name</span>
                   <p className="font-bold text-slate-900 dark:text-white text-sm">{displayName}</p>
                 </div>
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-1">
-                  <span className="text-slate-400 font-bold">Email</span>
+                <div className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 space-y-1">
+                  <span className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">Email</span>
                   <p className="font-bold text-slate-900 dark:text-white truncate">{displayEmail}</p>
                 </div>
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-1">
-                  <span className="text-slate-400 font-bold">Phone Number</span>
+                <div className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 space-y-1">
+                  <span className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">Phone Number</span>
                   <p className="font-bold text-slate-900 dark:text-white">{profile?.phone || 'Not provided'}</p>
                 </div>
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-1">
-                  <span className="text-slate-400 font-bold">Date of Birth</span>
+                <div className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 space-y-1">
+                  <span className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">Date of Birth</span>
                   <p className="font-bold text-slate-900 dark:text-white">{profile?.dateOfBirth || 'Not provided'}</p>
                 </div>
               </div>
 
               {profile?.bio && (
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-xs space-y-1">
-                  <span className="text-slate-400 font-bold">Bio</span>
-                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{profile.bio}</p>
+                <div className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 text-xs space-y-1">
+                  <span className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">Bio</span>
+                  <p className="text-slate-800 dark:text-slate-300 leading-relaxed font-medium">{profile.bio}</p>
                 </div>
               )}
             </div>
 
             {/* Academic Information */}
-            <div className="glass-card p-6 sm:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div className="p-6 sm:p-7 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4">
+              <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800 pb-3">
                 <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-                  <GraduationCap className="h-4 w-4 text-blue-500" />
+                  <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                    <GraduationCap className="h-4 w-4" />
+                  </div>
                   <span>Academic Information</span>
                 </h3>
-                <button onClick={() => setEditModalOpen(true)} className="text-xs text-emerald-600 dark:text-emerald-400 font-bold hover:underline">
+                <button onClick={openEditModal} className="px-3 py-1 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 rounded-xl text-xs font-bold transition cursor-pointer">
                   Edit
                 </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-1 col-span-2">
-                  <span className="text-slate-400 font-bold">College / University</span>
+                <div className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 space-y-1 col-span-2">
+                  <span className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">College / University</span>
                   <p className="font-bold text-slate-900 dark:text-white text-sm">
                     {profile?.academicInformation?.college || 'SkillNexus AI Institute'}
                   </p>
                 </div>
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-1">
-                  <span className="text-slate-400 font-bold">Department</span>
+                <div className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 space-y-1">
+                  <span className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">Department</span>
                   <p className="font-bold text-slate-900 dark:text-white">
                     {profile?.academicInformation?.department || profile?.academicInformation?.branch || 'Computer Science'}
                   </p>
                 </div>
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-1">
-                  <span className="text-slate-400 font-bold">Course / Degree</span>
+                <div className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 space-y-1">
+                  <span className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">Course / Degree</span>
                   <p className="font-bold text-slate-900 dark:text-white">
                     {profile?.academicInformation?.course || profile?.academicInformation?.degree || 'B.Tech'}
                   </p>
                 </div>
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-1">
-                  <span className="text-slate-400 font-bold">Current Year</span>
+                <div className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 space-y-1">
+                  <span className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">Current Year</span>
                   <p className="font-bold text-slate-900 dark:text-white">
                     {profile?.academicInformation?.year ? `${profile.academicInformation.year} Year` : '3rd Year'}
                   </p>
                 </div>
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-1">
-                  <span className="text-slate-400 font-bold">CGPA</span>
+                <div className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 space-y-1">
+                  <span className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">CGPA</span>
                   <p className="font-black text-emerald-600 dark:text-emerald-400 font-mono text-sm">
                     {profile?.academicInformation?.cgpa !== null && profile?.academicInformation?.cgpa !== undefined
                       ? `${profile.academicInformation.cgpa} / 10.0`
-                      : '8.8 / 10.0'}
+                      : 'Not provided'}
                   </p>
                 </div>
               </div>
@@ -1038,30 +1153,32 @@ export default function StudentProfilePage() {
       {activeTab === 'social' && (
         <div className="space-y-6 animate-in fade-in">
           
-          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="p-6 sm:p-8 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-5">
+            <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800 pb-3">
               <div>
                 <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center space-x-2">
-                  <Globe className="h-4 w-4 text-emerald-500" />
+                  <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    <Globe className="h-4 w-4" />
+                  </div>
                   <span>Public & Social Profiles</span>
                 </h3>
                 <p className="text-xs text-slate-500">Connect your GitHub, LinkedIn, and personal portfolio.</p>
               </div>
-              <button onClick={() => setEditModalOpen(true)} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition">
+              <button onClick={openEditModal} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-md shadow-emerald-600/20">
                 Edit Links
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
               
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="p-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white">
                     <GithubIcon className="h-4 w-4" />
                   </div>
                   <div>
-                    <span className="font-bold text-slate-400 block text-[11px]">GitHub Profile</span>
-                    <span className="font-bold text-slate-900 dark:text-white">{profile?.socialLinks?.github || 'Not linked'}</span>
+                    <span className="font-extrabold text-slate-500 text-[10px] uppercase tracking-wider block">GitHub Profile</span>
+                    <span className="font-bold text-slate-900 dark:text-white text-sm">{profile?.socialLinks?.github || 'Not linked'}</span>
                   </div>
                 </div>
                 {profile?.socialLinks?.github && (
@@ -1072,14 +1189,14 @@ export default function StudentProfilePage() {
                 )}
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600">
                     <LinkedinIcon className="h-4 w-4" />
                   </div>
                   <div>
-                    <span className="font-bold text-slate-400 block text-[11px]">LinkedIn Profile</span>
-                    <span className="font-bold text-slate-900 dark:text-white">{profile?.socialLinks?.linkedin || 'Not linked'}</span>
+                    <span className="font-extrabold text-slate-500 text-[10px] uppercase tracking-wider block">LinkedIn Profile</span>
+                    <span className="font-bold text-slate-900 dark:text-white text-sm">{profile?.socialLinks?.linkedin || 'Not linked'}</span>
                   </div>
                 </div>
                 {profile?.socialLinks?.linkedin && (
@@ -1090,14 +1207,14 @@ export default function StudentProfilePage() {
                 )}
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-950 border border-slate-200/90 dark:border-slate-800 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-600">
                     <Globe className="h-4 w-4" />
                   </div>
                   <div>
-                    <span className="font-bold text-slate-400 block text-[11px]">Portfolio Website</span>
-                    <span className="font-bold text-slate-900 dark:text-white">{profile?.socialLinks?.portfolio || 'Not linked'}</span>
+                    <span className="font-extrabold text-slate-500 text-[10px] uppercase tracking-wider block">Portfolio Website</span>
+                    <span className="font-bold text-slate-900 dark:text-white text-sm">{profile?.socialLinks?.portfolio || 'Not linked'}</span>
                   </div>
                 </div>
                 {profile?.socialLinks?.portfolio && (
@@ -1136,142 +1253,148 @@ export default function StudentProfilePage() {
 
             <form onSubmit={handleSaveProfile} className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">Full Name *</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1.5">
+                  <label className="font-extrabold text-slate-800 dark:text-slate-200">Full Name *</label>
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl outline-none focus:border-emerald-500 font-bold"
+                    className="w-full px-3.5 py-2.5 bg-slate-50/90 focus:bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-emerald-500 font-bold text-slate-900 dark:text-white shadow-xs"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">Phone</label>
+                <div className="space-y-1.5">
+                  <label className="font-extrabold text-slate-800 dark:text-slate-200">Phone Number</label>
                   <input
                     type="text"
+                    placeholder="e.g. +91 9876543210"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50/90 focus:bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-emerald-500 font-medium text-slate-900 dark:text-white shadow-xs"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">Date of Birth</label>
+                <div className="space-y-1.5">
+                  <label className="font-extrabold text-slate-800 dark:text-slate-200">Date of Birth</label>
                   <input
                     type="date"
                     value={formData.dateOfBirth}
                     onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50/90 focus:bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-emerald-500 font-medium text-slate-900 dark:text-white shadow-xs"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">CGPA (0 - 10)</label>
+                <div className="space-y-1.5">
+                  <label className="font-extrabold text-slate-800 dark:text-slate-200">CGPA (0.0 - 10.0)</label>
                   <input
                     type="number"
                     step="0.01"
                     min="0"
                     max="10"
+                    placeholder="e.g. 8.75"
                     value={formData.cgpa}
                     onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl outline-none focus:border-emerald-500 font-mono"
+                    className="w-full px-3.5 py-2.5 bg-slate-50/90 focus:bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-emerald-500 font-mono font-bold text-slate-900 dark:text-white shadow-xs"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-slate-300">College / Institution</label>
+              <div className="space-y-1.5">
+                <label className="font-extrabold text-slate-800 dark:text-slate-200">College / Institution</label>
                 <input
                   type="text"
+                  placeholder="e.g. Zenith Institute of Technology"
                   value={formData.college}
                   onChange={(e) => setFormData({ ...formData, college: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50/90 focus:bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-emerald-500 font-medium text-slate-900 dark:text-white shadow-xs"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">Department</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div className="space-y-1.5">
+                  <label className="font-extrabold text-slate-800 dark:text-slate-200">Department</label>
                   <input
                     type="text"
+                    placeholder="Computer Science"
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50/90 focus:bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-emerald-500 font-medium text-slate-900 dark:text-white shadow-xs"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">Course / Degree</label>
+                <div className="space-y-1.5">
+                  <label className="font-extrabold text-slate-800 dark:text-slate-200">Course / Degree</label>
                   <input
                     type="text"
+                    placeholder="B.Tech"
                     value={formData.course}
                     onChange={(e) => setFormData({ ...formData, course: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50/90 focus:bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-emerald-500 font-medium text-slate-900 dark:text-white shadow-xs"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700 dark:text-slate-300">Current Year</label>
+                <div className="space-y-1.5">
+                  <label className="font-extrabold text-slate-800 dark:text-slate-200">Current Year</label>
                   <input
                     type="text"
                     value={formData.year}
                     onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    placeholder="e.g. 3rd"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl outline-none focus:border-emerald-500"
+                    placeholder="3rd"
+                    className="w-full px-3.5 py-2.5 bg-slate-50/90 focus:bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-emerald-500 font-medium text-slate-900 dark:text-white shadow-xs"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-slate-300">Bio</label>
+              <div className="space-y-1.5">
+                <label className="font-extrabold text-slate-800 dark:text-slate-200">Bio</label>
                 <textarea
                   rows={2}
+                  placeholder="Tell companies and recruiters about your passions and strengths..."
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50/90 focus:bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-emerald-500 font-medium text-slate-900 dark:text-white shadow-xs"
                 />
               </div>
 
-              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <span className="font-black text-slate-900 dark:text-white uppercase font-mono block">Social & Portfolio URLs</span>
+              <div className="space-y-2 pt-2 border-t-2 border-slate-100 dark:border-slate-800">
+                <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase font-mono block text-[11px]">Social & Portfolio URLs</span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <input
                     type="url"
-                    placeholder="GitHub URL"
+                    placeholder="GitHub Profile URL"
                     value={formData.github}
                     onChange={(e) => setFormData({ ...formData, github: e.target.value })}
-                    className="px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl outline-none focus:border-emerald-500"
+                    className="px-3.5 py-2.5 bg-slate-50/90 focus:bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-emerald-500 text-slate-900 dark:text-white font-medium shadow-xs"
                   />
                   <input
                     type="url"
-                    placeholder="LinkedIn URL"
+                    placeholder="LinkedIn Profile URL"
                     value={formData.linkedin}
                     onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                    className="px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl outline-none focus:border-emerald-500"
+                    className="px-3.5 py-2.5 bg-slate-50/90 focus:bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-emerald-500 text-slate-900 dark:text-white font-medium shadow-xs"
                   />
                   <input
                     type="url"
                     placeholder="Portfolio URL"
                     value={formData.portfolio}
                     onChange={(e) => setFormData({ ...formData, portfolio: e.target.value })}
-                    className="px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl outline-none focus:border-emerald-500"
+                    className="px-3.5 py-2.5 bg-slate-50/90 focus:bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-emerald-500 text-slate-900 dark:text-white font-medium shadow-xs"
                   />
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end space-x-3">
+              <div className="pt-3 border-t-2 border-slate-100 dark:border-slate-800 flex items-center justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setEditModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 font-bold rounded-xl"
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-bold rounded-xl text-slate-700 dark:text-slate-300 transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-md flex items-center space-x-1.5"
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl shadow-lg shadow-emerald-600/30 flex items-center space-x-2 transition cursor-pointer"
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  <span>Save Changes</span>
+                  <span>{saving ? 'Saving...' : 'Save Changes'}</span>
                 </button>
               </div>
 

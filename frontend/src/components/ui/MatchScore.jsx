@@ -8,10 +8,10 @@ export function MatchScore({
   className = ''
 }) {
   const getBadgeStyle = (val) => {
-    if (val >= 85) return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-    if (val >= 70) return "bg-blue-500/10 text-blue-400 border-blue-500/20";
-    if (val >= 50) return "bg-amber-500/10 text-amber-400 border-amber-500/20";
-    return "bg-slate-800 text-slate-400 border-slate-700";
+    if (val >= 85) return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20";
+    if (val >= 70) return "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20";
+    if (val >= 50) return "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20";
+    return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700";
   };
 
   const sizes = {

@@ -9,7 +9,7 @@ import {
 import { Link } from 'react-router-dom';
 
 export default function CompanyProfilePage() {
-  const { token, user } = useAuth();
+  const { token, user, updateUser } = useAuth();
 
   // State Management
   const [profile, setProfile] = useState(null);
@@ -175,6 +175,9 @@ export default function CompanyProfilePage() {
       }
 
       setProfile(resData.profile);
+      if (updateUser && companyName.trim()) {
+        updateUser({ name: companyName.trim() });
+      }
       setSuccessMsg('Company profile updated successfully!');
       setIsEditing(false);
 

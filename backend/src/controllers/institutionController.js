@@ -666,9 +666,9 @@ export const getFacultyPlacement = async (req, res) => {
 
     const allApplications = await Application.find({});
     const totalApplicationsCount = allApplications.length;
-    const shortlistedApplications = allApplications.filter(a => ['shortlisted', 'reviewed'].includes(a.status));
+    const shortlistedApplications = allApplications.filter(a => ['shortlisted', 'reviewed', 'interview'].includes(a.status));
     const shortlistedCount = new Set(shortlistedApplications.map(a => a.studentId?.toString()).filter(Boolean)).size;
-    const acceptedApplications = allApplications.filter(a => a.status === 'accepted');
+    const acceptedApplications = allApplications.filter(a => ['accepted', 'selected'].includes(a.status));
     const selectedCount = new Set(acceptedApplications.map(a => a.studentId?.toString()).filter(Boolean)).size;
 
     const activeDrives = opportunities.filter(o => o.status === 'open');
@@ -677,14 +677,31 @@ export const getFacultyPlacement = async (req, res) => {
     const overallPlacementRate = totalStudents > 0 ? Math.round((selectedCount / totalStudents) * 100) : 0;
 
     const formattedDrives = opportunities.map(opp => {
-      const driveApps = applications.filter(a => a.opportunityId.toString() === opp._id.toString());
-      const driveShortlisted = driveApps.filter(a => ['shortlisted', 'reviewed'].includes(a.status));
-      const driveSelected = driveApps.filter(a => a.status === 'accepted');
+      const driveApps = applications.filter(a => a.opportunityId?.toString() === opp._id.toString() || a.opportunityId?._id?.toString() === opp._id.toString());
+      const driveShortlisted = driveApps.filter(a => ['shortlisted', 'reviewed', 'interview'].includes(a.status));
+      const driveSelected = driveApps.filter(a => ['accepted', 'selected'].includes(a.status));
 
       const comp = opp.companyId;
       const created = opp.createdAt || new Date();
       const driveDate = new Date(created.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString();
-      const deadline = new Date(created.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const deadline = opp.deadline ? new Date(opp.deadline).toISOString() : new Date(created.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      // Real eligibility calculation for this specific drive
+      const driveEligibleStudents = allStudents.filter(s => {
+        const branch = (s.academicInformation?.branch || s.academicInformation?.department || '').toLowerCase().trim();
+        const year = (s.academicInformation?.year || s.academicInformation?.yearOfStudy || '').toLowerCase().trim();
+        const cgpa = s.academicInformation?.cgpa !== null && s.academicInformation?.cgpa !== undefined ? Number(s.academicInformation.cgpa) : 8.0;
+
+        const isBranchEligible = (!opp.eligibleBranches || opp.eligibleBranches.length === 0) ||
+          (branch ? opp.eligibleBranches.some(b => branch.includes(b.toLowerCase().trim()) || b.toLowerCase().trim().includes(branch)) : true);
+
+        const isYearEligible = (!opp.eligibleYears || opp.eligibleYears.length === 0) ||
+          (year ? opp.eligibleYears.some(y => year.includes(y.toLowerCase().trim()) || y.toLowerCase().trim().includes(year)) : true);
+
+        const isCgpaEligible = (!opp.minCgpa) || (cgpa >= opp.minCgpa);
+
+        return isBranchEligible && isYearEligible && isCgpaEligible;
+      });
 
       return {
         _id: opp._id,
@@ -704,12 +721,12 @@ export const getFacultyPlacement = async (req, res) => {
           website: comp?.website || ''
         },
         eligibility: {
-          minCgpa: 7.0,
-          allowedBranches: ['Computer Science', 'Information Technology', 'Electronics & Comm', 'AI & Data Science'],
-          passingYears: [2026, 2027]
+          minCgpa: opp.minCgpa || 7.0,
+          allowedBranches: opp.eligibleBranches && opp.eligibleBranches.length > 0 ? opp.eligibleBranches : ['Computer Science', 'Information Technology', 'Electronics', 'Data Science'],
+          passingYears: opp.eligibleYears && opp.eligibleYears.length > 0 ? opp.eligibleYears : ['2026', '2027']
         },
         metrics: {
-          eligibleStudentsCount: totalEligibleCount,
+          eligibleStudentsCount: driveEligibleStudents.length,
           appliedCount: driveApps.length,
           shortlistedCount: driveShortlisted.length,
           selectedCount: driveSelected.length
@@ -725,6 +742,21 @@ export const getFacultyPlacement = async (req, res) => {
         }))
       };
     });
+
+    const selectedStudents = applications
+      .filter(a => ['accepted', 'selected'].includes(a.status))
+      .map(a => ({
+        _id: a._id,
+        studentName: a.studentId?.userId?.name || 'Placed Candidate',
+        email: a.studentId?.userId?.email || 'N/A',
+        department: a.studentId?.academicInformation?.branch || a.studentId?.academicInformation?.department || 'Computer Science',
+        cgpa: a.studentId?.academicInformation?.cgpa ?? 8.5,
+        skills: a.studentId?.skillsList?.map(s => s.name) || a.studentId?.skills || [],
+        companyName: a.opportunityId?.companyId?.companyName || 'Corporate Partner',
+        role: a.opportunityId?.title || 'Engineer',
+        package: a.placementDetails?.package || a.opportunityId?.stipend || 'Competitive Package',
+        placedAt: a.placementDetails?.placedAt || a.updatedAt || a.createdAt
+      }));
 
     let finalDrives = formattedDrives;
     if (search && search.trim()) {
@@ -748,7 +780,8 @@ export const getFacultyPlacement = async (req, res) => {
         selectedStudents: selectedCount,
         overallPlacementRate
       },
-      drives: finalDrives
+      drives: finalDrives,
+      selectedStudents
     });
   } catch (error) {
     console.error('Get Faculty Placement Error:', error.message);
@@ -800,14 +833,15 @@ export const getFacultyNotifications = async (req, res) => {
     for (const app of applications) {
       const studentName = app.studentId?.userId?.name || 'Student Candidate';
       const oppTitle = app.opportunityId?.title || 'Campus Drive';
+      const status = (app.status || '').toLowerCase();
 
-      // Placed / Accepted update
-      if (app.status === 'accepted') {
+      // (a) Placed / Selected update
+      if (['accepted', 'selected'].includes(status)) {
         const notifId = `placement_${app._id}`;
         notifications.push({
           id: notifId,
           type: 'placement',
-          title: 'Student Placement Offer Secured!',
+          title: 'Student Placement Offer Secured! 🎉',
           message: `Congratulations! ${studentName} has been officially selected and placed for "${oppTitle}".`,
           timestamp: app.updatedAt || app.createdAt,
           isRead: readIds.has(notifId),
@@ -815,8 +849,25 @@ export const getFacultyNotifications = async (req, res) => {
         });
       }
 
-      // Interview / Shortlisted update
-      if (app.status === 'shortlisted') {
+      // (b) Interview update
+      if (status === 'interview' || app.interviewDetails?.scheduledAt) {
+        const isCancelled = (app.interviewDetails?.status || '').toLowerCase() === 'cancelled';
+        const notifId = isCancelled ? `faculty_int_cancel_${app._id}` : `faculty_int_${app._id}`;
+        notifications.push({
+          id: notifId,
+          type: 'interview',
+          title: isCancelled ? 'Candidate Interview Cancelled' : 'Candidate Interview Scheduled 📅',
+          message: isCancelled
+            ? `Interview session with ${studentName} for "${oppTitle}" was cancelled.`
+            : `${studentName} has an upcoming interview scheduled for "${oppTitle}".`,
+          timestamp: app.interviewDetails?.scheduledAt || app.updatedAt,
+          isRead: readIds.has(notifId),
+          link: '/faculty/placement'
+        });
+      }
+
+      // (c) Shortlisted update
+      if (status === 'shortlisted') {
         const notifId = `interview_${app._id}`;
         notifications.push({
           id: notifId,

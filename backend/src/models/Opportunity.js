@@ -46,6 +46,30 @@ const OpportunitySchema = new mongoose.Schema({
     default: '', // Optional for jobs, highly relevant for internships
     trim: true
   },
+  deadline: {
+    type: Date,
+    default: null
+  },
+  minCgpa: {
+    type: Number,
+    default: null
+  },
+  eligibleBranches: {
+    type: [String],
+    default: []
+  },
+  eligibleYears: {
+    type: [String],
+    default: []
+  },
+  isPlacementDrive: {
+    type: Boolean,
+    default: false
+  },
+  driveName: {
+    type: String,
+    default: ''
+  },
   status: {
     type: String,
     enum: ['open', 'closed', 'approved', 'rejected', 'suspended'],

@@ -1,67 +1,178 @@
 @import "tailwindcss";
 
-
 /* ─────────────────────────────────────────────────────────────
-   TAILWIND v4: CLASS-BASED DARK MODE
-   Override the default dark: variant (prefers-color-scheme)
-   to use the .dark class on <html> instead.
+   TAILWIND v4: CLASS-BASED DARK MODE & CUSTOM VARIANTS
    ───────────────────────────────────────────────────────────── */
 @custom-variant dark (&:where(.dark, .dark *));
 
-
 @layer base {
 
-  /* LIGHT MODE VARIABLES */
-  :root[data-theme="light"], :root.light {
-    --sb-bg: #f1f5f9;
-    --sb-card-bg: #ffffff;
-    --sb-card-border: #cbd5e1;
-    --sb-text-main: #0f172a;
-    --sb-text-muted: #334155;
-    --sb-input-bg: #ffffff;
-    --sb-input-text: #0f172a;
-    --sb-input-border: #94a3b8;
-    --sb-nav-bg: #ffffff;
+  /* ─────────────────────────────────────────────────────────────
+     LIGHT MODE DESIGN SYSTEM TOKENS (Clean SaaS / Enterprise Indigo)
+     ───────────────────────────────────────────────────────────── */
+  :root, :root[data-theme="light"], :root.light {
+    --color-primary: #4f46e5;
+    --color-primary-hover: #4338ca;
+    --color-primary-subtle: #eef2ff;
+    --color-primary-text: #4338ca;
+    --color-primary-border: rgba(79, 70, 229, 0.2);
+
+    --color-bg-base: #f8fafc;
+    --color-bg-surface: #ffffff;
+    --color-bg-card: #ffffff;
+    --color-bg-input: #ffffff;
+    --color-bg-hover: #f1f5f9;
+    --color-bg-elevated: #ffffff;
+
+    --color-border-subtle: #e2e8f0;
+    --color-border-strong: #cbd5e1;
+
+    --color-text-main: #0f172a;
+    --color-text-body: #334155;
+    --color-text-muted: #64748b;
+    --color-text-subtle: #94a3b8;
+
+    --color-success: #059669;
+    --color-success-bg: #ecfdf5;
+    --color-success-border: #a7f3d0;
+    --color-warning: #d97706;
+    --color-warning-bg: #fffbeb;
+    --color-warning-border: #fde68a;
+    --color-error: #e11d48;
+    --color-error-bg: #fff1f2;
+    --color-error-border: #fecdd3;
+    --color-info: #0284c7;
+    --color-info-bg: #f0f9ff;
+    --color-info-border: #bae6fd;
+
+    --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+    --shadow-card-hover: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+    --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.18);
   }
 
-
-  /* DARK MODE VARIABLES (DEFAULT) */
+  /* ─────────────────────────────────────────────────────────────
+     DARK MODE DESIGN SYSTEM TOKENS (Deep Charcoal/Navy Theme)
+     ───────────────────────────────────────────────────────────── */
   :root[data-theme="dark"], :root.dark {
-    --sb-bg: #090d16;
-    --sb-card-bg: #0f172a;
-    --sb-card-border: rgba(255, 255, 255, 0.08);
-    --sb-text-main: #f8fafc;
-    --sb-text-muted: #94a3b8;
-    --sb-input-bg: #0b1120;
-    --sb-input-text: #f8fafc;
-    --sb-input-border: #1e293b;
-    --sb-nav-bg: rgba(9, 13, 22, 0.9);
+    --color-primary: #6366f1;
+    --color-primary-hover: #4f46e5;
+    --color-primary-subtle: rgba(99, 102, 241, 0.14);
+    --color-primary-text: #818cf8;
+    --color-primary-border: rgba(99, 102, 241, 0.3);
+
+    --color-bg-base: #090d16;
+    --color-bg-surface: #0f172a;
+    --color-bg-card: #111827;
+    --color-bg-input: #0b1120;
+    --color-bg-hover: #1e293b;
+    --color-bg-elevated: #161f38;
+
+    --color-border-subtle: #1e293b;
+    --color-border-strong: rgba(255, 255, 255, 0.12);
+
+    --color-text-main: #f8fafc;
+    --color-text-body: #e2e8f0;
+    --color-text-muted: #94a3b8;
+    --color-text-subtle: #64748b;
+
+    --color-success: #10b981;
+    --color-success-bg: rgba(16, 185, 129, 0.12);
+    --color-success-border: rgba(16, 185, 129, 0.25);
+    --color-warning: #f59e0b;
+    --color-warning-bg: rgba(245, 158, 11, 0.12);
+    --color-warning-border: rgba(245, 158, 11, 0.25);
+    --color-error: #f43f5e;
+    --color-error-bg: rgba(244, 63, 94, 0.12);
+    --color-error-border: rgba(244, 63, 94, 0.25);
+    --color-info: #38bdf8;
+    --color-info-bg: rgba(56, 189, 248, 0.12);
+    --color-info-border: rgba(56, 189, 248, 0.25);
+
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+    --shadow-card-hover: 0 12px 24px -4px rgba(0, 0, 0, 0.4);
+    --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
   }
 
-
-  html.light, body.light {
-    background-color: #f1f5f9 !important;
-    color: #0f172a !important;
+  html {
+    color-scheme: light dark;
+    scroll-behavior: smooth;
   }
-
-  html.dark, body.dark {
-    background-color: #090d16 !important;
-    color: #f8fafc !important;
-  }
-
 
   body {
     margin: 0;
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
-    transition: background-color 0.25s ease, color 0.25s ease;
+    background-color: var(--color-bg-base);
+    color: var(--color-text-main);
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     UNIFIED TYPOGRAPHY STANDARDS
+     ───────────────────────────────────────────────────────────── */
+  h1 {
+    font-size: 1.75rem;
+    line-height: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--color-text-main);
+  }
+
+  @media (min-width: 640px) {
+    h1 {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+    }
+  }
+
+  h2 {
+    font-size: 1.375rem;
+    line-height: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-text-main);
+  }
+
+  @media (min-width: 640px) {
+    h2 {
+      font-size: 1.625rem;
+      line-height: 2.125rem;
+    }
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.625rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--color-text-main);
+  }
+
+  h4 {
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+    font-weight: 600;
+    color: var(--color-text-main);
+  }
+
+  p {
+    line-height: 1.6;
+    color: var(--color-text-body);
+  }
+
+  label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-body);
+    letter-spacing: 0.01em;
   }
 }
 
-
 /* ─────────────────────────────────────────────────────────────
-   CUSTOM SCROLLBARS
+   CUSTOM SCROLLBAR
    ───────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
@@ -69,101 +180,289 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--sb-bg);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 3px;
+  border-radius: 9999px;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #334155;
 }
 
-/* SkillNexus AI Theme-Aware Cards & Utilities */
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   REUSABLE DESIGN SYSTEM COMPONENT CLASSES
+   ───────────────────────────────────────────────────────────── */
+
+/* Cards & Surfaces */
+.app-card,
+.glass-card,
 .sb-glass-card {
-  background: var(--sb-card-bg);
-  border: 1px solid var(--sb-card-border);
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.light .sb-glass-card {
-  box-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.2);
-}
-
-
+/* Interactive Cards */
+.app-card-interactive,
 .sb-glass-card-interactive {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-card);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
+.app-card-interactive:hover,
 .sb-glass-card-interactive:hover {
-  border-color: rgba(16, 185, 129, 0.4);
-  box-shadow: 0 8px 25px -5px rgba(16, 185, 129, 0.15);
-  transform: translateY(-1px);
-}
-
-
-/* Glass card classes referenced in HomePage & component JSX */
-.glass-card {
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.light .glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 8px 32px -4px rgba(148, 163, 184, 0.15);
-}
-
-
-.glass-card-hover {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-card-hover:hover {
-  border-color: rgba(16, 185, 129, 0.35);
-  box-shadow: 0 8px 30px -5px rgba(16, 185, 129, 0.12);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-card-hover);
   transform: translateY(-2px);
 }
 
-.light .glass-card-hover:hover {
-  border-color: rgba(16, 185, 129, 0.5);
-  box-shadow: 0 12px 40px -8px rgba(16, 185, 129, 0.15);
+/* Buttons */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff !important;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.01em;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.15);
 }
 
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28);
+  transform: translateY(-0.5px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text-main) !important;
+  border: 1px solid var(--color-border-subtle);
+  font-weight: 600;
+  border-radius: 0.75rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-border-subtle);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-main) !important;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-text-body) !important;
+  border: 1px solid var(--color-border-strong);
+  font-weight: 600;
+  border-radius: 0.75rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.btn-outline:hover {
+  background-color: var(--color-bg-hover);
+  border-color: var(--color-primary);
+  color: var(--color-primary) !important;
+}
+
+.btn-danger {
+  background-color: var(--color-error);
+  color: #ffffff !important;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.btn-danger:hover {
+  filter: brightness(0.92);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.28);
+}
+
+/* Input Fields & Forms */
+.app-input,
+.app-select,
+.app-textarea {
+  background-color: var(--color-bg-input);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-main);
+  border-radius: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.app-input:focus,
+.app-select:focus,
+.app-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-subtle);
+}
+
+.app-input::placeholder,
+.app-textarea::placeholder {
+  color: var(--color-text-subtle);
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.badge-indigo,
+.badge-primary {
+  background-color: var(--color-primary-subtle);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary-border);
+}
+
+.badge-emerald,
+.badge-success {
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1px solid var(--color-success-border);
+}
+
+.badge-amber,
+.badge-warning {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning-border);
+}
+
+.badge-rose,
+.badge-error {
+  background-color: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1px solid var(--color-error-border);
+}
+
+.badge-blue,
+.badge-info {
+  background-color: var(--color-info-bg);
+  color: var(--color-info);
+  border: 1px solid var(--color-info-border);
+}
+
+.badge-slate {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-subtle);
+}
+
+/* Skeletons */
+.sb-skeleton,
+.app-skeleton {
+  background-color: var(--color-bg-hover);
+  position: relative;
+  overflow: hidden;
+}
+
+.sb-skeleton::after,
+.app-skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.06) 20%,
+    rgba(255, 255, 255, 0.12) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  animation: shimmer 2s infinite;
+}
+
+.light .sb-skeleton::after,
+.light .app-skeleton::after {
+  background-image: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0) 0,
+    rgba(0, 0, 0, 0.03) 20%,
+    rgba(0, 0, 0, 0.06) 60%,
+    rgba(0, 0, 0, 0)
+  );
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Modals & Backdrop */
+.modal-backdrop {
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+}
 
 /* ─────────────────────────────────────────────────────────────
-   LIGHT MODE: TEXT COLOR OVERRIDES
-   Dashboard pages use hardcoded dark-mode text classes.
-   These rules remap them to proper light-mode equivalents.
+   COMPREHENSIVE LIGHT MODE COLOR REMAPPING
+   Ensures existing Tailwind slate palette maps gracefully to clean light theme
    ───────────────────────────────────────────────────────────── */
 
-/* Headings: text-white → dark slate */
+/* Headings & Text in Light Mode */
 .light .text-white {
   color: #0f172a !important;
 }
 
-/* Body text: text-slate-300 → darker */
-.light .text-slate-300 {
-  color: #334155 !important;
-}
-
-/* Muted text: text-slate-400 → medium gray */
-.light .text-slate-400 {
-  color: #475569 !important;
-}
-
-/* Subtle text: text-slate-500 stays readable */
-.light .text-slate-500 {
-  color: #64748b !important;
-}
-
-/* Very subtle text: text-slate-600 */
-.light .text-slate-600 {
-  color: #475569 !important;
-}
-
-/* Mono number accents */
 .light .text-slate-100 {
   color: #1e293b !important;
 }
@@ -172,43 +471,63 @@
   color: #334155 !important;
 }
 
+.light .text-slate-300 {
+  color: #475569 !important;
+}
 
-/* ─────────────────────────────────────────────────────────────
-   LIGHT MODE: BACKGROUND COLOR OVERRIDES
-   ───────────────────────────────────────────────────────────── */
+.light .text-slate-400 {
+  color: #64748b !important;
+}
 
-/* Dark card backgrounds → white/light */
+.light .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Backgrounds in Light Mode */
+.light .bg-slate-950 {
+  background-color: #f8fafc !important;
+}
+
+.light .bg-slate-950\/80,
+.light .bg-slate-950\/90 {
+  background-color: rgba(248, 250, 252, 0.95) !important;
+}
+
 .light .bg-slate-900 {
   background-color: #ffffff !important;
 }
 
-.light .bg-slate-950 {
-  background-color: #f8fafc !important;
+.light .bg-slate-900\/40,
+.light .bg-slate-900\/50,
+.light .bg-slate-900\/60,
+.light .bg-slate-900\/70,
+.light .bg-slate-900\/80,
+.light .bg-slate-900\/90 {
+  background-color: #ffffff !important;
 }
 
 .light .bg-slate-800 {
   background-color: #f1f5f9 !important;
 }
 
-/* Custom dark backgrounds → light equivalents */
-.light [class*="bg-[#090d16]"] {
-  background-color: #f1f5f9 !important;
-}
-
-.light [class*="bg-[#060a13]"] {
+.light .bg-slate-800\/60,
+.light .bg-slate-800\/80 {
   background-color: #f8fafc !important;
 }
 
+.light .bg-slate-850 {
+  background-color: #e2e8f0 !important;
+}
 
-/* ─────────────────────────────────────────────────────────────
-   LIGHT MODE: BORDER COLOR OVERRIDES
-   ───────────────────────────────────────────────────────────── */
-
-.light .border-slate-800 {
+/* Borders in Light Mode */
+.light .border-slate-800,
+.light .border-slate-800\/80,
+.light .border-slate-800\/60 {
   border-color: #e2e8f0 !important;
 }
 
-.light .border-slate-700 {
+.light .border-slate-700,
+.light .border-slate-700\/80 {
   border-color: #cbd5e1 !important;
 }
 
@@ -216,84 +535,64 @@
   border-color: #e2e8f0 !important;
 }
 
+.light .divide-slate-800,
+.light .divide-slate-800\/80 {
+  border-color: #e2e8f0 !important;
+}
 
-/* ─────────────────────────────────────────────────────────────
-   LIGHT MODE: INPUT FIELD OVERRIDES (AuthPage inputs)
-   ───────────────────────────────────────────────────────────── */
-
+/* Form Inputs in Light Mode */
 .light input.bg-slate-950,
-.light input.bg-slate-900 {
+.light input.bg-slate-900,
+.light input.bg-slate-800,
+.light select.bg-slate-950,
+.light select.bg-slate-900,
+.light textarea.bg-slate-950,
+.light textarea.bg-slate-900 {
   background-color: #ffffff !important;
   color: #0f172a !important;
   border-color: #cbd5e1 !important;
 }
 
-.light input.bg-slate-950::placeholder,
-.light input.bg-slate-900::placeholder {
+.light input:focus,
+.light select:focus,
+.light textarea:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12) !important;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
   color: #94a3b8 !important;
 }
 
-
-/* ─────────────────────────────────────────────────────────────
-   LIGHT MODE: HOVER BACKGROUND OVERRIDES
-   ───────────────────────────────────────────────────────────── */
-
+/* Hover States in Light Mode */
+.light .hover\:bg-slate-900:hover,
 .light .hover\:bg-slate-800:hover {
-  background-color: #e2e8f0 !important;
+  background-color: #f1f5f9 !important;
 }
 
-.light .hover\:bg-slate-700:hover {
-  background-color: #e2e8f0 !important;
+.light .hover\:bg-slate-900\/50:hover {
+  background-color: #f8fafc !important;
 }
 
-
-/* ─────────────────────────────────────────────────────────────
-   LIGHT MODE: SHADOW OVERRIDES
-   ───────────────────────────────────────────────────────────── */
-
-.light .shadow-black\/50 {
-  --tw-shadow-color: rgba(148, 163, 184, 0.25);
+.light .hover\:text-white:hover {
+  color: #0f172a !important;
 }
 
-.light .shadow-2xl {
-  box-shadow: 0 25px 50px -12px rgba(148, 163, 184, 0.2);
+/* Table Header in Light Mode */
+.light table thead.bg-slate-900\/90,
+.light table thead.bg-slate-900,
+.light table thead.bg-slate-950 {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
 }
 
-
-/* ─────────────────────────────────────────────────────────────
-   SMOOTH LOGIN ↔ REGISTER SLIDER TRANSITION (0 JITTER)
-   ───────────────────────────────────────────────────────────── */
-.auth-slider-container {
-  display: grid;
-  grid-template-columns: 100%;
-  overflow: hidden;
-  position: relative;
+.light table tbody tr:hover {
+  background-color: #f8fafc !important;
 }
 
-.auth-slide-panel {
-  grid-area: 1 / 1 / 2 / 2;
-  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.45s ease;
-  will-change: transform, opacity;
-}
-
-
-.auth-slide-left-enter {
-  transform: translateX(-100%);
-  opacity: 0;
-}
-
-.auth-slide-left-active {
-  transform: translateX(0%);
-  opacity: 1;
-}
-
-
-.auth-slide-right-enter {
-  transform: translateX(100%);
-  opacity: 0;
-}
-
-.auth-slide-right-active {
-  transform: translateX(0%);
-  opacity: 1;
+/* Modal Dialog in Light Mode */
+.light .modal-backdrop {
+  background-color: rgba(15, 23, 42, 0.45) !important;
 }
