@@ -2397,20 +2397,22 @@ class Solution {
 
 /**
  * GET /api/students/dsa-problems
- * Returns real DSA problems mapped to real opportunity requirements with difficulty flow
+ * Returns real DSA practice problems for topic progression
  */
 export const getDsaPracticeProblems = async (req, res) => {
   try {
     const { opportunityId, topic } = req.query;
 
-    let targetCompany = 'Target Enterprise Partner';
-    let targetRole = 'Software Development Engineer';
+    let targetCompany = null;
+    let targetRole = null;
+    let requiredSkills = [];
 
     if (opportunityId) {
       const opp = await Opportunity.findById(opportunityId).populate('companyId', 'companyName industry');
       if (opp) {
-        targetCompany = opp.companyId?.companyName || opp.companyName || targetCompany;
-        targetRole = opp.title || targetRole;
+        targetCompany = opp.companyId?.companyName || opp.companyName || null;
+        targetRole = opp.title || null;
+        requiredSkills = opp.requiredSkills || [];
       }
     }
 
@@ -2419,17 +2421,20 @@ export const getDsaPracticeProblems = async (req, res) => {
       filtered = filtered.filter(p => p.topic === topic);
     }
 
-    // Attach dynamic company tags based on real opportunity
+    // Return problems as topic practice problems without fake company interview claims
     const resultProblems = filtered.map(p => ({
       ...p,
-      companyTag: targetCompany,
-      targetRole
+      isCompanySpecific: false,
+      companyTag: null,
+      targetRole,
+      opportunitySkills: requiredSkills
     }));
 
     res.status(200).json({
       success: true,
       company: targetCompany,
       role: targetRole,
+      opportunitySkills: requiredSkills,
       problems: resultProblems
     });
   } catch (error) {
@@ -2627,26 +2632,30 @@ export const submitDsaMockTest = async (req, res) => {
 
 /**
  * GET /api/students/companies
- * Retrieves real companies with their real opportunities count, industry, website, and required skills
+ * Retrieves real companies stored in MongoDB with their real opportunities and required skills
  */
 export const getCompanyPrepCompanies = async (req, res) => {
   try {
     const [allDbCompanies, opportunities] = await Promise.all([
-      Company.find().lean(),
-      Opportunity.find({ isActive: { $ne: false } })
+      Company.find({ verificationStatus: { $ne: 'rejected' } }).lean(),
+      Opportunity.find({ status: { $ne: 'closed' } })
         .populate('companyId', 'companyName industry website logoUrl location description')
         .lean()
     ]);
 
     const companyMap = new Map();
 
-    // 1. Add all direct Company records from MongoDB
+    // 1. Add valid Company records from MongoDB
     allDbCompanies.forEach(comp => {
+      const rawName = (comp.companyName || '').trim();
+      // Skip empty or timestamped test junk
+      if (!rawName || /\d{10,}/.test(rawName)) return;
+
       const compId = comp._id.toString();
       companyMap.set(compId, {
         _id: compId,
-        companyName: comp.companyName || 'Company Partner',
-        industry: comp.industry || 'Technology & Engineering',
+        companyName: rawName,
+        industry: comp.industry || 'Technology & Software',
         website: comp.website || '',
         location: comp.location || 'Remote / Hybrid',
         logoUrl: comp.logoUrl || '',
@@ -2656,25 +2665,23 @@ export const getCompanyPrepCompanies = async (req, res) => {
       });
     });
 
-    // 2. Add/augment opportunities
+    // 2. Add real opportunities from MongoDB
     opportunities.forEach(opp => {
-      const compId = opp.companyId?._id?.toString() || opp.companyName || 'General';
-      const compName = opp.companyId?.companyName || opp.companyName || 'Company Partner';
-      const industry = opp.companyId?.industry || 'Technology & Engineering';
-      const website = opp.companyId?.website || '';
-      const location = opp.companyId?.location || opp.location || 'Remote / Hybrid';
-      const logoUrl = opp.companyId?.logoUrl || '';
-      const description = opp.companyId?.description || opp.description || '';
+      if (!opp.companyId && !opp.companyName) return;
+      const rawName = (opp.companyId?.companyName || opp.companyName || '').trim();
+      if (!rawName || /\d{10,}/.test(rawName)) return;
+
+      const compId = opp.companyId?._id?.toString() || rawName;
 
       if (!companyMap.has(compId)) {
         companyMap.set(compId, {
           _id: compId,
-          companyName: compName,
-          industry,
-          website,
-          location,
-          logoUrl,
-          description,
+          companyName: rawName,
+          industry: opp.companyId?.industry || 'Technology & Software',
+          website: opp.companyId?.website || '',
+          location: opp.companyId?.location || opp.location || 'Remote / Hybrid',
+          logoUrl: opp.companyId?.logoUrl || '',
+          description: opp.companyId?.description || opp.description || '',
           opportunityCount: 0,
           opportunities: []
         });
@@ -2687,7 +2694,8 @@ export const getCompanyPrepCompanies = async (req, res) => {
         title: opp.title,
         type: opp.type || 'job',
         requiredSkills: opp.requiredSkills || [],
-        stipend: opp.stipend || ''
+        stipend: opp.stipend || '',
+        location: opp.location || 'Remote'
       });
     });
 

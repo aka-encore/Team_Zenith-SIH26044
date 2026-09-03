@@ -1077,15 +1077,15 @@ export default function CompanyPrepPage() {
       {currentFlowStep === 3 && selectedCompany && (
         <section className="space-y-8">
           
-          {/* Company Hiring Overview */}
-          <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4">
+          {/* Company Hiring & Opportunity Overview */}
+          <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                  {selectedCompany.companyName} Hiring Analysis
+                  {selectedCompany.companyName} Profile & Requirements
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Verified publicly available interview structure & focus topics.
+                  Industry: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedCompany.industry || 'Technology'}</span> • Location: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedCompany.location || 'Remote / Hybrid'}</span>
                 </p>
               </div>
 
@@ -1095,8 +1095,38 @@ export default function CompanyPrepPage() {
               </div>
             </div>
 
+            {/* Real Opportunities from Database */}
+            {selectedCompany.opportunities && selectedCompany.opportunities.length > 0 ? (
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Active Database Roles & Required Skills ({selectedCompany.opportunities.length})
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {selectedCompany.opportunities.map((opp, idx) => (
+                    <div key={opp._id || idx} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                          {opp.title}
+                        </h5>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 uppercase font-semibold">
+                          {opp.type}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {(opp.requiredSkills || []).map((skill, si) => (
+                          <span key={si} className="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             {currentCompanyProfile ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm pt-2 border-t border-slate-100 dark:border-slate-800">
                 <div>
                   <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
                     Focus Topics
@@ -1128,11 +1158,7 @@ export default function CompanyPrepPage() {
                   </p>
                 </div>
               </div>
-            ) : (
-              <p className="text-xs text-slate-500 italic">
-                Company-specific interview data is not available yet. Showing standardized technical curriculum.
-              </p>
-            )}
+            ) : null}
           </div>
 
           {/* Unsolved Practice Queue */}
@@ -1625,7 +1651,7 @@ export default function CompanyPrepPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 font-bold uppercase">
-                        {selectedCompany.companyName}
+                        {currentTopic.title}
                       </span>
                       <span className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-bold ${
                         selectedProblem.difficulty === 'Easy' ? 'text-emerald-600' :
