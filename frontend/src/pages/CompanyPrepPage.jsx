@@ -874,28 +874,38 @@ export default function CompanyPrepPage() {
         </div>
       </header>
 
-      {/* ── STEP 1: CHOOSE COMPANY (CLEAN, SPACIOUS GRID) ── */}
+      {/* ── STEP 1: CHOOSE TARGET COMPANY ── */}
       {currentFlowStep === 1 && (
-        <section className="space-y-6">
+        <section className="space-y-8 w-full">
           
-          {/* Search & Filter Bar */}
+          {/* Header Title & Subtitle */}
+          <div className="space-y-1 text-left">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              Choose Your Target Company
+            </h1>
+            <p className="text-base text-slate-600 dark:text-slate-400">
+              Prepare specifically for your target company's interview pattern.
+            </p>
+          </div>
+
+          {/* Search Company Input */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="h-4 w-4 absolute left-3.5 top-3 text-slate-400" />
+              <Search className="h-4 w-4 absolute left-4 top-3.5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search company or industry..."
+                placeholder="Search company by name or industry..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-purple-500"
+                className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-purple-600 dark:focus:border-purple-500 shadow-xs"
               />
             </div>
 
-            <div className="sm:w-64">
+            <div className="sm:w-72">
               <select
                 value={industryFilter}
                 onChange={(e) => setIndustryFilter(e.target.value)}
-                className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-purple-500 cursor-pointer"
+                className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-purple-600 dark:focus:border-purple-500 cursor-pointer shadow-xs"
               >
                 {industries.map(ind => (
                   <option key={ind} value={ind}>
@@ -906,71 +916,96 @@ export default function CompanyPrepPage() {
             </div>
           </div>
 
+          {/* Company Grid / Loading / Empty State */}
           {loadingCompanies ? (
-            <div className="py-20 text-center space-y-3">
-              <RefreshCw className="h-6 w-6 animate-spin text-purple-600 mx-auto" />
+            <div className="py-24 text-center space-y-3">
+              <RefreshCw className="h-7 w-7 animate-spin text-purple-600 mx-auto" />
               <p className="text-sm font-medium text-slate-500">Loading companies from database...</p>
             </div>
           ) : filteredCompanies.length === 0 ? (
-            <div className="py-16 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-              <Building2 className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No matching companies found</p>
-              <p className="text-xs text-slate-400 mt-1">Try adjusting your search query or filter.</p>
+            <div className="py-20 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 p-8 space-y-2">
+              <Building2 className="h-10 w-10 text-slate-400 mx-auto" />
+              <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">No companies available yet.</h3>
+              <p className="text-sm text-slate-500">No matching company records found in the database.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCompanies.map(comp => {
                 const isSelected = selectedCompany?._id === comp._id;
                 return (
-                  <button
+                  <div
                     key={comp._id}
-                    onClick={() => handleSelectCompany(comp)}
-                    className={`p-6 rounded-2xl border text-left transition flex flex-col justify-between space-y-5 cursor-pointer bg-white dark:bg-slate-900 hover:border-purple-500 ${
+                    className={`p-7 rounded-2xl border text-left transition flex flex-col justify-between space-y-6 bg-white dark:bg-slate-900 ${
                       isSelected
-                        ? 'border-purple-600 ring-2 ring-purple-600/20'
-                        : 'border-slate-200 dark:border-slate-800'
+                        ? 'border-purple-600 ring-2 ring-purple-600/30 dark:ring-purple-500/30'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-500'
                     }`}
                   >
-                    <div>
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-11 h-11 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-lg border border-purple-100 dark:border-purple-900 shrink-0">
-                            {comp.companyName.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                              {comp.companyName}
-                            </h3>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                              {comp.industry}
-                            </p>
-                          </div>
+                    <div className="space-y-4">
+                      {/* Logo Area & Header */}
+                      <div className="flex items-start space-x-4">
+                        {comp.logoUrl ? (
+                          <img
+                            src={comp.logoUrl}
+                            alt={comp.companyName}
+                            className="w-14 h-14 rounded-xl object-contain bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 shrink-0"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        
+                        <div
+                          style={{ display: comp.logoUrl ? 'none' : 'flex' }}
+                          className="w-14 h-14 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 items-center justify-center font-bold text-xl border border-purple-100 dark:border-purple-900 shrink-0 uppercase font-mono"
+                        >
+                          {comp.companyName.charAt(0)}
                         </div>
 
-                        {isSelected && <CheckCircle2 className="h-5 w-5 text-purple-600 shrink-0" />}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xl font-bold text-slate-900 dark:text-white truncate">
+                            {comp.companyName}
+                          </h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                            {comp.industry || 'Technology & Software'}
+                          </p>
+                        </div>
                       </div>
 
+                      {/* Website link if available */}
                       {comp.website && (
-                        <p className="text-xs text-slate-400 mt-3 flex items-center space-x-1.5 truncate">
+                        <p className="text-xs text-slate-400 flex items-center space-x-1.5 truncate pt-1">
                           <Globe className="h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{comp.website}</span>
                         </p>
                       )}
                     </div>
 
-                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                        {comp.opportunityCount} Active {comp.opportunityCount === 1 ? 'Opening' : 'Openings'}
+                    {/* Action Button */}
+                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                        {comp.opportunityCount > 0 ? `${comp.opportunityCount} Active Roles` : 'Direct Prep'}
                       </span>
-                      <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 flex items-center">
-                        Select & Continue <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
-                      </span>
+
+                      <button
+                        onClick={() => handleSelectCompany(comp)}
+                        className={`px-5 py-2.5 rounded-xl text-sm font-bold transition flex items-center space-x-1.5 cursor-pointer ${
+                          isSelected
+                            ? 'bg-purple-600 text-white shadow-sm'
+                            : 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 hover:bg-purple-600 hover:text-white'
+                        }`}
+                      >
+                        <span>Prepare for {comp.companyName}</span>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
           )}
+
         </section>
       )}
 

@@ -2631,16 +2631,35 @@ export const submitDsaMockTest = async (req, res) => {
  */
 export const getCompanyPrepCompanies = async (req, res) => {
   try {
-    const opportunities = await Opportunity.find({ isActive: { $ne: false } })
-      .populate('companyId', 'companyName industry website logoUrl location description')
-      .lean();
+    const [allDbCompanies, opportunities] = await Promise.all([
+      Company.find().lean(),
+      Opportunity.find({ isActive: { $ne: false } })
+        .populate('companyId', 'companyName industry website logoUrl location description')
+        .lean()
+    ]);
 
-    // Aggregate by company
     const companyMap = new Map();
 
+    // 1. Add all direct Company records from MongoDB
+    allDbCompanies.forEach(comp => {
+      const compId = comp._id.toString();
+      companyMap.set(compId, {
+        _id: compId,
+        companyName: comp.companyName || 'Company Partner',
+        industry: comp.industry || 'Technology & Engineering',
+        website: comp.website || '',
+        location: comp.location || 'Remote / Hybrid',
+        logoUrl: comp.logoUrl || '',
+        description: comp.description || '',
+        opportunityCount: 0,
+        opportunities: []
+      });
+    });
+
+    // 2. Add/augment opportunities
     opportunities.forEach(opp => {
       const compId = opp.companyId?._id?.toString() || opp.companyName || 'General';
-      const compName = opp.companyId?.companyName || opp.companyName || 'Enterprise Partner';
+      const compName = opp.companyId?.companyName || opp.companyName || 'Company Partner';
       const industry = opp.companyId?.industry || 'Technology & Engineering';
       const website = opp.companyId?.website || '';
       const location = opp.companyId?.location || opp.location || 'Remote / Hybrid';
