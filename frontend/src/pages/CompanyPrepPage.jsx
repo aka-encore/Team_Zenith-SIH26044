@@ -2,23 +2,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Building2, Code2, BookOpen, Layers, Target, Terminal, Play, Pause,
+  Building2, Code2, BookOpen, Layers, Terminal, Play, Pause,
   Send, Clock, CheckCircle2, Circle, AlertCircle, RefreshCw,
-  ArrowLeft, ArrowRight, ShieldCheck, Award, Sparkles, CheckSquare,
-  Square, ChevronRight, HelpCircle, Lightbulb, Search, Filter,
-  Globe, Briefcase, Type, ZoomIn, ZoomOut, Layout, LayoutGrid,
-  Columns, Rows, RotateCcw, Check, XCircle, FastForward, Rewind,
-  Maximize, Minimize, Bookmark, Eye, AlertTriangle, ListFilter,
-  CheckCheck, Video
+  ArrowLeft, ArrowRight, ShieldCheck, Award,
+  ChevronRight, HelpCircle, Lightbulb, Search, Filter,
+  Globe, Briefcase, Type, Columns, Rows, RotateCcw, Check, XCircle,
+  FastForward, Rewind, Maximize, Minimize, Bookmark, AlertTriangle
 } from 'lucide-react';
 
 export default function CompanyPrepPage() {
   const { token, user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // ── 10-Step Master Navigation ──
-  // 1: Choose Company | 2: Choose Language | 3: Roadmap | 4: Topic Learning | 5: AI Video Lesson | 6: Coding Arena | 7: Mock Test
+  // ── Step State: 1: Company | 2: Language | 3: Roadmap | 4: Learning | 5: Video Lesson | 6: Coding Arena | 7: Mock Test ──
   const [currentFlowStep, setCurrentFlowStep] = useState(1);
 
   // ── Step 1: Real Database Companies ──
@@ -31,18 +28,18 @@ export default function CompanyPrepPage() {
   // ── Step 2: DSA Language (C++, Java, Python) ──
   const [selectedLanguage, setSelectedLanguage] = useState('cpp');
 
-  // ── Step 3, 4 & 5: Topics, Learning & AI Video ──
+  // ── Step 3, 4 & 5: Topics & Video Lesson ──
   const [selectedTopicId, setSelectedTopicId] = useState('arrays');
   
-  // AI Video Player Controls (Zero YouTube / 100% Native Architecture)
+  // Video Lesson Player Controls
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [currentTime, setCurrentTime] = useState(0); // in seconds
+  const [currentTime, setCurrentTime] = useState(0);
   const [activeChapterIdx, setActiveChapterIdx] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const playerContainerRef = useRef(null);
 
-  // ── Step 6 & 7: LeetCode-Style Coding Arena ──
+  // ── Step 6: LeetCode-Style Coding Arena ──
   const [problems, setProblems] = useState([]);
   const [selectedProblem, setSelectedProblem] = useState(null);
   const [code, setCode] = useState('');
@@ -52,17 +49,17 @@ export default function CompanyPrepPage() {
   const [activeConsoleTab, setActiveConsoleTab] = useState('testcases'); // 'testcases' | 'output' | 'hints'
   const [showHint, setShowHint] = useState(false);
 
-  // Independent Typography & Accessibility Controls
-  const [questionFontSize, setQuestionFontSize] = useState(16); // 14: A-, 16: A, 20: A+
-  const [editorFontSize, setEditorFontSize] = useState(14); // 12: A-, 14: A, 18: A+
+  // Typography Controls
+  const [questionFontSize, setQuestionFontSize] = useState(16); // 14, 16, 20
+  const [editorFontSize, setEditorFontSize] = useState(14); // 12, 14, 18
   const [editorLayout, setEditorLayout] = useState('split'); // 'split' | 'stacked'
 
-  // ── Step 8: Unsolved & Saved for Later Tracking ──
-  const [problemSubmissions, setProblemSubmissions] = useState({}); // { [id]: { status: 'Accepted' | 'Failed', lastAttemptAt } }
+  // Progress & Unsolved Tracking
+  const [problemSubmissions, setProblemSubmissions] = useState({});
   const [savedForLater, setSavedForLater] = useState({});
   const [completedTopics, setCompletedTopics] = useState({});
 
-  // ── Step 10: Timed Company Mock Test ──
+  // ── Step 7: Timed Mock Test ──
   const [mockSession, setMockSession] = useState(null);
   const [mockTimeRemaining, setMockTimeRemaining] = useState(45 * 60);
   const [mockAnswers, setMockAnswers] = useState({});
@@ -71,7 +68,7 @@ export default function CompanyPrepPage() {
   const [mockResult, setMockResult] = useState(null);
   const [mockCompleted, setMockCompleted] = useState(false);
 
-  // ── 1. Fetch Real Database Companies ──
+  // Fetch real companies
   useEffect(() => {
     const fetchCompanies = async () => {
       setLoadingCompanies(true);
@@ -96,7 +93,7 @@ export default function CompanyPrepPage() {
     if (token) fetchCompanies();
   }, [token]);
 
-  // Load persistent progress from localStorage
+  // Load persistent progress
   useEffect(() => {
     try {
       const uid = user?.id || 'guest';
@@ -160,21 +157,21 @@ export default function CompanyPrepPage() {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  // ── Verified Public Company Interview Intelligence Patterns ──
+  // Company hiring profiles
   const companyInterviewProfiles = {
     google: {
-      focusTopics: ['Trees & BST', 'Graphs', 'Dynamic Programming', 'Recursion & Backtracking'],
-      roundBreakdown: 'Round 1: Screening (Arrays/Strings) → Rounds 2-4: Coding & Algorithms (Trees, Graphs, DP) → Round 5: Googleyness & System Architecture.',
-      difficultyPattern: 'High algorithmic rigor. Heavy emphasis on optimal O(N) or O(log N) time with sub-quadratic space and complete handling of extreme constraints.',
+      focusTopics: ['Trees & BST', 'Graphs', 'Dynamic Programming', 'Recursion'],
+      roundBreakdown: 'Round 1: Screening (Arrays/Strings) → Rounds 2-4: Deep Problem Solving (Trees, Graphs, DP) → Round 5: System Architecture.',
+      difficultyPattern: 'High algorithmic rigor. Heavy emphasis on optimal O(N) or O(log N) time with sub-quadratic space.',
       interviewQuestions: [
         'How do you validate a Binary Search Tree without modifying node values?',
         'Implement an optimal algorithm to find the Longest Path in a Directed Acyclic Graph.',
-        'Given stream of numbers, how do you find the median dynamically in O(log N) per insertion?'
+        'Given stream of numbers, how do you find the median dynamically in O(log N)?'
       ]
     },
     amazon: {
       focusTopics: ['Arrays', 'Hash Maps', 'Trees & BST', 'Heap & Priority Queue', 'Sliding Window'],
-      roundBreakdown: 'Online Assessment: 2 Coding Problems → 3-4 Technical Rounds focusing on Trees, Heaps, and 14 Leadership Principles.',
+      roundBreakdown: 'Online Assessment: 2 Coding Problems → 3-4 Technical Rounds focusing on Trees, Heaps, and Leadership Principles.',
       difficultyPattern: 'Medium to Hard problems. Strong focus on clean modular code, fast lookups, and heap data structures.',
       interviewQuestions: [
         'Design an LRU Cache with O(1) get and put operations.',
@@ -184,7 +181,7 @@ export default function CompanyPrepPage() {
     },
     microsoft: {
       focusTopics: ['Strings', 'Linked List', 'Trees & Graph Traversal', 'Two Pointers'],
-      roundBreakdown: 'Round 1: Online Assessment → Rounds 2-4: In-depth Technical interviews with focus on memory pointers, recursion, and data structures.',
+      roundBreakdown: 'Round 1: Online Assessment → Rounds 2-4: In-depth Technical interviews with focus on memory pointers and recursion.',
       difficultyPattern: 'Medium difficulty with deep questions on recursion call stacks, string parsing, and pointer management.',
       interviewQuestions: [
         'Reverse a Linked List in groups of size K.',
@@ -200,24 +197,6 @@ export default function CompanyPrepPage() {
         'Subarray Sum Equals K using Prefix Sums and Hash Map.',
         'Binary Tree Vertical Order Traversal using BFS queue.',
         'Search in Rotated Sorted Array in O(log N) time.'
-      ]
-    },
-    apple: {
-      focusTopics: ['Linear Structures', 'Memory Management', 'Bit Manipulation', 'Trees'],
-      roundBreakdown: 'Technical screening → Onsite architecture and pointer-level data structure discussions.',
-      difficultyPattern: 'Focus on memory footprint, pointer safety, and space-efficient implementations.',
-      interviewQuestions: [
-        'Implement a dynamic Ring Buffer (Circular Queue) in C++/Java.',
-        'Detect cycle in Linked List using Floyd\'s Tortoise and Hare algorithm.'
-      ]
-    },
-    netflix: {
-      focusTopics: ['System Design Data Structures', 'Graphs', 'Hash Tables', 'Sliding Window'],
-      roundBreakdown: 'Technical screening → In-depth discussions on distributed data structures and high-throughput algorithms.',
-      difficultyPattern: 'High focus on real-world stream processing and sliding window averages.',
-      interviewQuestions: [
-        'Design a Sliding Window Rate Limiter.',
-        'Find maximum video buffering rate using Monotonic Deque.'
       ]
     },
     flipkart: {
@@ -280,7 +259,7 @@ export default function CompanyPrepPage() {
 
   const currentCompanyProfile = getCompanyProfile();
 
-  // ── Progressive 18 Core DSA Topics (From Basic to Advanced) ──
+  // Core DSA Topics
   const dsaTopics = [
     {
       id: 'arrays',
@@ -290,21 +269,21 @@ export default function CompanyPrepPage() {
       description: 'Contiguous memory indexing, dynamic vectors, prefix sums, two pointers, and sliding window optimization.',
       explanation: 'An Array is a collection of items stored at contiguous memory locations. It is the most fundamental data structure, providing O(1) random access by index arithmetic.',
       beginnerConcepts: [
-        'Contiguous Memory: Elements stored side-by-side in RAM.',
-        'Base Addressing Formula: Address(i) = Base_Address + i * sizeof(Type).',
-        'Static Arrays vs Dynamic Arrays: Fixed size vs Geometric amortized doubling.'
+        'Contiguous Memory: Elements stored sequentially in RAM.',
+        'Base Addressing: Address(i) = Base_Address + i * sizeof(Type).',
+        'Static vs Dynamic: Fixed size vs Geometric amortized doubling.'
       ],
       stepByStepExamples: [
-        'Example: Reversing an array in-place.',
+        'Example: Reversing an array in-place using two pointers.',
         'Step 1: Place left pointer at 0 and right pointer at N-1.',
         'Step 2: Swap arr[left] and arr[right].',
         'Step 3: Increment left, decrement right until left >= right.'
       ],
       patterns: ['Converging Two Pointers (Left & Right)', 'Fast & Slow Pointers', 'Prefix Sum Queries', 'Sliding Window Subarrays'],
-      timeComplexity: 'Access: O(1) | Linear Search: O(N) | Insertion/Deletion at end: O(1) amortized | Insertion/Deletion at start: O(N)',
-      spaceComplexity: 'O(N) for storing N elements. In-place algorithms operate in O(1) auxiliary space.',
+      timeComplexity: 'Access: O(1) • Linear Search: O(N) • Append: O(1) amortized • Insert at Start: O(N)',
+      spaceComplexity: 'O(N) for storing elements. In-place algorithms use O(1) extra space.',
       commonMistakes: [
-        'Off-by-one errors (accessing arr[n] instead of arr[n-1]).',
+        'Off-by-one errors (accessing arr[N] instead of arr[N-1]).',
         'Modifying an array while iterating without index adjustment.',
         'Assuming sorted order when input is unsorted.'
       ],
@@ -321,7 +300,7 @@ export default function CompanyPrepPage() {
             'Direct memory lookup without pointer traversal.',
             'L1/L2 CPU Cache locality optimization.'
           ],
-          codeSnippet: `// Array memory jump formula\nint arr[5] = {10, 20, 30, 40, 50};\nint val = arr[2]; // Directly jumps to memory offset`
+          codeSnippet: `int arr[5] = {10, 20, 30, 40, 50};\nint val = arr[2]; // Jumps to memory offset in O(1)`
         },
         {
           chapter: '2. Memory Concept & Traversal',
@@ -402,7 +381,7 @@ export default function CompanyPrepPage() {
         'Step 3: If complement exists in map, return indices. Otherwise store x in map.'
       ],
       patterns: ['Complement Lookup (Target - X)', 'Frequency Counting', 'Anagram Grouping', 'Prefix Sum Hash Map'],
-      timeComplexity: 'Average: O(1) Insert/Search/Delete | Worst-Case: O(N) under heavy collisions',
+      timeComplexity: 'Average: O(1) Insert/Search/Delete • Worst-Case: O(N) under heavy collisions',
       spaceComplexity: 'O(N) for storing hash buckets and entries.',
       commonMistakes: [
         'Using unhashable or mutable keys.',
@@ -460,7 +439,7 @@ export default function CompanyPrepPage() {
     },
     {
       id: 'trees',
-      title: 'Trees & Binary Search Trees (BST)',
+      title: 'Trees & Binary Search Trees',
       category: 'Hierarchical Structures',
       tier: 'ADVANCED',
       description: 'Binary trees, BST invariants, DFS traversals (Inorder, Preorder, Postorder), BFS level order, and Lowest Common Ancestor.',
@@ -477,8 +456,8 @@ export default function CompanyPrepPage() {
         'Step 3: Traverse right subtree recursively.'
       ],
       patterns: ['Bottom-Up Subtree Return (Max Depth, Diameter)', 'Level Order Traversal (BFS with Queue)', 'BST Min/Max Bound Validation', 'Lowest Common Ancestor (LCA)'],
-      timeComplexity: 'Balanced BST Search/Insert: O(log N) | Skewed Tree: O(N) | Traversals: O(N)',
-      spaceComplexity: 'O(H) call stack auxiliary space, where H = height of tree (O(log N) balanced, O(N) skewed).',
+      timeComplexity: 'Balanced BST Search/Insert: O(log N) • Skewed Tree: O(N) • Traversals: O(N)',
+      spaceComplexity: 'O(H) call stack auxiliary space, where H = height of tree.',
       commonMistakes: [
         'Forgetting null root base condition (`if (!root) return 0`).',
         'Validating BST by checking only immediate children instead of global min/max bounds.',
@@ -553,10 +532,10 @@ export default function CompanyPrepPage() {
       ],
       patterns: ['1D Linear DP', '0/1 Knapsack & Unbounded Knapsack', '2D Matrix DP (LCS & Edit Distance)', 'State Machine DP'],
       timeComplexity: 'Time = Number of Subproblem States * Transitions per State.',
-      spaceComplexity: 'Space = Table size + Recursion Call Stack. Can often be optimized to rolling 1D array.',
+      spaceComplexity: 'Space = Table size + Recursion Call Stack.',
       commonMistakes: [
         'Incorrect base cases leading to index out of bounds.',
-        'Overlapping state confusion (e.g. iterating weights before items in 0/1 knapsack).',
+        'Overlapping state confusion.',
         'Forgetting memoization return values.'
       ],
       realWorldUsage: 'DNA sequence alignment in bioinformatics, Git diff algorithms (Myers LCS), and packet routing protocols.',
@@ -615,7 +594,7 @@ export default function CompanyPrepPage() {
   const currentLessonChapter = activeLessons[activeChapterIdx] || activeLessons[0];
   const totalVideoDuration = activeLessons.reduce((acc, l) => acc + l.duration, 0);
 
-  // ── AI Video Player Timeline ──
+  // Video playback effect
   useEffect(() => {
     let interval = null;
     if (isPlaying) {
@@ -676,7 +655,7 @@ export default function CompanyPrepPage() {
     }
   };
 
-  // ── Real Problem Execution (Pass Required for Completion) ──
+  // Real Problem Execution
   const handleExecuteCode = async (isSubmit = false) => {
     if (!selectedProblem || !selectedCompany) return;
     if (isSubmit) setSubmittingCode(true);
@@ -753,7 +732,7 @@ export default function CompanyPrepPage() {
     }
   };
 
-  // ── Step 10: Timed Mock Assessment ──
+  // Mock Test
   const handleStartMockTest = async () => {
     if (!selectedCompany) return;
     setLoadingCompanies(true);
@@ -771,7 +750,7 @@ export default function CompanyPrepPage() {
           initialCodes[p.id] = p.starterCode[selectedLanguage] || p.starterCode.cpp || '';
         });
         setMockAnswers(initialCodes);
-        setCurrentFlowStep(7); // 7: Mock Test View
+        setCurrentFlowStep(7);
         setMockCompleted(false);
         setMockResult(null);
       }
@@ -821,12 +800,10 @@ export default function CompanyPrepPage() {
     }
   };
 
-  // Progress Counters
   const solvedCount = Object.values(problemSubmissions).filter(s => s.status === 'Accepted').length;
   const unsolvedList = Object.values(problemSubmissions).filter(s => s.status === 'Failed');
   const completedTopicsCount = Object.keys(completedTopics).filter(k => completedTopics[k] && k.startsWith(selectedCompany?._id || '')).length;
 
-  // Step 1 Filtering
   const industries = ['all', ...new Set(companies.map(c => c.industry).filter(Boolean))];
   const filteredCompanies = companies.filter(c => {
     const matchesSearch = c.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -841,83 +818,84 @@ export default function CompanyPrepPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-24 text-left">
+    <div className="w-full max-w-7xl mx-auto space-y-8 pb-20 text-left px-2 sm:px-4">
       
-      {/* ── TOP BREADCRUMB & STEP BAR ── */}
-      <div className="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center space-x-2 text-xs font-mono text-purple-600 dark:text-purple-400 font-bold uppercase">
-            <span>Company Interview Preparation Hub</span>
-            <span>/</span>
-            <span>Flow Step {currentFlowStep}</span>
+      {/* ── TOP HEADER & CLEAN TAB NAVIGATION ── */}
+      <header className="border-b border-slate-200 dark:border-slate-800 pb-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+              Company Interview Preparation
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mt-1">
+              {currentFlowStep === 1 && 'Select Target Company'}
+              {currentFlowStep === 2 && `Choose DSA Language`}
+              {currentFlowStep === 3 && `${selectedCompany?.companyName || 'Target'} Interview Roadmap`}
+              {currentFlowStep === 4 && `${currentTopic.title}`}
+              {currentFlowStep === 5 && `${currentTopic.title} • Video Lesson`}
+              {currentFlowStep === 6 && `Problem Practice Arena`}
+              {currentFlowStep === 7 && `${selectedCompany?.companyName || 'Target'} Technical Assessment`}
+            </h1>
+            {selectedCompany && currentFlowStep > 1 && (
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Company: <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedCompany.companyName}</span> ({selectedCompany.industry}) • Language: <span className="font-mono font-semibold uppercase text-purple-600 dark:text-purple-400">{selectedLanguage}</span>
+              </p>
+            )}
           </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
-            {currentFlowStep === 1 && 'Step 1: Choose Target Company'}
-            {currentFlowStep === 2 && `Step 2: Choose DSA Language for ${selectedCompany?.companyName || 'Target Company'}`}
-            {currentFlowStep === 3 && `Step 3: Company Roadmap • ${selectedCompany?.companyName || 'Company'}`}
-            {currentFlowStep === 4 && `Step 4: Topic Learning • ${currentTopic.title}`}
-            {currentFlowStep === 5 && `Step 5: AI Topic Video Masterclass • ${currentTopic.title}`}
-            {currentFlowStep === 6 && `Step 6 & 7: LeetCode-Style Coding Arena`}
-            {currentFlowStep === 7 && `Step 10: Timed Company Mock Assessment`}
-          </h1>
-          {selectedCompany && currentFlowStep > 1 && (
-            <p className="text-xs text-slate-500">
-              Target: <strong className="text-slate-900 dark:text-white">{selectedCompany.companyName}</strong> ({selectedCompany.industry}) • Language: <strong className="uppercase text-purple-600 font-mono">{selectedLanguage}</strong>
-            </p>
-          )}
-        </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex items-center space-x-1.5 overflow-x-auto">
-          {[
-            { num: 1, label: '1. Company' },
-            { num: 2, label: '2. Language' },
-            { num: 3, label: '3. Roadmap' },
-            { num: 4, label: '4. Learning' },
-            { num: 5, label: '5. AI Video' },
-            { num: 6, label: '6. Coding Arena' },
-            { num: 7, label: '10. Mock Test' }
-          ].map(s => (
-            <button
-              key={s.num}
-              onClick={() => {
-                if (s.num > 1 && !selectedCompany) return;
-                setCurrentFlowStep(s.num);
-              }}
-              disabled={s.num > 1 && !selectedCompany}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition whitespace-nowrap cursor-pointer disabled:opacity-40 ${
-                currentFlowStep === s.num
-                  ? 'bg-purple-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
+          {/* Clean Stepper Tabs */}
+          <nav className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            {[
+              { num: 1, label: '1. Company' },
+              { num: 2, label: '2. Language' },
+              { num: 3, label: '3. Roadmap' },
+              { num: 4, label: '4. Topic' },
+              { num: 5, label: '5. Video' },
+              { num: 6, label: '6. Coding' },
+              { num: 7, label: '7. Mock Test' }
+            ].map(s => (
+              <button
+                key={s.num}
+                onClick={() => {
+                  if (s.num > 1 && !selectedCompany) return;
+                  setCurrentFlowStep(s.num);
+                }}
+                disabled={s.num > 1 && !selectedCompany}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition whitespace-nowrap cursor-pointer disabled:opacity-40 ${
+                  currentFlowStep === s.num
+                    ? 'bg-purple-600 text-white font-semibold'
+                    : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </nav>
         </div>
-      </div>
+      </header>
 
-      {/* ── STEP 1: CHOOSE COMPANY ── */}
+      {/* ── STEP 1: CHOOSE COMPANY (CLEAN, SPACIOUS GRID) ── */}
       {currentFlowStep === 1 && (
-        <div className="space-y-6 animate-in fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-            <div className="relative flex-1 max-w-md">
+        <section className="space-y-6">
+          
+          {/* Search & Filter Bar */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
               <Search className="h-4 w-4 absolute left-3.5 top-3 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search real company or industry..."
+                placeholder="Search company or industry..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-purple-500 font-medium"
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-purple-500"
               />
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-purple-500 shrink-0" />
+            <div className="sm:w-64">
               <select
                 value={industryFilter}
                 onChange={(e) => setIndustryFilter(e.target.value)}
-                className="px-3 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-purple-500 cursor-pointer"
+                className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-purple-500 cursor-pointer"
               >
                 {industries.map(ind => (
                   <option key={ind} value={ind}>
@@ -930,16 +908,14 @@ export default function CompanyPrepPage() {
 
           {loadingCompanies ? (
             <div className="py-20 text-center space-y-3">
-              <RefreshCw className="h-8 w-8 animate-spin text-purple-600 mx-auto" />
-              <p className="text-xs font-mono font-bold text-slate-500 uppercase">
-                Loading Real Companies from Database...
-              </p>
+              <RefreshCw className="h-6 w-6 animate-spin text-purple-600 mx-auto" />
+              <p className="text-sm font-medium text-slate-500">Loading companies from database...</p>
             </div>
           ) : filteredCompanies.length === 0 ? (
-            <div className="p-12 text-center rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 space-y-2">
-              <Building2 className="h-8 w-8 text-slate-400 mx-auto" />
-              <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">No matching companies found</h3>
-              <p className="text-xs text-slate-400">Try adjusting your search query or filter.</p>
+            <div className="py-16 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+              <Building2 className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No matching companies found</p>
+              <p className="text-xs text-slate-400 mt-1">Try adjusting your search query or filter.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -949,85 +925,72 @@ export default function CompanyPrepPage() {
                   <button
                     key={comp._id}
                     onClick={() => handleSelectCompany(comp)}
-                    className={`p-6 rounded-3xl border-2 text-left transition flex flex-col justify-between space-y-4 cursor-pointer bg-white dark:bg-slate-900 group ${
+                    className={`p-6 rounded-2xl border text-left transition flex flex-col justify-between space-y-5 cursor-pointer bg-white dark:bg-slate-900 hover:border-purple-500 ${
                       isSelected
-                        ? 'border-purple-600 shadow-lg shadow-purple-600/10'
-                        : 'border-slate-200 dark:border-slate-800 hover:border-purple-500/50 hover:shadow-md'
+                        ? 'border-purple-600 ring-2 ring-purple-600/20'
+                        : 'border-slate-200 dark:border-slate-800'
                     }`}
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2.5">
-                          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-base border border-purple-500/20 shrink-0">
+                    <div>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-11 h-11 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-lg border border-purple-100 dark:border-purple-900 shrink-0">
                             {comp.companyName.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-purple-600 transition">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                               {comp.companyName}
                             </h3>
-                            <span className="text-xs text-slate-500 font-medium">
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
                               {comp.industry}
-                            </span>
+                            </p>
                           </div>
                         </div>
 
                         {isSelected && <CheckCircle2 className="h-5 w-5 text-purple-600 shrink-0" />}
                       </div>
-                    </div>
 
-                    <div className="space-y-2.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-500">
-                      {comp.website ? (
-                        <div className="flex items-center space-x-1.5 text-purple-600 dark:text-purple-400 font-mono text-[11px] truncate">
+                      {comp.website && (
+                        <p className="text-xs text-slate-400 mt-3 flex items-center space-x-1.5 truncate">
                           <Globe className="h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{comp.website}</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-1.5 text-slate-400 font-mono text-[11px]">
-                          <Globe className="h-3.5 w-3.5 shrink-0" />
-                          <span>Website: Not Listed</span>
-                        </div>
+                        </p>
                       )}
+                    </div>
 
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-xs font-bold">
-                          <Briefcase className="h-3.5 w-3.5" />
-                          <span>{comp.opportunityCount} Active {comp.opportunityCount === 1 ? 'Opening' : 'Openings'}</span>
-                        </span>
-
-                        <span className="text-xs font-bold text-purple-600 dark:text-purple-400 flex items-center space-x-0.5 group-hover:translate-x-1 transition-transform">
-                          <span>Select</span>
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </span>
-                      </div>
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        {comp.opportunityCount} Active {comp.opportunityCount === 1 ? 'Opening' : 'Openings'}
+                      </span>
+                      <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 flex items-center">
+                        Select & Continue <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
+                      </span>
                     </div>
                   </button>
                 );
               })}
             </div>
           )}
-        </div>
+        </section>
       )}
 
       {/* ── STEP 2: CHOOSE DSA LANGUAGE ── */}
       {currentFlowStep === 2 && selectedCompany && (
-        <div className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-6 max-w-3xl mx-auto animate-in fade-in">
-          <div className="space-y-1 text-center">
-            <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
-              Step 2 of Flow
-            </span>
-            <h2 className="text-xl font-black text-slate-900 dark:text-white">
-              Choose DSA Programming Language
+        <section className="max-w-2xl mx-auto space-y-6 py-6">
+          <div className="text-center space-y-1">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+              Select Coding Language
             </h2>
-            <p className="text-xs text-slate-500">
-              Target Company: <strong className="text-slate-900 dark:text-white">{selectedCompany.companyName}</strong> ({selectedCompany.industry})
+            <p className="text-sm text-slate-500">
+              Pick your preferred language for {selectedCompany.companyName} technical rounds.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { id: 'cpp', title: 'C++', desc: 'C++17 with Standard Template Library (STL)' },
-              { id: 'java', title: 'Java', desc: 'Java 17 with Collections Framework' },
-              { id: 'python', title: 'Python', desc: 'Python 3.11 with Built-in Data Structures' }
+              { id: 'cpp', title: 'C++', desc: 'C++17 with STL' },
+              { id: 'java', title: 'Java', desc: 'Java 17 Collections' },
+              { id: 'python', title: 'Python', desc: 'Python 3.11' }
             ].map(lang => (
               <button
                 key={lang.id}
@@ -1039,114 +1002,111 @@ export default function CompanyPrepPage() {
                   } catch (e) {
                     console.error(e);
                   }
-                  setCurrentFlowStep(3); // Direct transition to Step 3: Roadmap
+                  setCurrentFlowStep(3);
                 }}
-                className={`p-6 rounded-2xl border-2 text-center transition flex flex-col items-center justify-center space-y-2 cursor-pointer group hover:border-purple-500 hover:shadow-lg ${
+                className={`p-6 rounded-2xl border text-center transition flex flex-col items-center justify-center space-y-2 cursor-pointer bg-white dark:bg-slate-900 hover:border-purple-500 ${
                   selectedLanguage === lang.id
-                    ? 'border-purple-600 bg-purple-500/10 shadow-md'
-                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300'
+                    ? 'border-purple-600 ring-2 ring-purple-600/20 bg-purple-50/20 dark:bg-purple-950/20'
+                    : 'border-slate-200 dark:border-slate-800'
                 }`}
               >
-                <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center font-mono font-bold text-lg border border-purple-500/20 group-hover:scale-105 transition-transform">
+                <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center font-mono font-bold text-lg mb-1">
                   <Code2 className="h-6 w-6" />
                 </div>
-                <span className="text-base font-black font-mono text-slate-900 dark:text-white group-hover:text-purple-600">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                   {lang.title}
-                </span>
-                <span className="text-[10px] text-slate-500 leading-tight">
+                </h3>
+                <p className="text-xs text-slate-500">
                   {lang.desc}
-                </span>
+                </p>
               </button>
             ))}
           </div>
 
-          <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex justify-between items-center pt-6 border-t border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setCurrentFlowStep(1)}
-              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition flex items-center space-x-1.5 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Change Company</span>
             </button>
-            <span className="text-xs text-slate-400 font-mono">
-              Click language to proceed directly to DSA Roadmap →
+            <span className="text-xs text-slate-400">
+              Clicking a language continues directly to Roadmap
             </span>
           </div>
-        </div>
+        </section>
       )}
 
-      {/* ── STEP 3: COMPANY-SPECIFIC DSA ROADMAP (BEGINNER → INTERMEDIATE → ADVANCED → INTERVIEW LEVEL) ── */}
+      {/* ── STEP 3: COMPANY-SPECIFIC ROADMAP ── */}
       {currentFlowStep === 3 && selectedCompany && (
-        <div className="space-y-6 animate-in fade-in">
+        <section className="space-y-8">
           
-          {/* Company Intelligence Profile */}
-          <div className="p-6 rounded-3xl border-2 border-purple-500/30 bg-gradient-to-r from-purple-500/10 via-slate-50/50 to-indigo-500/10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 shadow-md space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Company Hiring Overview */}
+          <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
-                <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
-                  Verified Hiring Pattern Analysis
-                </span>
-                <h2 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
-                  {selectedCompany.companyName} DSA Progression Profile
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                  {selectedCompany.companyName} Hiring Analysis
                 </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Verified publicly available interview structure & focus topics.
+                </p>
               </div>
 
-              {/* Progress Counters */}
-              <div className="flex items-center space-x-3 text-xs font-mono">
-                <div className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
-                  <span className="text-slate-400 block text-[9px] uppercase">Solved</span>
-                  <span className="font-bold text-emerald-600">{solvedCount} Problems</span>
-                </div>
-                <div className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
-                  <span className="text-slate-400 block text-[9px] uppercase">Mastered</span>
-                  <span className="font-bold text-purple-600">{completedTopicsCount}/{dsaTopics.length} Topics</span>
-                </div>
+              <div className="flex items-center space-x-4 text-xs font-semibold">
+                <span className="text-emerald-600 dark:text-emerald-400">Solved: {solvedCount}</span>
+                <span className="text-purple-600 dark:text-purple-400">Completed: {completedTopicsCount}/{dsaTopics.length} Topics</span>
               </div>
             </div>
 
             {currentCompanyProfile ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1.5">
-                  <span className="font-mono font-bold text-purple-600 dark:text-purple-400 uppercase text-[10px]">High-Frequency Focus Topics:</span>
-                  <div className="flex flex-wrap gap-1">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                    Focus Topics
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
                     {currentCompanyProfile.focusTopics.map((ft, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-700 dark:text-purple-300 font-mono text-[10px] font-bold">
+                      <span key={i} className="px-2.5 py-1 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 text-xs font-medium">
                         {ft}
                       </span>
                     ))}
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="font-mono font-bold text-slate-400 uppercase text-[10px]">Round Structure:</span>
-                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                    Round Breakdown
+                  </h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                     {currentCompanyProfile.roundBreakdown}
                   </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase text-[10px]">Difficulty & Strategy:</span>
-                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                    Strategy & Patterns
+                  </h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                     {currentCompanyProfile.difficultyPattern}
                   </p>
                 </div>
               </div>
             ) : (
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-500 font-mono">
-                Company-specific interview data is not available yet. Showing standardized high-yield technical curriculum.
-              </div>
+              <p className="text-xs text-slate-500 italic">
+                Company-specific interview data is not available yet. Showing standardized technical curriculum.
+              </p>
             )}
           </div>
 
-          {/* Unsolved Practice Queue (Step 8) */}
+          {/* Unsolved Practice Queue */}
           {unsolvedList.length > 0 && (
-            <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-amber-800 dark:text-amber-300 font-mono flex items-center space-x-1.5">
-                  <RotateCcw className="h-4 w-4" />
-                  <span>Unsolved Practice Queue ({unsolvedList.length} problems need retry)</span>
-                </span>
-              </div>
+            <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 space-y-2">
+              <h4 className="text-xs font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider flex items-center space-x-1.5">
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Unsolved Practice Queue ({unsolvedList.length} problems)</span>
+              </h4>
               <div className="flex flex-wrap gap-2">
                 {unsolvedList.map(u => (
                   <button
@@ -1159,28 +1119,27 @@ export default function CompanyPrepPage() {
                         setCurrentFlowStep(6);
                       }
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-xs font-mono font-bold flex items-center space-x-1.5 hover:shadow-xs cursor-pointer"
+                    className="px-3 py-1 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-lg hover:border-amber-500 cursor-pointer"
                   >
-                    <span>{u.problemTitle}</span>
-                    <span className="text-[10px] text-amber-500">↳ Try Again</span>
+                    {u.problemTitle} ↳ Retry
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Topics Progression Grid */}
+          {/* Core Progressive DSA Roadmap */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-black uppercase font-mono text-slate-900 dark:text-white">
-                Roadmap Progression (Beginner → Intermediate → Advanced → Interview Level)
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                Curriculum Roadmap
               </h3>
               <button
                 onClick={handleStartMockTest}
-                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer"
               >
                 <Clock className="h-3.5 w-3.5" />
-                <span>Take {selectedCompany.companyName} Mock Test</span>
+                <span>Launch Mock Test</span>
               </button>
             </div>
 
@@ -1190,27 +1149,22 @@ export default function CompanyPrepPage() {
                 return (
                   <div
                     key={topic.id}
-                    className="p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4 flex flex-col justify-between"
+                    className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between space-y-4"
                   >
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className={`text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded ${
-                          topic.tier === 'BEGINNER' ? 'bg-emerald-500/10 text-emerald-600' :
-                          topic.tier === 'INTERMEDIATE' ? 'bg-amber-500/10 text-amber-600' :
-                          topic.tier === 'ADVANCED' ? 'bg-purple-500/10 text-purple-600' :
-                          'bg-indigo-500/10 text-indigo-600'
-                        }`}>
+                        <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
                           {topic.tier} • {topic.category}
                         </span>
 
                         <button
                           onClick={() => toggleTopicDone(topic.id)}
-                          className="text-xs font-mono font-bold flex items-center space-x-1.5 text-slate-500 hover:text-purple-600 cursor-pointer"
+                          className="text-xs font-medium flex items-center space-x-1 text-slate-500 hover:text-purple-600 cursor-pointer"
                         >
                           {isDone ? (
                             <>
                               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                              <span className="text-emerald-600 dark:text-emerald-400">Mastered</span>
+                              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Done</span>
                             </>
                           ) : (
                             <>
@@ -1221,33 +1175,23 @@ export default function CompanyPrepPage() {
                         </button>
                       </div>
 
-                      <div>
-                        <h4 className="text-base font-black text-slate-900 dark:text-white">{topic.title}</h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                          {topic.description}
-                        </p>
-                      </div>
-
-                      {/* Patterns */}
-                      <div className="flex flex-wrap gap-1">
-                        {topic.patterns.slice(0, 3).map((pat, idx) => (
-                          <span key={idx} className="text-[9px] font-mono px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded">
-                            • {pat}
-                          </span>
-                        ))}
-                      </div>
+                      <h4 className="text-lg font-bold text-slate-900 dark:text-white">
+                        {topic.title}
+                      </h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                        {topic.description}
+                      </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
                       <button
                         onClick={() => {
                           setSelectedTopicId(topic.id);
                           setCurrentFlowStep(4);
                         }}
-                        className="px-3.5 py-1.5 bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 hover:bg-purple-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
+                        className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-purple-600 hover:text-white text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition cursor-pointer"
                       >
-                        <BookOpen className="h-3.5 w-3.5" />
-                        <span>Topic Learning</span>
+                        Topic Breakdown
                       </button>
 
                       <button
@@ -1258,10 +1202,9 @@ export default function CompanyPrepPage() {
                           setIsPlaying(false);
                           setActiveChapterIdx(0);
                         }}
-                        className="px-3.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
+                        className="px-3.5 py-1.5 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-600 hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer"
                       >
-                        <Sparkles className="h-3.5 w-3.5" />
-                        <span>AI Video Masterclass</span>
+                        Video Lesson
                       </button>
 
                       <button
@@ -1269,10 +1212,9 @@ export default function CompanyPrepPage() {
                           setSelectedTopicId(topic.id);
                           setCurrentFlowStep(6);
                         }}
-                        className="px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
+                        className="px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer"
                       >
-                        <Terminal className="h-3.5 w-3.5" />
-                        <span>Practice Arena</span>
+                        Coding Arena
                       </button>
                     </div>
                   </div>
@@ -1280,28 +1222,24 @@ export default function CompanyPrepPage() {
               })}
             </div>
           </div>
-
-        </div>
+        </section>
       )}
 
-      {/* ── STEP 4: TOPIC LEARNING (10-DIMENSIONAL PROFESSIONAL MASTERCLASS) ── */}
+      {/* ── STEP 4: TOPIC LEARNING ── */}
       {currentFlowStep === 4 && selectedCompany && (
-        <div className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-6 animate-in fade-in">
+        <section className="space-y-8">
           
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
             <div>
-              <span className="text-[10px] font-mono font-bold uppercase text-purple-600 dark:text-purple-400">
-                Step 4: Comprehensive Topic Learning • {selectedCompany.companyName}
+              <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+                Topic Learning Module
               </span>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
                 {currentTopic.title}
               </h2>
-              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-                {currentTopic.explanation}
-              </p>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => {
                   setCurrentFlowStep(5);
@@ -1309,194 +1247,158 @@ export default function CompanyPrepPage() {
                   setIsPlaying(false);
                   setActiveChapterIdx(0);
                 }}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm cursor-pointer shrink-0"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
               >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Watch AI Topic Video</span>
+                Watch Video Lesson
+              </button>
+              <button
+                onClick={() => setCurrentFlowStep(6)}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                Solve Problems
               </button>
             </div>
           </div>
 
-          {/* 10 Detailed Dimensions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-6 leading-relaxed">
             
-            {/* 1. Beginner Concepts */}
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
-              <h4 className="text-xs font-bold uppercase font-mono text-emerald-600">
-                1. Beginner Core Concepts
-              </h4>
-              <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1.5 list-disc list-inside leading-relaxed">
-                {currentTopic.beginnerConcepts.map((c, i) => (
-                  <li key={i}>{c}</li>
-                ))}
-              </ul>
+            <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Overview & Explanation
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                {currentTopic.explanation}
+              </p>
             </div>
 
-            {/* 2. Step-by-Step Examples */}
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
-              <h4 className="text-xs font-bold uppercase font-mono text-purple-600">
-                2. Step-by-Step Problem Walkthrough
-              </h4>
-              <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1.5 list-disc list-inside leading-relaxed">
-                {currentTopic.stepByStepExamples.map((ex, i) => (
-                  <li key={i}>{ex}</li>
-                ))}
-              </ul>
-            </div>
-
-            {/* 3. Essential Patterns */}
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
-              <h4 className="text-xs font-bold uppercase font-mono text-indigo-600">
-                3. Essential Algorithmic Patterns
-              </h4>
-              <div className="grid grid-cols-1 gap-1.5 text-xs font-mono">
-                {currentTopic.patterns.map((p, idx) => (
-                  <div key={idx} className="p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 flex items-center space-x-2">
-                    <Check className="h-3 w-3 text-indigo-500" />
-                    <span>{p}</span>
-                  </div>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600">
+                  Core Concepts
+                </h3>
+                <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-2 list-disc list-inside">
+                  {currentTopic.beginnerConcepts.map((c, i) => (
+                    <li key={i}>{c}</li>
+                  ))}
+                </ul>
               </div>
+
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider text-emerald-600">
+                  Step-by-Step Example
+                </h3>
+                <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-2 list-disc list-inside">
+                  {currentTopic.stepByStepExamples.map((ex, i) => (
+                    <li key={i}>{ex}</li>
+                  ))}
+                </ul>
+              </div>
+
             </div>
 
-            {/* 4. Time & Space Complexity */}
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-              <h4 className="font-bold uppercase font-mono text-amber-600">
-                4. Time & Space Complexity
-              </h4>
-              <p className="text-slate-700 dark:text-slate-300 font-mono text-[11px] p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <strong>Time:</strong> {currentTopic.timeComplexity}
-              </p>
-              <p className="text-slate-700 dark:text-slate-300 font-mono text-[11px] p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <strong>Space:</strong> {currentTopic.spaceComplexity}
-              </p>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-sm">
+                <h4 className="font-bold text-slate-900 dark:text-white">Time & Space Complexity</h4>
+                <p className="text-xs text-slate-500 font-mono"><strong>Time:</strong> {currentTopic.timeComplexity}</p>
+                <p className="text-xs text-slate-500 font-mono"><strong>Space:</strong> {currentTopic.spaceComplexity}</p>
+              </div>
 
-            {/* 5. Common Mistakes */}
-            <div className="p-5 rounded-2xl bg-rose-500/5 border border-rose-500/20 space-y-2">
-              <h4 className="text-xs font-bold uppercase font-mono text-rose-600 flex items-center space-x-1.5">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                <span>5. Common Traps & Edge Cases</span>
-              </h4>
-              <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1 list-disc list-inside">
-                {currentTopic.commonMistakes.map((m, i) => (
-                  <li key={i}>{m}</li>
-                ))}
-              </ul>
-            </div>
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-sm">
+                <h4 className="font-bold text-slate-900 dark:text-white">Common Traps & Mistakes</h4>
+                <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                  {currentTopic.commonMistakes.map((m, i) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </ul>
+              </div>
 
-            {/* 6. Real-World Usage & Company Relevance */}
-            <div className="p-5 rounded-2xl bg-purple-500/5 border border-purple-500/20 space-y-2">
-              <h4 className="text-xs font-bold uppercase font-mono text-purple-700 dark:text-purple-300">
-                6. Production Architecture & {selectedCompany.companyName} Alignment
-              </h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                <strong>Industry Systems:</strong> {currentTopic.realWorldUsage}
-              </p>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-1">
-                <strong>Hiring Focus:</strong> {currentTopic.interviewRelevance}
-              </p>
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-sm">
+                <h4 className="font-bold text-slate-900 dark:text-white">{selectedCompany.companyName} Focus</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  {currentTopic.interviewRelevance}
+                </p>
+              </div>
+
             </div>
 
           </div>
 
-          {/* Navigation */}
-          <div className="flex justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex justify-between items-center pt-6 border-t border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setCurrentFlowStep(3)}
-              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition cursor-pointer"
             >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Roadmap</span>
+              ← Back to Roadmap
             </button>
             <button
               onClick={() => setCurrentFlowStep(6)}
-              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow-md cursor-pointer"
+              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition cursor-pointer"
             >
-              <span>Practice in Coding Arena</span>
-              <ArrowRight className="h-4 w-4" />
+              Practice in Coding Arena →
             </button>
           </div>
-        </div>
+        </section>
       )}
 
-      {/* ── STEP 5: AI TOPIC VIDEO MASTERCLASS (NATIVE PLAYER - ZERO YOUTUBE) ── */}
+      {/* ── STEP 5: VIDEO LESSON PLAYER ── */}
       {currentFlowStep === 5 && selectedCompany && (
-        <div className="space-y-6 animate-in fade-in">
+        <section className="space-y-6">
           
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center space-x-1">
-                  <Sparkles className="h-3 w-3" />
-                  <span>AI Topic Video Engine</span>
-                </span>
-                <span className="text-xs text-slate-400 font-mono">Target: {selectedCompany.companyName}</span>
-              </div>
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                {currentTopic.title} • Video Masterclass
+              <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+                Video Lesson
+              </span>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-0.5">
+                {currentTopic.title} Masterclass
               </h2>
             </div>
 
             <button
               onClick={() => setCurrentFlowStep(6)}
-              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer shrink-0"
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
             >
-              <Terminal className="h-4 w-4" />
-              <span>Proceed to Coding Arena</span>
-              <ArrowRight className="h-4 w-4" />
+              Proceed to Coding Arena →
             </button>
           </div>
 
-          {/* Native Player Container */}
+          {/* Clean Player Window */}
           <div
             ref={playerContainerRef}
-            className={`rounded-3xl border-2 border-purple-500/30 bg-[#080d19] text-white shadow-2xl overflow-hidden flex flex-col justify-between ${
-              isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'min-h-[500px]'
+            className={`rounded-2xl bg-slate-950 text-white border border-slate-800 overflow-hidden flex flex-col justify-between ${
+              isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'min-h-[480px]'
             }`}
           >
-            {/* Header */}
-            <div className="p-4 bg-slate-900/80 backdrop-blur border-b border-slate-800 flex items-center justify-between text-xs font-mono">
-              <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-bold text-slate-200">AI Educational Video Stream</span>
-                <span className="text-slate-500">•</span>
-                <span className="text-purple-400">{currentLessonChapter.chapter}</span>
-              </div>
-
-              <div className="flex items-center space-x-3 text-slate-400">
-                <span className="hidden sm:inline">Speed: <strong>{playbackSpeed}x</strong></span>
-                <span className="text-slate-200 font-bold">{formatTimer(currentTime)} / {formatTimer(totalVideoDuration)}</span>
-              </div>
+            {/* Top Bar */}
+            <div className="p-4 border-b border-slate-800/80 flex items-center justify-between text-xs font-mono text-slate-400">
+              <span className="font-semibold text-slate-200">{currentLessonChapter.chapter}: {currentLessonChapter.title}</span>
+              <span>{formatTimer(currentTime)} / {formatTimer(totalVideoDuration)}</span>
             </div>
 
             {/* Stage Body */}
-            <div className="p-6 sm:p-10 flex-1 flex flex-col justify-center space-y-6 text-left">
-              <div className="space-y-2">
-                <span className="text-xs font-mono font-extrabold uppercase px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 inline-block border border-purple-500/30">
-                  {currentLessonChapter.chapter}: {currentLessonChapter.title}
+            <div className="p-6 sm:p-10 space-y-6 text-left">
+              <div>
+                <span className="text-xs font-mono uppercase text-purple-400 font-bold">
+                  {currentLessonChapter.chapter}
                 </span>
-                <h3 className="text-xl sm:text-3xl font-black text-white tracking-tight">
+                <h3 className="text-xl sm:text-2xl font-bold text-white mt-1">
                   {currentLessonChapter.concept}
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {currentLessonChapter.points.map((pt, idx) => (
-                  <div key={idx} className="p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 text-xs text-slate-300 space-y-1">
-                    <span className="text-[10px] font-mono text-purple-400 font-bold uppercase">#0{idx + 1}</span>
+                  <div key={idx} className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
                     <p className="leading-relaxed">{pt}</p>
                   </div>
                 ))}
               </div>
 
               {currentLessonChapter.codeSnippet && (
-                <div className="rounded-2xl border border-slate-800 bg-[#050811] p-4 font-mono text-xs text-emerald-400 overflow-x-auto shadow-inner">
-                  <div className="text-[10px] text-slate-500 pb-2 border-b border-slate-800/80 flex justify-between">
-                    <span>Algorithm Blueprint ({selectedLanguage.toUpperCase()})</span>
-                    <span className="text-purple-400">Topic: {currentTopic.title}</span>
-                  </div>
-                  <pre className="pt-2 leading-relaxed whitespace-pre font-mono">
+                <div className="rounded-xl bg-slate-900 p-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-slate-800">
+                  <pre className="whitespace-pre">
                     <code>{currentLessonChapter.codeSnippet}</code>
                   </pre>
                 </div>
@@ -1504,48 +1406,45 @@ export default function CompanyPrepPage() {
             </div>
 
             {/* Controls Bar */}
-            <div className="p-4 bg-slate-900/90 backdrop-blur border-t border-slate-800 space-y-3">
-              <div className="relative w-full h-2 bg-slate-800 rounded-full overflow-hidden cursor-pointer">
+            <div className="p-4 bg-slate-900/90 border-t border-slate-800 space-y-3">
+              <div className="relative w-full h-1.5 bg-slate-800 rounded-full overflow-hidden cursor-pointer">
                 <div
                   style={{ width: `${(currentTime / totalVideoDuration) * 100}%` }}
-                  className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 transition-all duration-300"
+                  className="h-full bg-purple-600 transition-all duration-300"
                 />
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+              <div className="flex items-center justify-between text-xs font-mono">
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => handleSeek(-10)}
-                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer"
-                    title="Rewind 10s"
+                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
                   >
                     <Rewind className="h-4 w-4" />
                   </button>
 
                   <button
                     onClick={() => setIsPlaying(!isPlaying)}
-                    className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                    className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold cursor-pointer"
                   >
-                    {isPlaying ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current" />}
-                    <span>{isPlaying ? 'Pause' : 'Play Video'}</span>
+                    {isPlaying ? 'Pause' : 'Play'}
                   </button>
 
                   <button
                     onClick={() => handleSeek(10)}
-                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer"
-                    title="Forward 10s"
+                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
                   >
                     <FastForward className="h-4 w-4" />
                   </button>
                 </div>
 
-                <div className="flex items-center space-x-1 bg-slate-800 p-1 rounded-xl">
+                <div className="flex items-center space-x-1 bg-slate-800 p-1 rounded-lg">
                   {[0.75, 1, 1.25, 1.5, 2].map(spd => (
                     <button
                       key={spd}
                       onClick={() => setPlaybackSpeed(spd)}
                       className={`px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer ${
-                        playbackSpeed === spd ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                        playbackSpeed === spd ? 'bg-purple-600 text-white' : 'text-slate-400'
                       }`}
                     >
                       {spd}x
@@ -1555,8 +1454,7 @@ export default function CompanyPrepPage() {
 
                 <button
                   onClick={toggleFullscreen}
-                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition cursor-pointer"
-                  title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                  className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
                 >
                   {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
                 </button>
@@ -1565,59 +1463,34 @@ export default function CompanyPrepPage() {
           </div>
 
           {/* Chapters List */}
-          <div className="space-y-2 text-left">
-            <span className="text-xs font-mono font-bold uppercase text-slate-400 block">
-              Video Lesson Chapters (Click to Seek):
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {activeLessons.map((l, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleJumpToChapter(idx)}
-                  className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
-                    activeChapterIdx === idx
-                      ? 'border-purple-600 bg-purple-500/10 text-purple-700 dark:text-purple-300 font-bold'
-                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-purple-400/40'
-                  }`}
-                >
-                  <div className="text-[10px] font-mono uppercase text-slate-400">{l.chapter}</div>
-                  <div className="text-xs line-clamp-1">{l.title}</div>
-                </button>
-              ))}
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-left">
+            {activeLessons.map((l, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleJumpToChapter(idx)}
+                className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                  activeChapterIdx === idx
+                    ? 'border-purple-600 bg-purple-50/20 dark:bg-purple-950/20 font-semibold text-purple-600 dark:text-purple-400'
+                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <div className="text-[10px] uppercase font-mono text-slate-400">{l.chapter}</div>
+                <div className="text-xs truncate">{l.title}</div>
+              </button>
+            ))}
           </div>
-
-          {/* Navigation to Arena */}
-          <div className="flex justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-            <button
-              onClick={() => setCurrentFlowStep(4)}
-              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Topic Learning</span>
-            </button>
-            <button
-              onClick={() => setCurrentFlowStep(6)}
-              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow-md cursor-pointer"
-            >
-              <span>Solve Problems in Arena</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-
-        </div>
+        </section>
       )}
 
-      {/* ── STEP 6, 7, 8 & 9: PROFESSIONAL LEETCODE-STYLE CODING INTERFACE ── */}
+      {/* ── STEP 6: PROFESSIONAL CODING ARENA (LEETCODE STYLE) ── */}
       {currentFlowStep === 6 && selectedCompany && (
-        <div className="space-y-5 animate-in fade-in">
+        <section className="space-y-4">
           
-          {/* Top Control Bar with Independent Font Controls (A- / A / A+) and Layouts */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
+          {/* Top Control Bar: Problem selector & Typography */}
+          <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
             
-            {/* Problem Selector */}
             <div className="flex items-center space-x-2 overflow-x-auto">
-              <span className="text-xs font-mono font-bold text-slate-400 uppercase shrink-0">Problems:</span>
+              <span className="text-xs font-semibold text-slate-400 uppercase">Problems:</span>
               {problems.map(p => {
                 const isSel = selectedProblem?.id === p.id;
                 const isPassed = problemSubmissions[p.id]?.status === 'Accepted';
@@ -1631,8 +1504,10 @@ export default function CompanyPrepPage() {
                       setCodeResult(null);
                       setShowHint(false);
                     }}
-                    className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap ${
-                      isSel ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    className={`px-3 py-1.5 rounded-lg font-mono text-xs transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap ${
+                      isSel
+                        ? 'bg-purple-600 text-white font-bold'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     <span>{p.title}</span>
@@ -1643,12 +1518,10 @@ export default function CompanyPrepPage() {
               })}
             </div>
 
-            {/* Independent Typography Controls & Layout Switcher */}
-            <div className="flex items-center space-x-3 shrink-0 text-xs font-mono">
-              
-              {/* Question Font (A- / A / A+) */}
-              <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                <span className="text-[10px] text-slate-400 px-1 font-bold">Question:</span>
+            {/* Font & Layout Controls */}
+            <div className="flex items-center space-x-3 text-xs font-mono">
+              <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                <span className="text-slate-400 px-1">Text:</span>
                 {[
                   { label: 'A-', sz: 14 },
                   { label: 'A', sz: 16 },
@@ -1657,8 +1530,8 @@ export default function CompanyPrepPage() {
                   <button
                     key={f.label}
                     onClick={() => setQuestionFontSize(f.sz)}
-                    className={`px-2 py-0.5 rounded text-xs font-bold cursor-pointer ${
-                      questionFontSize === f.sz ? 'bg-purple-600 text-white' : 'text-slate-600 dark:text-slate-400'
+                    className={`px-2 py-0.5 rounded font-bold cursor-pointer ${
+                      questionFontSize === f.sz ? 'bg-purple-600 text-white' : 'text-slate-500'
                     }`}
                   >
                     {f.label}
@@ -1666,9 +1539,8 @@ export default function CompanyPrepPage() {
                 ))}
               </div>
 
-              {/* Editor Font (A- / A / A+) */}
-              <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                <span className="text-[10px] text-slate-400 px-1 font-bold">Editor:</span>
+              <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                <span className="text-slate-400 px-1">Code:</span>
                 {[
                   { label: 'A-', sz: 12 },
                   { label: 'A', sz: 14 },
@@ -1677,8 +1549,8 @@ export default function CompanyPrepPage() {
                   <button
                     key={f.label}
                     onClick={() => setEditorFontSize(f.sz)}
-                    className={`px-2 py-0.5 rounded text-xs font-bold cursor-pointer ${
-                      editorFontSize === f.sz ? 'bg-purple-600 text-white' : 'text-slate-600 dark:text-slate-400'
+                    className={`px-2 py-0.5 rounded font-bold cursor-pointer ${
+                      editorFontSize === f.sz ? 'bg-purple-600 text-white' : 'text-slate-500'
                     }`}
                   >
                     {f.label}
@@ -1686,26 +1558,7 @@ export default function CompanyPrepPage() {
                 ))}
               </div>
 
-              {/* Layout Switcher */}
-              <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                <button
-                  onClick={() => setEditorLayout('split')}
-                  className={`p-1.5 rounded cursor-pointer ${editorLayout === 'split' ? 'bg-purple-600 text-white' : 'text-slate-400'}`}
-                  title="Horizontal Split Screen"
-                >
-                  <Columns className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  onClick={() => setEditorLayout('stacked')}
-                  className={`p-1.5 rounded cursor-pointer ${editorLayout === 'stacked' ? 'bg-purple-600 text-white' : 'text-slate-400'}`}
-                  title="Vertical Stacked Layout"
-                >
-                  <Rows className="h-3.5 w-3.5" />
-                </button>
-              </div>
-
-              {/* Language Selector */}
-              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
                 {['cpp', 'java', 'python'].map(l => (
                   <button
                     key={l}
@@ -1715,7 +1568,7 @@ export default function CompanyPrepPage() {
                         setCode(selectedProblem.starterCode[l]);
                       }
                     }}
-                    className={`px-2.5 py-0.5 rounded-lg text-xs font-mono font-bold uppercase transition cursor-pointer ${
+                    className={`px-2.5 py-0.5 rounded text-xs font-bold uppercase transition cursor-pointer ${
                       selectedLanguage === l ? 'bg-purple-600 text-white' : 'text-slate-500'
                     }`}
                   >
@@ -1723,55 +1576,50 @@ export default function CompanyPrepPage() {
                   </button>
                 ))}
               </div>
-
             </div>
 
           </div>
 
           {selectedProblem && (
-            <div className={`grid gap-6 items-start ${editorLayout === 'split' ? 'grid-cols-1 lg:grid-cols-12' : 'grid-cols-1'}`}>
+            <div className={`grid gap-5 items-start ${editorLayout === 'split' ? 'grid-cols-1 lg:grid-cols-12' : 'grid-cols-1'}`}>
               
-              {/* ── QUESTION AREA (LARGE READABLE TEXT) ── */}
-              <div className={`${editorLayout === 'split' ? 'lg:col-span-5' : 'w-full'} p-6 sm:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-6 max-h-[800px] overflow-y-auto text-left`}>
+              {/* ── QUESTION PANEL (LARGE READABLE TEXT) ── */}
+              <div className={`${editorLayout === 'split' ? 'lg:col-span-5' : 'w-full'} p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-6 max-h-[820px] overflow-y-auto`}>
                 
-                <div className="space-y-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div className="space-y-1.5 border-b border-slate-100 dark:border-slate-800 pb-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-600 font-extrabold uppercase">
-                        {selectedCompany.companyName} Question
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 font-bold uppercase">
+                        {selectedCompany.companyName}
                       </span>
                       <span className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-bold ${
-                        selectedProblem.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-600' :
-                        selectedProblem.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-600' :
-                        'bg-purple-500/10 text-purple-600'
+                        selectedProblem.difficulty === 'Easy' ? 'text-emerald-600' :
+                        selectedProblem.difficulty === 'Medium' ? 'text-amber-600' :
+                        'text-purple-600'
                       }`}>
                         {selectedProblem.difficulty}
                       </span>
                     </div>
 
-                    {/* Save for later button (Step 8) */}
                     <button
                       onClick={() => toggleSaveForLater(selectedProblem.id)}
-                      className="text-xs font-mono flex items-center space-x-1 text-slate-400 hover:text-purple-600 cursor-pointer"
+                      className="text-xs font-medium text-slate-400 hover:text-purple-600 cursor-pointer flex items-center space-x-1"
                     >
                       <Bookmark className={`h-4 w-4 ${savedForLater[selectedProblem.id] ? 'fill-purple-600 text-purple-600' : ''}`} />
-                      <span>{savedForLater[selectedProblem.id] ? 'Saved' : 'Save for Later'}</span>
+                      <span>{savedForLater[selectedProblem.id] ? 'Saved' : 'Save'}</span>
                     </button>
                   </div>
 
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                     {selectedProblem.title}
                   </h3>
                 </div>
 
-                {/* Problem Statement with Accessible Font Size */}
                 <div className="space-y-2">
-                  <h4 className="text-xs font-mono font-bold uppercase text-slate-900 dark:text-white">
-                    Problem Description:
-                  </h4>
+                  <h4 className="text-xs font-semibold uppercase text-slate-400">Description</h4>
                   <p 
                     style={{ fontSize: `${questionFontSize}px`, lineHeight: 1.6 }}
-                    className="text-slate-700 dark:text-slate-300 font-medium"
+                    className="text-slate-800 dark:text-slate-200 font-normal"
                   >
                     {selectedProblem.problemStatement}
                   </p>
@@ -1779,76 +1627,43 @@ export default function CompanyPrepPage() {
 
                 {/* Examples */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-mono font-bold uppercase text-slate-900 dark:text-white">
-                    Examples:
-                  </h4>
+                  <h4 className="text-xs font-semibold uppercase text-slate-400">Examples</h4>
                   {selectedProblem.examples.map((ex, idx) => (
-                    <div key={idx} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono text-xs">
-                      <div className="text-slate-400 text-[11px] font-bold">Example {idx + 1}:</div>
+                    <div key={idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono space-y-1">
                       <div><strong className="text-purple-600 dark:text-purple-400">Input:</strong> <code>{ex.input}</code></div>
                       <div><strong className="text-emerald-600 dark:text-emerald-400">Output:</strong> <code>{ex.output}</code></div>
                       {ex.explanation && (
-                        <div className="text-slate-500 text-[11px] pt-1 font-sans">
-                          <em>Explanation:</em> {ex.explanation}
-                        </div>
+                        <p className="text-slate-500 font-sans pt-1 text-[11px]">{ex.explanation}</p>
                       )}
                     </div>
                   ))}
                 </div>
 
                 {/* Constraints */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-mono font-bold uppercase text-slate-900 dark:text-white">
-                    Constraints:
-                  </h4>
-                  <ul className="text-xs font-mono text-slate-500 space-y-1 list-disc list-inside bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <div className="space-y-1.5">
+                  <h4 className="text-xs font-semibold uppercase text-slate-400">Constraints</h4>
+                  <ul className="text-xs font-mono text-slate-500 space-y-1 list-disc list-inside bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
                     {selectedProblem.constraints.map((c, i) => (
                       <li key={i}>{c}</li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Step 9: Company Interview Questions for this Topic */}
-                <div className="p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20 space-y-2 text-xs">
-                  <h4 className="font-mono font-bold text-purple-700 dark:text-purple-300 uppercase flex items-center space-x-1.5">
-                    <HelpCircle className="h-4 w-4" />
-                    <span>{selectedCompany.companyName} Interview Questions for {currentTopic.title}:</span>
-                  </h4>
-                  {currentCompanyProfile?.interviewQuestions ? (
-                    <ul className="space-y-1 text-slate-600 dark:text-slate-400 list-disc list-inside">
-                      {currentCompanyProfile.interviewQuestions.map((q, i) => (
-                        <li key={i}>{q}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-slate-500 italic">
-                      Verified company-specific questions are not available yet for this topic.
-                    </p>
-                  )}
-                </div>
-
               </div>
 
-              {/* ── CODING EDITOR & EXECUTION CONSOLE ── */}
-              <div className={`${editorLayout === 'split' ? 'lg:col-span-7' : 'w-full'} rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden flex flex-col justify-between text-left`}>
+              {/* ── CODE EDITOR & CONSOLE ── */}
+              <div className={`${editorLayout === 'split' ? 'lg:col-span-7' : 'w-full'} rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden flex flex-col justify-between`}>
                 
-                {/* Editor Header */}
-                <div className="p-3.5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
-                  <span className="flex items-center space-x-1.5">
-                    <Terminal className="h-4 w-4 text-purple-600" />
-                    <span>solution.{selectedLanguage === 'cpp' ? 'cpp' : selectedLanguage === 'python' ? 'py' : 'java'}</span>
-                  </span>
-
+                <div className="p-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
+                  <span>solution.{selectedLanguage === 'cpp' ? 'cpp' : selectedLanguage === 'python' ? 'py' : 'java'}</span>
                   <button
                     onClick={() => setCode(selectedProblem.starterCode[selectedLanguage] || '')}
-                    className="hover:text-slate-200 transition cursor-pointer flex items-center space-x-1"
+                    className="hover:text-slate-200 cursor-pointer"
                   >
-                    <RotateCcw className="h-3 w-3" />
-                    <span>Reset Code</span>
+                    Reset Starter Code
                   </button>
                 </div>
 
-                {/* Textarea */}
                 <div className="bg-[#0b101b] p-4 font-mono text-slate-100">
                   <textarea
                     value={code}
@@ -1857,68 +1672,62 @@ export default function CompanyPrepPage() {
                     style={{ fontSize: `${editorFontSize}px`, lineHeight: 1.5 }}
                     spellCheck="false"
                     className="w-full bg-transparent text-slate-100 font-mono leading-relaxed outline-none resize-y"
-                    placeholder="Write your solution here..."
+                    placeholder="Write code..."
                   />
                 </div>
 
-                {/* Actions */}
-                <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <div className="flex items-center space-x-2 text-xs font-mono text-slate-400">
-                    <span>Language: <strong className="uppercase text-purple-600">{selectedLanguage}</strong></span>
-                  </div>
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <span className="text-xs text-slate-400 font-mono">Language: <strong className="uppercase text-purple-600">{selectedLanguage}</strong></span>
 
-                  <div className="flex items-center space-x-2.5">
+                  <div className="flex items-center space-x-2">
                     <button
                       onClick={() => handleExecuteCode(false)}
                       disabled={runningCode || submittingCode}
-                      className="px-4 py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+                      className="px-4 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 text-slate-800 dark:text-slate-200 font-semibold rounded-lg text-xs transition cursor-pointer disabled:opacity-50"
                     >
-                      {runningCode ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 text-purple-600" />}
-                      <span>Run Code</span>
+                      {runningCode ? 'Running...' : 'Run Code'}
                     </button>
 
                     <button
                       onClick={() => handleExecuteCode(true)}
                       disabled={runningCode || submittingCode}
-                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs transition flex items-center space-x-1.5 shadow-md cursor-pointer disabled:opacity-50"
+                      className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition cursor-pointer disabled:opacity-50"
                     >
-                      {submittingCode ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                      <span>Submit Solution</span>
+                      {submittingCode ? 'Submitting...' : 'Submit Solution'}
                     </button>
                   </div>
                 </div>
 
-                {/* Console Tabs */}
+                {/* Console Output */}
                 <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3 font-mono text-xs">
                   <div className="flex items-center space-x-4 border-b border-slate-100 dark:border-slate-800 pb-2">
                     <button
                       onClick={() => setActiveConsoleTab('testcases')}
-                      className={`font-bold transition cursor-pointer ${activeConsoleTab === 'testcases' ? 'text-purple-600 border-b-2 border-purple-600 pb-1' : 'text-slate-400'}`}
+                      className={`font-semibold cursor-pointer ${activeConsoleTab === 'testcases' ? 'text-purple-600 border-b-2 border-purple-600 pb-1' : 'text-slate-400'}`}
                     >
                       Test Cases
                     </button>
                     <button
                       onClick={() => setActiveConsoleTab('output')}
-                      className={`font-bold transition cursor-pointer ${activeConsoleTab === 'output' ? 'text-purple-600 border-b-2 border-purple-600 pb-1' : 'text-slate-400'}`}
+                      className={`font-semibold cursor-pointer ${activeConsoleTab === 'output' ? 'text-purple-600 border-b-2 border-purple-600 pb-1' : 'text-slate-400'}`}
                     >
-                      Execution Console {codeResult && (codeResult.status === 'Accepted' ? '✓' : '✗')}
+                      Output
                     </button>
                     <button
                       onClick={() => {
                         setActiveConsoleTab('hints');
                         setShowHint(true);
                       }}
-                      className={`font-bold transition cursor-pointer flex items-center space-x-1 ${activeConsoleTab === 'hints' ? 'text-purple-600 border-b-2 border-purple-600 pb-1' : 'text-slate-400'}`}
+                      className={`font-semibold cursor-pointer ${activeConsoleTab === 'hints' ? 'text-purple-600 border-b-2 border-purple-600 pb-1' : 'text-slate-400'}`}
                     >
-                      <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
-                      <span>View Hint</span>
+                      Hints
                     </button>
                   </div>
 
                   {activeConsoleTab === 'testcases' && (
                     <div className="space-y-2">
                       {selectedProblem.examples.map((tc, idx) => (
-                        <div key={idx} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] flex justify-between items-center">
+                        <div key={idx} className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] flex justify-between">
                           <span>Case #{idx + 1}: <code>{tc.input}</code></span>
                           <span className="text-slate-400">Expected: <code>{tc.output}</code></span>
                         </div>
@@ -1929,23 +1738,19 @@ export default function CompanyPrepPage() {
                   {activeConsoleTab === 'output' && (
                     <div>
                       {!codeResult ? (
-                        <div className="py-4 text-center text-slate-400 text-[11px]">
-                          Click "Run Code" or "Submit Solution" to view real compiler execution results.
-                        </div>
+                        <p className="text-slate-400 text-center py-3">Run code or submit to view test case execution.</p>
                       ) : (
-                        <div className="space-y-2 animate-in fade-in">
-                          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                            <span className={`font-bold ${codeResult.status === 'Accepted' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'}`}>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                            <span className={`font-bold ${codeResult.status === 'Accepted' ? 'text-emerald-600' : 'text-rose-600'}`}>
                               {codeResult.status === 'Accepted' ? '✓ ' : '✗ '} {codeResult.verdict}
                             </span>
-                            <span className="text-[11px] text-slate-400">
-                              Runtime: {codeResult.runtimeMs}ms • Memory: {codeResult.memoryMb}
-                            </span>
+                            <span className="text-slate-400">Runtime: {codeResult.runtimeMs}ms</span>
                           </div>
 
                           {(codeResult.testResults || []).map((tr, idx) => (
-                            <div key={idx} className="p-2 rounded bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] flex justify-between items-center">
-                              <span>Test #{tr.testCaseIndex}: Input <code>{tr.input}</code></span>
+                            <div key={idx} className="p-2 rounded bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] flex justify-between">
+                              <span>Test #{tr.testCaseIndex}: <code>{tr.input}</code></span>
                               <span className={tr.passed ? 'text-emerald-500 font-bold' : 'text-rose-500 font-bold'}>
                                 {tr.passed ? 'Passed ✓' : 'Failed ✗'}
                               </span>
@@ -1957,64 +1762,34 @@ export default function CompanyPrepPage() {
                   )}
 
                   {activeConsoleTab === 'hints' && (
-                    <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-                      <strong>Problem Hint:</strong> Try using a two-pointer approach or hash map to avoid nested iterations. Check for sorted array invariants.
-                    </div>
+                    <p className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300">
+                      Try using a two-pointer approach or hash map to avoid quadratic nested loops.
+                    </p>
                   )}
-
                 </div>
 
               </div>
 
             </div>
           )}
-
-          {/* Navigation to Mock Test */}
-          <div className="flex justify-between pt-4">
-            <button
-              onClick={() => setCurrentFlowStep(3)}
-              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Roadmap</span>
-            </button>
-            <button
-              onClick={handleStartMockTest}
-              className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow-md cursor-pointer"
-            >
-              <span>Take {selectedCompany.companyName} Mock Assessment</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-
-        </div>
+        </section>
       )}
 
-      {/* ── STEP 10: TIMED TARGET COMPANY MOCK TEST & RESULTS ── */}
+      {/* ── STEP 7: TIMED MOCK ASSESSMENT ── */}
       {currentFlowStep === 7 && selectedCompany && (
-        <div className="space-y-6 animate-in fade-in">
+        <section className="space-y-6">
           
-          <div className="p-6 rounded-3xl border-2 border-purple-500/30 bg-gradient-to-r from-purple-500/10 via-slate-50 to-indigo-500/10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <span className="text-[10px] font-mono font-bold uppercase text-purple-600">
-                Official Step 10: Target Company Technical Assessment
-              </span>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
-                {selectedCompany.companyName} Timed Coding Test
+              <span className="text-xs font-semibold text-purple-600 uppercase">Assessment</span>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">
+                {selectedCompany.companyName} Timed Assessment
               </h2>
-              <p className="text-xs text-slate-500">
-                Industry: <strong>{selectedCompany.industry}</strong> • Language: <strong className="uppercase font-mono text-purple-600">{selectedLanguage}</strong>
-              </p>
             </div>
 
-            <div className="flex items-center space-x-3 shrink-0">
-              <div className={`px-4 py-2 rounded-2xl border-2 font-mono flex items-center space-x-2 ${
-                mockTimeRemaining < 300
-                  ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 animate-pulse'
-                  : 'bg-white dark:bg-slate-950 border-purple-500/30 text-purple-600'
-              }`}>
-                <Clock className="h-4 w-4" />
-                <span className="text-lg font-black">{formatTimer(mockTimeRemaining)}</span>
+            <div className="flex items-center space-x-3">
+              <div className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono font-bold text-lg text-purple-600">
+                {formatTimer(mockTimeRemaining)}
               </div>
 
               {!mockCompleted && (
@@ -2023,161 +1798,98 @@ export default function CompanyPrepPage() {
                     if (window.confirm('Finish and submit mock test?')) handleFinalMockSubmit();
                   }}
                   disabled={mockSubmitting}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs shadow-md transition flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50"
                 >
-                  {mockSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  <span>Submit Assessment</span>
+                  {mockSubmitting ? 'Evaluating...' : 'Submit Test'}
                 </button>
               )}
             </div>
           </div>
 
-          {/* Results + Weak Topics */}
+          {/* Result Card */}
           {mockCompleted && mockResult && (
-            <div className="p-8 rounded-3xl border-2 border-emerald-500/40 bg-white dark:bg-slate-900 shadow-2xl space-y-6 animate-in fade-in">
-              <div className="text-center space-y-2">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto">
-                  <Award className="h-7 w-7" />
-                </div>
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white">
-                  Mock Assessment Results & Verification
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Recorded directly to your verified MongoDB Assessment & Skill Passport records.
-                </p>
-              </div>
+            <div className="p-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-6 text-center">
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+                Assessment Results
+              </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                  <span className="text-[10px] font-mono uppercase text-slate-400">Total Score</span>
-                  <div className="text-3xl font-black font-mono text-purple-600 pt-1">
-                    {mockResult.score} / 100
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto">
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                  <span className="text-xs text-slate-400 font-mono uppercase">Score</span>
+                  <div className="text-3xl font-black text-purple-600 mt-1">{mockResult.score}/100</div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                  <span className="text-[10px] font-mono uppercase text-slate-400">Verdict</span>
-                  <div className={`text-base font-black font-mono pt-2 ${mockResult.passed ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {mockResult.verdict}
-                  </div>
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                  <span className="text-xs text-slate-400 font-mono uppercase">Verdict</span>
+                  <div className="text-base font-bold text-emerald-600 mt-2">{mockResult.verdict}</div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                  <span className="text-[10px] font-mono uppercase text-slate-400">Questions Cleared</span>
-                  <div className="text-3xl font-black font-mono text-emerald-600 pt-1">
-                    {mockResult.correctAnswers} / {mockResult.totalQuestions}
-                  </div>
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                  <span className="text-xs text-slate-400 font-mono uppercase">Passed</span>
+                  <div className="text-3xl font-black text-emerald-600 mt-1">{mockResult.correctAnswers}/{mockResult.totalQuestions}</div>
                 </div>
               </div>
 
-              {/* Weak Topics */}
-              <div className="max-w-2xl mx-auto p-5 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-2">
-                <h4 className="text-xs font-mono font-bold uppercase text-purple-700 dark:text-purple-300">
-                  Topic-Wise Weak Areas for Targeted Revision:
-                </h4>
-                {mockResult.weakTopics && mockResult.weakTopics.length > 0 ? (
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {mockResult.weakTopics.map((wt, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 rounded-xl text-xs font-bold font-mono">
-                        ⚠️ {wt}
+              {mockResult.weakTopics && mockResult.weakTopics.length > 0 && (
+                <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/30 text-xs text-left max-w-xl mx-auto space-y-2">
+                  <h4 className="font-bold text-purple-700 dark:text-purple-300">Weak Topics Identified:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {mockResult.weakTopics.map((wt, i) => (
+                      <span key={i} className="px-2.5 py-1 bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 rounded-md font-semibold">
+                        {wt}
                       </span>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-xs text-emerald-600 font-bold">
-                    ✓ Outstanding performance! No weak topics detected in this assessment.
-                  </p>
-                )}
-              </div>
-
-              <div className="flex justify-center space-x-3 pt-4">
-                <button
-                  onClick={() => setCurrentFlowStep(3)}
-                  className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition cursor-pointer"
-                >
-                  Review DSA Roadmap
-                </button>
-                <button
-                  onClick={() => navigate('/profile')}
-                  className="px-5 py-2.5 bg-purple-600 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
-                >
-                  <ShieldCheck className="h-4 w-4" />
-                  <span>View in Skill Passport</span>
-                </button>
-              </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Active Question Workspace */}
+          {/* Active Question in Test */}
           {!mockCompleted && mockSession && (
-            <div className="space-y-5">
-              
-              <div className="flex items-center space-x-2 p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <span className="text-xs font-mono font-bold text-slate-400 uppercase">Question Palette:</span>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
                 {mockSession.problems.map((p, idx) => (
                   <button
                     key={p.id}
                     onClick={() => setMockQuestionIdx(idx)}
-                    className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg font-mono text-xs font-bold cursor-pointer ${
                       mockQuestionIdx === idx ? 'bg-purple-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
                     }`}
                   >
-                    Q{idx + 1} ({p.difficulty})
+                    Q{idx + 1}
                   </button>
                 ))}
               </div>
 
               {mockSession.problems[mockQuestionIdx] && (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  
-                  <div className="lg:col-span-5 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4 max-h-[700px] overflow-y-auto">
-                    <div className="space-y-1 border-b border-slate-100 dark:border-slate-800 pb-3">
-                      <span className="text-[10px] font-mono font-black uppercase text-purple-600">
-                        {mockSession.problems[mockQuestionIdx].difficulty}
-                      </span>
-                      <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                        Q{mockQuestionIdx + 1}. {mockSession.problems[mockQuestionIdx].title}
-                      </h3>
-                    </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  <div className="lg:col-span-5 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      Q{mockQuestionIdx + 1}. {mockSession.problems[mockQuestionIdx].title}
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                       {mockSession.problems[mockQuestionIdx].problemStatement}
                     </p>
-                    <div className="space-y-1">
-                      <span className="text-xs font-mono font-bold uppercase text-slate-900 dark:text-white">Constraints:</span>
-                      <ul className="text-xs font-mono text-slate-500 list-disc list-inside bg-slate-50 dark:bg-slate-950 p-3 rounded-xl">
-                        {mockSession.problems[mockQuestionIdx].constraints.map((c, i) => (
-                          <li key={i}>{c}</li>
-                        ))}
-                      </ul>
-                    </div>
                   </div>
 
-                  <div className="lg:col-span-7 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden flex flex-col justify-between">
-                    <div className="p-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-400">
-                      Editor ({selectedLanguage.toUpperCase()})
-                    </div>
-                    <div className="bg-[#0b101b] p-4 font-mono text-xs text-slate-100">
-                      <textarea
-                        value={mockAnswers[mockSession.problems[mockQuestionIdx].id] || ''}
-                        onChange={(e) => setMockAnswers({
-                          ...mockAnswers,
-                          [mockSession.problems[mockQuestionIdx].id]: e.target.value
-                        })}
-                        rows={16}
-                        spellCheck="false"
-                        className="w-full bg-transparent text-slate-100 font-mono text-xs leading-relaxed outline-none resize-y"
-                        placeholder="Write your complete solution..."
-                      />
-                    </div>
+                  <div className="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-slate-800 bg-[#0b101b] p-4">
+                    <textarea
+                      value={mockAnswers[mockSession.problems[mockQuestionIdx].id] || ''}
+                      onChange={(e) => setMockAnswers({
+                        ...mockAnswers,
+                        [mockSession.problems[mockQuestionIdx].id]: e.target.value
+                      })}
+                      rows={16}
+                      className="w-full bg-transparent text-slate-100 font-mono text-xs outline-none"
+                      placeholder="Write solution..."
+                    />
                   </div>
-
                 </div>
               )}
-
             </div>
           )}
-
-        </div>
+        </section>
       )}
 
     </div>
