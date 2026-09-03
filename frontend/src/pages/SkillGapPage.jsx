@@ -26,6 +26,141 @@ export default function SkillGapPage() {
   const [learningRoadmap, setLearningRoadmap] = useState([]);
   const [industryDemandComparison, setIndustryDemandComparison] = useState([]);
   const [targetSkills, setTargetSkills] = useState([]);
+
+  // ── WHAT-IF SIMULATOR STATE (IN-MEMORY ONLY) ──
+  const [selectedSimulatedSkill, setSelectedSimulatedSkill] = useState('');
+
+  // Reusable skill match calculation helper (exact formula from backend matchingEngine)
+  const calculateMatch = (skillsList, opp) => {
+    if (!opp) return { matchPercentage: 0, matchedSkills: [], missingSkills: [] };
+    
+    const sSkills = (skillsList || []).map(s => (typeof s === 'string' ? s : s?.name || '').toLowerCase().trim()).filter(Boolean);
+    const sSet = new Set(sSkills);
+
+    const req = Array.isArray(opp.requiredSkills)
+      ? opp.requiredSkills
+      : (typeof opp.requiredSkills === 'string' ? opp.requiredSkills.split(',') : []);
+
+    const cleanReq = req.map(s => (typeof s === 'string' ? s : s?.name || '').trim()).filter(Boolean);
+
+    if (cleanReq.length === 0) {
+      return { matchPercentage: 100, matchedSkills: [], missingSkills: [], totalRequired: 0 };
+    }
+
+    const matched = cleanReq.filter(r => sSet.has(r.toLowerCase().trim()));
+    const missing = cleanReq.filter(r => !sSet.has(r.toLowerCase().trim()));
+    const matchPercentage = Math.round((matched.length / cleanReq.length) * 100);
+
+    return {
+      matchPercentage,
+      matchedSkills: matched,
+      missingSkills: missing,
+      totalRequired: cleanReq.length
+    };
+  };
+
+  // Extract all candidate missing/weak skills for simulation
+  const baseStudentSkills = currentSkills.map(s => (typeof s === 'string' ? s : s?.name || ''));
+  const selectableMissingSkills = (() => {
+    const studentSkillNames = new Set(
+      currentSkills.map(s => (typeof s === 'string' ? s : s?.name || '').toLowerCase().trim())
+    );
+    const missingSet = new Set();
+    const list = [];
+
+    // 1. Missing skills from currently selected target role
+    missingSkills.forEach(sk => {
+      const norm = sk.toLowerCase().trim();
+      if (!missingSet.has(norm) && !studentSkillNames.has(norm)) {
+        missingSet.add(norm);
+        list.push(sk);
+      }
+    });
+
+    // 2. Weak skills from currently selected target role
+    weakSkills.forEach(w => {
+      const sk = typeof w === 'string' ? w : w?.name;
+      if (sk) {
+        const norm = sk.toLowerCase().trim();
+        if (!missingSet.has(norm)) {
+          missingSet.add(norm);
+          list.push(sk);
+        }
+      }
+    });
+
+    // 3. Additional missing skills from other active opportunities
+    opportunities.forEach(opp => {
+      (opp.requiredSkills || []).forEach(sk => {
+        if (sk) {
+          const norm = sk.toLowerCase().trim();
+          if (!missingSet.has(norm) && !studentSkillNames.has(norm)) {
+            missingSet.add(norm);
+            list.push(sk.trim());
+          }
+        }
+      });
+    });
+
+    return list;
+  })();
+
+  // Real in-memory What-If calculation results (zero MongoDB writes)
+  const whatIfResults = (() => {
+    if (!selectedSimulatedSkill) return null;
+
+    const simulatedSkills = [...baseStudentSkills, selectedSimulatedSkill];
+
+    // 1. Target Opportunity Impact
+    let targetBefore = null;
+    let targetAfter = null;
+    let newlyMatchedInTarget = [];
+
+    if (selectedTargetRole) {
+      targetBefore = calculateMatch(baseStudentSkills, selectedTargetRole);
+      targetAfter = calculateMatch(simulatedSkills, selectedTargetRole);
+      newlyMatchedInTarget = targetAfter.matchedSkills.filter(
+        sk => !targetBefore.matchedSkills.some(m => m.toLowerCase().trim() === sk.toLowerCase().trim())
+      );
+    }
+
+    // 2. Calculate impact across all active opportunities
+    const improvedOpportunities = [];
+    opportunities.forEach(opp => {
+      const before = calculateMatch(baseStudentSkills, opp);
+      const after = calculateMatch(simulatedSkills, opp);
+
+      if (after.matchPercentage > before.matchPercentage) {
+        const newlyMatched = after.matchedSkills.filter(
+          sk => !before.matchedSkills.some(m => m.toLowerCase().trim() === sk.toLowerCase().trim())
+        );
+
+        improvedOpportunities.push({
+          oppId: opp._id,
+          title: opp.title,
+          companyName: opp.companyName,
+          type: opp.type,
+          location: opp.location,
+          beforeMatch: before.matchPercentage,
+          afterMatch: after.matchPercentage,
+          boost: after.matchPercentage - before.matchPercentage,
+          newlyMatchedSkills: newlyMatched,
+          totalRequired: opp.requiredSkills?.length || 0
+        });
+      }
+    });
+
+    improvedOpportunities.sort((a, b) => b.boost - a.boost);
+
+    return {
+      simulatedSkill: selectedSimulatedSkill,
+      targetBefore: targetBefore?.matchPercentage ?? 0,
+      targetAfter: targetAfter?.matchPercentage ?? 0,
+      targetBoost: (targetAfter?.matchPercentage ?? 0) - (targetBefore?.matchPercentage ?? 0),
+      newlyMatchedInTarget,
+      improvedOpportunities
+    };
+  })();
   
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -399,7 +534,258 @@ export default function SkillGapPage() {
 
           </div>
 
-          {/* ── 3. LEARNING ROADMAP (RECOMMENDED LEARNING ORDER) ── */}
+          {/* ── 3. CAREER WHAT-IF SIMULATOR (IN-MEMORY ONLY) ── */}
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border-2 border-purple-500/30 bg-gradient-to-br from-white via-purple-50/20 to-indigo-50/20 dark:from-slate-900 dark:via-slate-900/95 dark:to-[#0f172a] shadow-xl space-y-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 dark:bg-purple-500/15 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
+
+            {/* Header & Simulator Badge */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4 relative z-10">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-400 font-mono font-extrabold uppercase tracking-wider flex items-center space-x-1 shadow-xs">
+                    <Sparkles className="h-3 w-3 text-purple-500" />
+                    <span>In-Memory Sandbox</span>
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">Zero Database Writes</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center space-x-2">
+                  <Cpu className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                  <span>Career What-If Simulator</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Select a missing or weak skill to simulate in real time how your opportunity match scores and hiring readiness improve across live employer postings.
+                </p>
+              </div>
+
+              {selectedSimulatedSkill && (
+                <button
+                  onClick={() => setSelectedSimulatedSkill('')}
+                  className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition cursor-pointer self-start sm:self-auto"
+                >
+                  Reset Simulation
+                </button>
+              )}
+            </div>
+
+            {/* Selectable Missing / Weak Skills Chips */}
+            <div className="space-y-2.5 relative z-10">
+              <label className="text-xs font-black uppercase font-mono text-slate-700 dark:text-slate-300 flex items-center space-x-1.5">
+                <span>Select One Missing Skill to Simulate:</span>
+                {selectedSimulatedSkill && (
+                  <span className="text-purple-600 dark:text-purple-400 font-bold lowercase">
+                    (simulating: <strong>{selectedSimulatedSkill}</strong>)
+                  </span>
+                )}
+              </label>
+
+              {selectableMissingSkills.length === 0 ? (
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-500 text-xs text-center font-medium">
+                  No missing skills detected for simulation. Add more corporate opportunities or adjust your target role.
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {selectableMissingSkills.map((skillName, idx) => {
+                    const isSelected = selectedSimulatedSkill.toLowerCase() === skillName.toLowerCase();
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedSimulatedSkill(isSelected ? '' : skillName)}
+                        className={`px-3.5 py-2 rounded-2xl text-xs font-bold font-mono transition flex items-center space-x-1.5 cursor-pointer shadow-xs ${
+                          isSelected
+                            ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 scale-105 border-2 border-purple-400'
+                            : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-500/50 hover:bg-purple-50/40 dark:hover:bg-purple-950/20'
+                        }`}
+                      >
+                        <span>{isSelected ? '★' : '+'}</span>
+                        <span>{skillName}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Simulation Results Display */}
+            {whatIfResults ? (
+              <div className="space-y-6 pt-2 relative z-10 animate-in fade-in duration-300">
+                
+                {/* Before vs After Match Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  
+                  {/* Match Boost Score Card */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-950 border-2 border-purple-500/30 shadow-md space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-bold uppercase text-slate-400">Target Role Match</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold ${
+                        whatIfResults.targetBoost > 0
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                      }`}>
+                        {whatIfResults.targetBoost > 0 ? `+${whatIfResults.targetBoost}% Match Boost` : 'No direct target match increase'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center space-x-3 pt-1">
+                      <div>
+                        <span className="text-xs text-slate-400 font-mono block">Before</span>
+                        <span className="text-2xl font-black font-mono text-slate-700 dark:text-slate-300">
+                          {whatIfResults.targetBefore}%
+                        </span>
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-purple-500 shrink-0" />
+                      <div>
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono block font-bold">After</span>
+                        <span className="text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400">
+                          {whatIfResults.targetAfter}%
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Comparative Dual Progress Bars */}
+                    <div className="space-y-1.5 pt-1 text-[10px] font-mono">
+                      <div className="flex justify-between text-slate-400">
+                        <span>Original: {whatIfResults.targetBefore}%</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">Simulated: {whatIfResults.targetAfter}%</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
+                        <div 
+                          className="h-full bg-slate-400 dark:bg-slate-600 rounded-full absolute top-0 left-0"
+                          style={{ width: `${whatIfResults.targetBefore}%` }}
+                        />
+                        <div 
+                          className="h-full bg-emerald-500 rounded-full absolute top-0 left-0 transition-all duration-500"
+                          style={{ width: `${whatIfResults.targetAfter}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Newly Matched Skills Card */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-md space-y-3">
+                    <span className="text-[10px] font-mono font-bold uppercase text-slate-400 block">
+                      Newly Matched Skills
+                    </span>
+
+                    {whatIfResults.newlyMatchedInTarget.length === 0 ? (
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-500 text-xs font-medium">
+                        Skill not required by {selectedTargetRole?.title || 'the selected opening'}, but improves other postings below!
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {whatIfResults.newlyMatchedInTarget.map((sk, idx) => (
+                          <span
+                            key={idx}
+                            className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-mono font-extrabold flex items-center space-x-1"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                            <span>{sk} (Now Satisfied)</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <p className="text-[11px] text-slate-400 leading-relaxed pt-1">
+                      Skill requirement verified as complete under in-memory simulator.
+                    </p>
+                  </div>
+
+                  {/* Opportunities Boost Summary Card */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-md space-y-3">
+                    <span className="text-[10px] font-mono font-bold uppercase text-slate-400 block">
+                      Employer Postings Impacted
+                    </span>
+
+                    <div className="flex items-baseline space-x-2">
+                      <span className="text-3xl font-black font-mono text-indigo-600 dark:text-indigo-400">
+                        {whatIfResults.improvedOpportunities.length}
+                      </span>
+                      <span className="text-xs text-slate-500 font-medium">
+                        {whatIfResults.improvedOpportunities.length === 1 ? 'Opportunity improved' : 'Opportunities improved'}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Total corporate postings where your compatibility score increases by mastering <strong>{selectedSimulatedSkill}</strong>.
+                    </p>
+                  </div>
+
+                </div>
+
+                {/* Opportunities That Improved Section */}
+                <div className="space-y-3 pt-1">
+                  <h4 className="text-xs font-black uppercase font-mono text-slate-900 dark:text-white flex items-center space-x-2">
+                    <Briefcase className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                    <span>Live Opportunities That Improved ({whatIfResults.improvedOpportunities.length})</span>
+                  </h4>
+
+                  {whatIfResults.improvedOpportunities.length === 0 ? (
+                    <div className="p-6 text-center rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-500 text-xs font-medium">
+                      No additional employer postings improved with this specific skill. Try another missing skill.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {whatIfResults.improvedOpportunities.map(opp => (
+                        <div
+                          key={opp.oppId}
+                          className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/90 shadow-xs space-y-3 flex flex-col justify-between hover:border-purple-400/40 transition"
+                        >
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md uppercase">
+                                {opp.type}
+                              </span>
+                              <span className="text-[10px] font-mono font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
+                                +{opp.boost}% Boost
+                              </span>
+                            </div>
+
+                            <h5 className="text-sm font-black text-slate-900 dark:text-white line-clamp-1">
+                              {opp.title}
+                            </h5>
+                            <p className="text-xs text-slate-500 font-medium">
+                              {opp.companyName} {opp.location ? `• ${opp.location}` : ''}
+                            </p>
+                          </div>
+
+                          {/* Match Percentage Visual Change */}
+                          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-mono">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-slate-400">Match:</span>
+                              <span className="font-bold text-slate-600 dark:text-slate-400">{opp.beforeMatch}%</span>
+                              <span className="text-purple-500 font-bold">→</span>
+                              <span className="font-black text-emerald-600 dark:text-emerald-400">{opp.afterMatch}%</span>
+                            </div>
+
+                            <div className="flex items-center space-x-1">
+                              {opp.newlyMatchedSkills.slice(0, 2).map((sk, idx) => (
+                                <span key={idx} className="text-[10px] font-mono font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">
+                                  +{sk}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            ) : (
+              /* Prompt when no skill is selected yet */
+              <div className="p-8 text-center rounded-2xl bg-white/60 dark:bg-slate-950/60 border border-dashed border-slate-300 dark:border-slate-800 space-y-2 relative z-10">
+                <Sparkles className="h-8 w-8 text-purple-500 mx-auto animate-pulse" />
+                <h4 className="text-sm font-black text-slate-800 dark:text-slate-200">
+                  Ready to Simulate Career Impact
+                </h4>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  Click any missing skill pill above to preview how your match percentage immediately increases across real corporate job postings.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* ── 4. LEARNING ROADMAP (RECOMMENDED LEARNING ORDER) ── */}
           <div className="glass-card p-6 sm:p-8 rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-white via-slate-50/70 to-indigo-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-[#0c1222] shadow-xl space-y-6">
             
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
