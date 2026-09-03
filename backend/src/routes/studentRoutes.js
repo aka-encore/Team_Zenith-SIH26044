@@ -7,6 +7,7 @@ import {
   getResume, uploadResume, deleteResume,
   getSkillGapAnalysis,
   getCareerReadinessScore,
+  getSkillPassport,
   getStudentNotifications, markStudentNotificationAsRead, markAllStudentNotificationsAsRead
 } from '../controllers/studentController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
@@ -20,7 +21,8 @@ router.get('/profile', protect, authorize('student'), getProfile);
 router.put('/profile', protect, authorize('student'), updateProfile);
 router.post('/upload-photo', protect, authorize('student'), uploadProfilePhoto.single('photo'), uploadPhoto);
 
-// 2. Career Readiness Score
+// 2. Skill Passport & Career Readiness
+router.get('/skill-passport', protect, authorize('student', 'faculty', 'institution', 'company', 'admin'), getSkillPassport);
 router.get('/readiness-score', protect, authorize('student'), getCareerReadinessScore);
 
 // 3. Skills CRUD

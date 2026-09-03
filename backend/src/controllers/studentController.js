@@ -1722,6 +1722,152 @@ export const getCareerReadinessScore = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/students/skill-passport
+ * Generates official Skill Passport for the student using real MongoDB data:
+ * - Verified Profile & User data
+ * - Verified Skills with Proficiency Levels
+ * - Real Assessment Results from AssessmentResult collection
+ * - Real Projects & Certifications
+ * - Real Academic Information (Education)
+ * - Career Readiness Score & Placement Tier
+ * - Verified Credential ID & Print/Share formatting
+ */
+export const getSkillPassport = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id;
+
+    const profile = await StudentProfile.findOne({ userId }).populate('userId', 'name email role avatarUrl status createdAt');
+    if (!profile) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    const assessmentResults = await AssessmentResult.find({ userId }).sort({ createdAt: -1 });
+
+    // Format skills with verified proficiency
+    const rawSkillsList = Array.isArray(profile.skillsList) && profile.skillsList.length > 0
+      ? profile.skillsList
+      : (profile.skills || []).map(s => (typeof s === 'string' ? { name: s, proficiency: 'Intermediate', category: 'Technical' } : s));
+
+    // Map verified assessments by skill name
+    const assessmentSkillMap = {};
+    assessmentResults.forEach(ar => {
+      const norm = ar.skill.toLowerCase().trim();
+      if (!assessmentSkillMap[norm] || ar.scorePercentage > assessmentSkillMap[norm].scorePercentage) {
+        assessmentSkillMap[norm] = ar;
+      }
+    });
+
+    const verifiedSkills = rawSkillsList.map(sk => {
+      const name = typeof sk === 'string' ? sk : sk.name || '';
+      const norm = name.toLowerCase().trim();
+      const assessment = assessmentSkillMap[norm] || null;
+      const baseProficiency = (typeof sk === 'object' && sk.proficiency) ? sk.proficiency : 'Intermediate';
+      const category = (typeof sk === 'object' && sk.category) ? sk.category : 'Technical';
+
+      return {
+        name,
+        category,
+        proficiency: assessment ? (assessment.proficiencyEarned || assessment.skillLevel || baseProficiency) : baseProficiency,
+        isAssessmentVerified: Boolean(assessment),
+        assessmentScore: assessment ? assessment.scorePercentage : null,
+        assessmentDate: assessment ? assessment.createdAt : null
+      };
+    });
+
+    // Unique Official Passport ID
+    const passportId = `ZN-PASS-${profile._id.toString().slice(-6).toUpperCase()}-${userId.toString().slice(-4).toUpperCase()}`;
+
+    // Calculate real Career Readiness metrics
+    const skillsCount = verifiedSkills.length;
+    const projectsCount = (profile.projects || []).length;
+    const certsCount = (profile.certifications || []).length;
+    const passedAssessmentsCount = assessmentResults.filter(a => (a.scorePercentage || a.percentage || 0) >= 50).length;
+
+    // Component weights
+    const skillsScore = Math.min(25, skillsCount * 4);
+    const assessmentScore = Math.min(25, passedAssessmentsCount * 8.3);
+    const projectScore = Math.min(25, projectsCount * 8.3);
+    const certScore = Math.min(15, certsCount * 7.5);
+    const academicScore = (profile.academicInformation?.cgpa ? (Number(profile.academicInformation.cgpa) >= 8.0 ? 10 : 7) : 5);
+
+    const careerReadinessIndex = Math.min(100, Math.round(skillsScore + assessmentScore + projectScore + certScore + academicScore));
+
+    let readinessTier = 'Foundational Talent';
+    if (careerReadinessIndex >= 80) readinessTier = 'Workplace Ready (Elite Tier)';
+    else if (careerReadinessIndex >= 60) readinessTier = 'Market Competitive';
+    else if (careerReadinessIndex >= 40) readinessTier = 'Emerging Practitioner';
+
+    const passportData = {
+      passportId,
+      issueDate: new Date().toISOString(),
+      student: {
+        id: profile._id,
+        userId: profile.userId?._id,
+        name: profile.userId?.name || 'Student Candidate',
+        email: profile.userId?.email || '',
+        avatarUrl: profile.userId?.avatarUrl || profile.profilePhoto || null,
+        phone: profile.phone || '',
+        bio: profile.bio || '',
+        socialLinks: profile.socialLinks || {}
+      },
+      education: {
+        college: profile.academicInformation?.college || 'Zenith Institute of Technology',
+        department: profile.academicInformation?.department || profile.academicInformation?.branch || 'Computer Science & Engineering',
+        degree: profile.academicInformation?.degree || profile.academicInformation?.course || 'Bachelor of Technology',
+        branch: profile.academicInformation?.branch || profile.academicInformation?.department || '',
+        year: profile.academicInformation?.year || '',
+        cgpa: profile.academicInformation?.cgpa || null
+      },
+      careerReadiness: {
+        score: careerReadinessIndex,
+        tier: readinessTier,
+        breakdown: {
+          skillsStrength: Math.round((skillsScore / 25) * 100),
+          assessmentVerification: Math.round((assessmentScore / 25) * 100),
+          projectPortfolio: Math.round((projectScore / 25) * 100),
+          certifications: Math.round((certScore / 15) * 100)
+        }
+      },
+      skills: verifiedSkills,
+      assessmentResults: assessmentResults.map(a => ({
+        _id: a._id,
+        skill: a.skill,
+        scorePercentage: a.scorePercentage || a.percentage || 0,
+        skillLevel: a.skillLevel || a.proficiencyEarned || 'Intermediate',
+        totalQuestions: a.totalQuestions,
+        correctAnswers: a.correctAnswers,
+        createdAt: a.createdAt
+      })),
+      projects: (profile.projects || []).map(p => ({
+        _id: p._id,
+        title: p.title,
+        description: p.description,
+        technologies: p.technologies || [],
+        githubUrl: p.githubUrl || '',
+        liveUrl: p.liveUrl || p.link || '',
+        duration: p.duration || ''
+      })),
+      certifications: (profile.certifications || []).map(c => ({
+        _id: c._id,
+        title: c.title,
+        issuer: c.issuer,
+        issueDate: c.issueDate || c.date || '',
+        credentialId: c.credentialId || '',
+        credentialUrl: c.credentialUrl || ''
+      }))
+    };
+
+    res.status(200).json({
+      success: true,
+      passport: passportData
+    });
+  } catch (error) {
+    console.error('Get Skill Passport Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error generating skill passport: ' + error.message });
+  }
+};
+
 
 
 

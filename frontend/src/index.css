@@ -596,3 +596,29 @@
 .light .modal-backdrop {
   background-color: rgba(15, 23, 42, 0.45) !important;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   SKILL PASSPORT PRINT STYLES
+   ───────────────────────────────────────────────────────────── */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print, header, nav, aside, footer {
+    display: none !important;
+  }
+  #skill-passport-view {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    color: black !important;
+  }
+  #skill-passport-view * {
+    box-shadow: none !important;
+  }
+}
+

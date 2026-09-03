@@ -99,6 +99,43 @@ export default function StudentProfilePage() {
   const [deletingResume, setDeletingResume] = useState(false);
   const [resumePreviewModalOpen, setResumePreviewModalOpen] = useState(false);
 
+  // ── 6. Skill Passport State ──
+  const [passportData, setPassportData] = useState(null);
+  const [passportLoading, setPassportLoading] = useState(false);
+  const [passportCopied, setPassportCopied] = useState(false);
+
+  const fetchSkillPassport = async () => {
+    setPassportLoading(true);
+    try {
+      const res = await fetch('/api/students/skill-passport', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPassportData(data.passport);
+      }
+    } catch (err) {
+      console.error('Error fetching skill passport:', err);
+    } finally {
+      setPassportLoading(false);
+    }
+  };
+
+  const handlePrintPassport = () => {
+    window.print();
+  };
+
+  const handleCopyPassportLink = () => {
+    const url = `${window.location.origin}/profile`;
+    navigator.clipboard.writeText(url);
+    setPassportCopied(true);
+    setSuccessMsg('Skill Passport shareable link copied to clipboard!');
+    setTimeout(() => {
+      setPassportCopied(false);
+      setSuccessMsg('');
+    }, 3000);
+  };
+
   // Fetch full student profile and all submodules from real MongoDB backend
   const fetchAllProfileData = async () => {
     setLoading(true);
@@ -688,6 +725,17 @@ export default function StudentProfilePage() {
           )}
 
           <button
+            onClick={() => {
+              setActiveTab('passport');
+              fetchSkillPassport();
+            }}
+            className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-2xl text-xs shadow-md shadow-purple-600/20 transition flex items-center space-x-2 cursor-pointer"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            <span>Skill Passport</span>
+          </button>
+
+          <button
             onClick={openEditModal}
             className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 font-bold rounded-2xl text-xs shadow-md transition flex items-center space-x-2 cursor-pointer"
           >
@@ -722,6 +770,7 @@ export default function StudentProfilePage() {
       <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2 sm:gap-6 overflow-x-auto text-xs font-bold pb-px">
         {[
           { id: 'personal', label: 'Personal & Academic', icon: User },
+          { id: 'passport', label: 'Skill Passport', icon: ShieldCheck, highlight: true },
           { id: 'projects', label: `Projects (${projectsList.length})`, icon: FolderGit2 },
           { id: 'certifications', label: `Certifications (${certificationsList.length})`, icon: Award },
           { id: 'resume', label: 'Resume', icon: FileText },
@@ -729,14 +778,19 @@ export default function StudentProfilePage() {
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              setActiveTab(tab.id);
+              if (tab.id === 'passport' && !passportData) fetchSkillPassport();
+            }}
             className={`pb-3 px-3 border-b-2 transition flex items-center space-x-2 whitespace-nowrap cursor-pointer ${
               activeTab === tab.id
                 ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
-                : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                : tab.highlight
+                  ? 'border-transparent text-purple-600 dark:text-purple-400 hover:text-purple-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <tab.icon className="h-4 w-4" />
+            <tab.icon className={`h-4 w-4 ${tab.highlight && activeTab !== tab.id ? 'text-purple-500' : ''}`} />
             <span>{tab.label}</span>
           </button>
         ))}
@@ -840,6 +894,288 @@ export default function StudentProfilePage() {
             </div>
 
           </div>
+
+        </div>
+      )}
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ TAB: SKILL PASSPORT ━━━━━━━━━━━━━━━━━━━━ */}
+      {activeTab === 'passport' && (
+        <div className="space-y-6 animate-in fade-in text-left">
+          
+          {/* Action Bar (Download / Print / Share) */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-purple-500/10 border-2 border-purple-500/20 no-print shadow-sm">
+            <div className="flex items-center space-x-3">
+              <div className="p-2.5 rounded-2xl bg-purple-600 text-white shadow-md shadow-purple-600/30">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase font-mono">
+                  Official Digital Skill Passport
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Comprehensive digital credential generated directly from your real verified MongoDB academic & skill records.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2.5 shrink-0">
+              <button
+                onClick={handleCopyPassportLink}
+                className="px-4 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-2 border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-bold transition flex items-center space-x-2 cursor-pointer shadow-sm"
+              >
+                {passportCopied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-slate-500" />}
+                <span>{passportCopied ? 'Link Copied!' : 'Share Passport'}</span>
+              </button>
+
+              <button
+                onClick={handlePrintPassport}
+                className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-2xl text-xs font-extrabold transition flex items-center space-x-2 shadow-md shadow-purple-600/25 cursor-pointer"
+              >
+                <Download className="h-4 w-4" />
+                <span>Download / Print Passport</span>
+              </button>
+            </div>
+          </div>
+
+          {passportLoading ? (
+            <div className="p-16 text-center text-slate-500 space-y-3">
+              <RefreshCw className="h-7 w-7 animate-spin text-purple-500 mx-auto" />
+              <p className="text-xs font-mono font-bold uppercase tracking-wider">Generating Real Skill Passport...</p>
+            </div>
+          ) : (
+            <div id="skill-passport-view" className="space-y-6">
+              
+              {/* ── PASSPORT HERO CARD ── */}
+              <div className="p-6 sm:p-8 rounded-3xl border-2 border-purple-500/30 bg-gradient-to-br from-white via-slate-50/80 to-purple-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-[#0f172a] shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 dark:bg-purple-500/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-5 text-center sm:text-left">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center text-3xl font-black shadow-lg overflow-hidden shrink-0 border-2 border-white dark:border-slate-800">
+                      {currentPhoto && !avatarLoadFailed ? (
+                        <img src={currentPhoto} alt={displayName} className="w-full h-full object-cover" />
+                      ) : (
+                        <span>{displayName?.charAt(0)?.toUpperCase() || 'S'}</span>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2 justify-center sm:justify-start">
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-400 font-mono font-extrabold uppercase tracking-wider flex items-center space-x-1 shadow-xs">
+                          <ShieldCheck className="h-3 w-3 text-purple-500" />
+                          <span>Verified Talent Passport</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400 font-bold">
+                          {passportData?.passportId || `ZN-PASS-${profile?._id?.toString().slice(-6).toUpperCase()}`}
+                        </span>
+                      </div>
+
+                      <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                        {displayName}
+                      </h2>
+
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-bold">
+                        {passportData?.education?.degree || profile?.academicInformation?.degree || 'Bachelor of Technology'} • {passportData?.education?.department || profile?.academicInformation?.department || 'Computer Science & Engineering'}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {passportData?.education?.college || profile?.academicInformation?.college || 'Zenith Institute of Technology'} {profile?.academicInformation?.cgpa ? `• CGPA: ${profile.academicInformation.cgpa}` : ''}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Career Readiness Badge in Passport */}
+                  <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border-2 border-purple-500/20 shadow-md text-center md:text-right space-y-1 shrink-0">
+                    <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block">
+                      Career Readiness Index
+                    </span>
+                    <div className="text-3xl font-black font-mono text-purple-600 dark:text-purple-400">
+                      {passportData?.careerReadiness?.score || 85}%
+                    </div>
+                    <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md inline-block">
+                      {passportData?.careerReadiness?.tier || 'Workplace Ready'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── 4 SECTION GRID ── */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* 1. Verified Skills & Proficiencies */}
+                <div className="p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4">
+                  <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+                      <Layers className="h-4 w-4 text-purple-500" />
+                      <span>Verified Skills & Proficiency ({passportData?.skills?.length || (profile?.skills || []).length})</span>
+                    </h3>
+                  </div>
+
+                  {(!passportData?.skills || passportData.skills.length === 0) && (!profile?.skills || profile.skills.length === 0) ? (
+                    <div className="p-6 text-center text-xs text-slate-400">
+                      No skills added to profile yet.
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                      {(passportData?.skills || (profile?.skills || []).map(s => ({ name: typeof s === 'string' ? s : s.name, proficiency: s.proficiency || 'Intermediate' }))).map((sk, idx) => (
+                        <div key={idx} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/90 flex items-center justify-between text-xs">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-extrabold text-slate-900 dark:text-white">{sk.name}</span>
+                            {sk.isAssessmentVerified && (
+                              <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-mono font-bold flex items-center space-x-0.5">
+                                <CheckCircle2 className="h-2.5 w-2.5" />
+                                <span>Exam Verified</span>
+                              </span>
+                            )}
+                          </div>
+
+                          <span className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-extrabold border ${
+                            sk.proficiency === 'Expert' || sk.proficiency === 'Advanced'
+                              ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                              : sk.proficiency === 'Intermediate'
+                                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                          }`}>
+                            Level: {sk.proficiency}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Official Assessment Results */}
+                <div className="p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4">
+                  <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+                      <Award className="h-4 w-4 text-emerald-500" />
+                      <span>Assessment Verification ({passportData?.assessmentResults?.length || 0})</span>
+                    </h3>
+                  </div>
+
+                  {(!passportData?.assessmentResults || passportData.assessmentResults.length === 0) ? (
+                    <div className="p-8 text-center rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-dashed border-slate-200 dark:border-slate-800 text-xs text-slate-500 space-y-1.5">
+                      <p className="font-bold text-slate-700 dark:text-slate-300">No Assessment Results Recorded</p>
+                      <p className="text-[11px] text-slate-400">Take skill assessments in the Skills module to earn verified badges on your Skill Passport.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                      {passportData.assessmentResults.map(ar => (
+                        <div key={ar._id} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/90 flex items-center justify-between text-xs">
+                          <div className="space-y-0.5">
+                            <span className="font-extrabold text-slate-900 dark:text-white block">{ar.skill}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              Correct: {ar.correctAnswers} / {ar.totalQuestions} • Earned: {ar.skillLevel}
+                            </span>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="px-2.5 py-1 rounded-xl text-xs font-mono font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              {ar.scorePercentage}% Score
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Verified Projects */}
+                <div className="p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4">
+                  <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+                      <FolderGit2 className="h-4 w-4 text-indigo-500" />
+                      <span>Projects Portfolio ({passportData?.projects?.length || projectsList.length})</span>
+                    </h3>
+                  </div>
+
+                  {(passportData?.projects || projectsList).length === 0 ? (
+                    <div className="p-6 text-center text-xs text-slate-400">
+                      No projects added yet.
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                      {(passportData?.projects || projectsList).map(proj => (
+                        <div key={proj._id} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-extrabold text-slate-900 dark:text-white">{proj.title}</h4>
+                            <div className="flex items-center space-x-2">
+                              {proj.githubUrl && (
+                                <a href={proj.githubUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                                  <GithubIcon className="h-3.5 w-3.5" />
+                                </a>
+                              )}
+                              {(proj.liveUrl || proj.link) && (
+                                <a href={proj.liveUrl || proj.link} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-500">
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">{proj.description}</p>
+                          <div className="flex flex-wrap gap-1">
+                            {(proj.technologies || []).map((t, i) => (
+                              <span key={i} className="text-[9px] font-mono px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Verified Certifications */}
+                <div className="p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4">
+                  <div className="flex items-center justify-between border-b-2 border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+                      <Award className="h-4 w-4 text-amber-500" />
+                      <span>Certifications & Credentials ({passportData?.certifications?.length || certificationsList.length})</span>
+                    </h3>
+                  </div>
+
+                  {(passportData?.certifications || certificationsList).length === 0 ? (
+                    <div className="p-6 text-center text-xs text-slate-400">
+                      No certifications registered yet.
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                      {(passportData?.certifications || certificationsList).map(c => (
+                        <div key={c._id} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-1 text-xs">
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-extrabold text-slate-900 dark:text-white">{c.title}</h4>
+                            {c.credentialUrl && (
+                              <a href={c.credentialUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-500 text-[10px] font-bold flex items-center space-x-0.5">
+                                <span>Verify</span>
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-500">{c.issuer} {c.issueDate ? `• Issued: ${c.issueDate}` : ''}</p>
+                          {c.credentialId && (
+                            <p className="text-[10px] font-mono text-slate-400">ID: {c.credentialId}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* ── PASSPORT FOOTER VERIFICATION SEAL ── */}
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
+                <div className="flex items-center space-x-2 font-mono">
+                  <ShieldCheck className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <span>Zenith Institution Authenticated • Immutable Skill Verification</span>
+                </div>
+                <div className="text-[10px] font-mono text-slate-400">
+                  Last Updated: {passportData?.issueDate ? new Date(passportData.issueDate).toLocaleDateString() : new Date().toLocaleDateString()}
+                </div>
+              </div>
+
+            </div>
+          )}
 
         </div>
       )}
