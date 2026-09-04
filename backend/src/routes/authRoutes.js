@@ -11,6 +11,7 @@ import {
   changePassword,
   getUserProfile,
   updateUserProfile,
+  uploadAvatar,
   firebaseGoogleAuth,
   googleInitiate,
   googleCallback,
@@ -19,6 +20,7 @@ import {
   setOAuthRole,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { uploadProfilePhoto } from '../middleware/uploadMiddleware.js';
 
 
 const router = express.Router();
@@ -61,6 +63,9 @@ router.get('/profile', protect, getUserProfile);
 
 // PUT /api/auth/profile — Update user profile details
 router.put('/profile', protect, updateUserProfile);
+
+// POST /api/auth/upload-avatar — Multipart profile avatar upload
+router.post('/upload-avatar', protect, uploadProfilePhoto.single('photo'), uploadAvatar);
 
 // POST /api/auth/change-password — Change password
 router.post('/change-password', protect, changePassword);

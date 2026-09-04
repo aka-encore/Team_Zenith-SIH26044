@@ -63,6 +63,40 @@ const UserSchema = new mongoose.Schema({
     default: null
   },
 
+  // Faculty & General Profile fields
+  phone: {
+    type: String,
+    default: ''
+  },
+  department: {
+    type: String,
+    default: ''
+  },
+  designation: {
+    type: String,
+    default: ''
+  },
+  institution: {
+    type: String,
+    default: ''
+  },
+  employeeId: {
+    type: String,
+    default: ''
+  },
+  officeLocation: {
+    type: String,
+    default: ''
+  },
+  bio: {
+    type: String,
+    default: ''
+  },
+  preferences: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
+
   // Whether the user's email has been verified
   emailVerified: {
     type: Boolean,

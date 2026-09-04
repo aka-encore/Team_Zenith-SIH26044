@@ -627,3 +627,393 @@
     box-shadow: none !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   FACULTY WORKSPACE — DUAL THEME (LIGHT & DARK INSTITUTIONAL SYSTEM)
+   Seamless switching between:
+   - LIGHT: Ivory (#F7F8F5), Deep Green (#063F3A), White Cards, Gold Accents
+   - DARK: Pure Black (#000000), Dark Cards (#080B0A), Emerald & Gold Accents
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Dark Mode Tokens (Default / .dark / [data-theme="dark"]) ── */
+:root,
+.dark,
+[data-theme="dark"] {
+  --fac-bg-page:         #000000;
+  --fac-bg-sidebar:      #000000;
+  --fac-bg-header:       #000000;
+  --fac-bg-card:         #080B0A;
+  --fac-bg-card-hover:   #0D1210;
+  --fac-bg-surface:      #050807;
+  --fac-bg-input:        #080B0A;
+  --fac-bg-subtle:       #0D1210;
+  
+  --fac-border:          #18201D;
+  --fac-border-subtle:   #141A18;
+  --fac-border-hover:    #26332E;
+
+  --fac-hero-bg:         linear-gradient(135deg, #050807 0%, #080B0A 50%, #0A100D 100%);
+  --fac-hero-border:     #18201D;
+  --fac-hero-title:      #F5F7F6;
+  --fac-hero-desc:       #A8B2AE;
+
+  --fac-text-primary:    #F5F7F6;
+  --fac-text-secondary:  #A8B2AE;
+  --fac-text-muted:      #69736F;
+
+  --fac-emerald:         #16A36A;
+  --fac-emerald-bright:  #19B874;
+  --fac-emerald-tint:    rgba(22, 163, 106, 0.12);
+  --fac-gold:            #D6A84F;
+  --fac-gold-light:      #E0B75F;
+  --fac-gold-tint:       rgba(214, 168, 79, 0.12);
+  --fac-error:           #E05252;
+
+  --fac-table-head-bg:   #050807;
+  --fac-table-row-hover: #0D1210;
+  --fac-table-border:    #121815;
+
+  --fac-nav-active-bg:   #080D0B;
+  --fac-nav-active-border: #182820;
+  --fac-nav-active-color: #F5F7F6;
+  --fac-nav-active-icon: #19B874;
+  --fac-nav-color:       #A8B2AE;
+
+  --fac-card-shadow:     none;
+  --fac-track-bg:        #141A18;
+}
+
+/* ── Light Mode Tokens (.light / [data-theme="light"]) ── */
+.light,
+[data-theme="light"] {
+  --fac-bg-page:         #F7F8F5;
+  --fac-bg-sidebar:      #063F3A;
+  --fac-bg-header:       #FFFFFF;
+  --fac-bg-card:         #FFFFFF;
+  --fac-bg-card-hover:   #FAFAF8;
+  --fac-bg-surface:      #F7F8F5;
+  --fac-bg-input:        #FFFFFF;
+  --fac-bg-subtle:       #F1F3F1;
+
+  --fac-border:          #E4E8E4;
+  --fac-border-subtle:   #EDF0ED;
+  --fac-border-hover:    #CBD3CA;
+
+  --fac-hero-bg:         linear-gradient(135deg, #063F3A 0%, #0B6B5E 60%, #0D7A6A 100%);
+  --fac-hero-border:     #075E54;
+  --fac-hero-title:      #FFFFFF;
+  --fac-hero-desc:       rgba(255, 255, 255, 0.75);
+
+  --fac-text-primary:    #10201D;
+  --fac-text-secondary:  #66736F;
+  --fac-text-muted:      #9CA8A4;
+
+  --fac-emerald:         #0B6B5E;
+  --fac-emerald-bright:  #16805C;
+  --fac-emerald-tint:    rgba(11, 107, 94, 0.10);
+  --fac-gold:            #D6A84F;
+  --fac-gold-light:      #B7791F;
+  --fac-gold-tint:       rgba(214, 168, 79, 0.14);
+  --fac-error:           #C94A4A;
+
+  --fac-table-head-bg:   #F7F8F5;
+  --fac-table-row-hover: #F7F8F5;
+  --fac-table-border:    #F1F3F1;
+
+  --fac-nav-active-bg:   #D6A84F;
+  --fac-nav-active-border: #D6A84F;
+  --fac-nav-active-color: #063F3A;
+  --fac-nav-active-icon: #063F3A;
+  --fac-nav-color:       rgba(255, 255, 255, 0.75);
+
+  --fac-card-shadow:     0 1px 4px rgba(6, 63, 58, 0.07), 0 1px 2px rgba(6, 63, 58, 0.04);
+  --fac-track-bg:        #EAF0EE;
+}
+
+/* ── Faculty Main Page Wrapper ── */
+.fac-theme-page,
+.fac-dark-page {
+  background-color: var(--fac-bg-page);
+  color: var(--fac-text-primary);
+  min-height: 100vh;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ── Faculty Cards ── */
+.fac-theme-card,
+.fac-dark-card {
+  background: var(--fac-bg-card);
+  border: 1px solid var(--fac-border);
+  border-radius: 12px;
+  box-shadow: var(--fac-card-shadow);
+  transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.fac-theme-card:hover,
+.fac-dark-card:hover {
+  border-color: var(--fac-border-hover);
+}
+
+.fac-theme-card-interactive,
+.fac-dark-card-interactive {
+  background: var(--fac-bg-card);
+  border: 1px solid var(--fac-border);
+  border-radius: 12px;
+  box-shadow: var(--fac-card-shadow);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.fac-theme-card-interactive:hover,
+.fac-dark-card-interactive:hover {
+  background: var(--fac-bg-card-hover);
+  border-color: var(--fac-border-hover);
+  transform: translateY(-1px);
+}
+
+/* ── Faculty KPI Card ── */
+.fac-theme-kpi,
+.fac-dark-kpi {
+  background: var(--fac-bg-card);
+  border: 1px solid var(--fac-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: var(--fac-card-shadow);
+  transition: border-color 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.fac-theme-kpi:hover,
+.fac-dark-kpi:hover {
+  border-color: var(--fac-border-hover);
+  transform: translateY(-1px);
+}
+
+/* ── Faculty Buttons ── */
+.fac-btn-emerald {
+  background: var(--fac-emerald-bright);
+  color: #FFFFFF !important;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  border: 1px solid rgba(25, 184, 116, 0.4);
+}
+
+.fac-btn-emerald:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 16px var(--fac-emerald-tint);
+}
+
+.fac-btn-gold {
+  background: var(--fac-gold);
+  color: #1A2E0A !important;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  border: none;
+}
+
+.fac-btn-gold:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 16px var(--fac-gold-tint);
+}
+
+.fac-btn-dark {
+  background: var(--fac-bg-surface);
+  color: var(--fac-text-primary) !important;
+  border: 1px solid var(--fac-border);
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.fac-btn-dark:hover {
+  background: var(--fac-bg-card-hover);
+  border-color: var(--fac-border-hover);
+}
+
+/* ── Badges ── */
+.fac-badge-emerald {
+  background: var(--fac-emerald-tint);
+  color: var(--fac-emerald-bright);
+  border: 1px solid rgba(22, 163, 106, 0.3);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.03em;
+}
+
+.fac-badge-gold {
+  background: var(--fac-gold-tint);
+  color: var(--fac-gold-light);
+  border: 1px solid rgba(214, 168, 79, 0.3);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.03em;
+}
+
+.fac-badge-dark {
+  background: var(--fac-bg-subtle);
+  color: var(--fac-text-secondary);
+  border: 1px solid var(--fac-border);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.fac-badge-red {
+  background: rgba(224, 82, 82, 0.14);
+  color: var(--fac-error);
+  border: 1px solid rgba(224, 82, 82, 0.3);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+/* ── Inputs / Search ── */
+.fac-theme-input,
+.fac-dark-input {
+  background: var(--fac-bg-input);
+  border: 1px solid var(--fac-border);
+  color: var(--fac-text-primary);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 0.8125rem;
+  outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  width: 100%;
+}
+
+.fac-theme-input:focus,
+.fac-dark-input:focus {
+  border-color: var(--fac-emerald-bright);
+}
+
+.fac-theme-input::placeholder,
+.fac-dark-input::placeholder {
+  color: var(--fac-text-muted);
+}
+
+.fac-theme-select,
+.fac-dark-select {
+  background: var(--fac-bg-input);
+  border: 1px solid var(--fac-border);
+  color: var(--fac-text-primary);
+  border-radius: 8px;
+  padding: 7px 28px 7px 12px;
+  font-size: 0.8125rem;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2369736F' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.fac-theme-select:focus,
+.fac-dark-select:focus {
+  border-color: var(--fac-emerald-bright);
+}
+
+/* ── Theme Table ── */
+.fac-theme-table,
+.fac-dark-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.fac-theme-table thead tr,
+.fac-dark-table thead tr {
+  background: var(--fac-table-head-bg);
+  border-bottom: 1px solid var(--fac-border);
+}
+
+.fac-theme-table th,
+.fac-dark-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--fac-text-muted);
+  white-space: nowrap;
+}
+
+.fac-theme-table td,
+.fac-dark-table td {
+  padding: 12px 14px;
+  color: var(--fac-text-primary);
+  border-bottom: 1px solid var(--fac-table-border);
+  vertical-align: middle;
+}
+
+.fac-theme-table tbody tr,
+.fac-dark-table tbody tr {
+  transition: background-color 0.12s ease;
+}
+
+.fac-theme-table tbody tr:hover td,
+.fac-dark-table tbody tr:hover td {
+  background-color: var(--fac-table-row-hover);
+}
+
+.fac-theme-table tbody tr:last-child td,
+.fac-dark-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Hero Gradient ── */
+.fac-theme-hero,
+.fac-dark-hero {
+  background: var(--fac-hero-bg);
+  border: 1px solid var(--fac-hero-border);
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--fac-card-shadow);
+}
+
+/* ── Skeleton ── */
+.fac-theme-skeleton,
+.fac-dark-skeleton {
+  background: linear-gradient(90deg, var(--fac-bg-surface) 25%, var(--fac-border-hover) 50%, var(--fac-bg-surface) 75%);
+  background-size: 200% 100%;
+  animation: fac-theme-shimmer 1.6s infinite;
+  border-radius: 6px;
+}
+
+@keyframes fac-theme-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+

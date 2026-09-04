@@ -36,6 +36,7 @@ import FacultySkillGapPage from './pages/FacultySkillGapPage';
 import FacultyOpportunitiesPage from './pages/FacultyOpportunitiesPage';
 import FacultyPlacementPage from './pages/FacultyPlacementPage';
 import FacultyNotificationsPage from './pages/FacultyNotificationsPage';
+import FacultySettingsPage from './pages/FacultySettingsPage';
 import AdminDashboardView from './pages/AdminDashboardView';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminCompaniesPage from './pages/AdminCompaniesPage';
@@ -70,6 +71,15 @@ function NotificationsRoleRouter() {
     return <FacultyNotificationsPage />;
   }
   return <StudentNotificationsPage />;
+}
+
+function SettingsRoleRouter() {
+  const { user } = useAuth();
+  const role = (user?.role || '').toLowerCase();
+  if (['faculty', 'institution', 'academician'].includes(role)) {
+    return <FacultySettingsPage />;
+  }
+  return <StudentSettingsPage />;
 }
 
 function AppContent() {
@@ -239,8 +249,8 @@ function AppContent() {
         <Route 
           path="/settings" 
           element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <StudentSettingsPage />
+            <ProtectedRoute allowedRoles={['student', 'faculty', 'company', 'admin', 'institution', 'academician']}>
+              <SettingsRoleRouter />
             </ProtectedRoute>
           } 
         />
@@ -300,6 +310,30 @@ function AppContent() {
           element={
             <ProtectedRoute allowedRoles={['faculty', 'institution', 'academician']}>
               <FacultyNotificationsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/faculty/network" 
+          element={
+            <ProtectedRoute allowedRoles={['faculty', 'institution', 'academician']}>
+              <FacultyStudentsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/faculty/reports" 
+          element={
+            <ProtectedRoute allowedRoles={['faculty', 'institution', 'academician']}>
+              <FacultySkillGapPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/faculty/settings" 
+          element={
+            <ProtectedRoute allowedRoles={['faculty', 'institution', 'academician']}>
+              <FacultySettingsPage />
             </ProtectedRoute>
           } 
         />

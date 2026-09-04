@@ -27,6 +27,16 @@ const userPayload = (user) => ({
   status: user.status,
   avatarUrl: user.avatarUrl || null,
   emailVerified: user.emailVerified || false,
+  phone: user.phone || '',
+  department: user.department || '',
+  designation: user.designation || '',
+  institution: user.institution || '',
+  employeeId: user.employeeId || '',
+  officeLocation: user.officeLocation || '',
+  bio: user.bio || '',
+  preferences: user.preferences || {},
+  createdAt: user.createdAt || null,
+  authProviders: (user.authProviders || []).map(p => p.provider),
 });
 
 
@@ -572,7 +582,10 @@ export const getUserProfile = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
   try {
     const userId = req.user?._id || req.user?.id || req.body.userId;
-    const { name, avatarUrl, phone, institution, department, bio } = req.body;
+    const {
+      name, avatarUrl, phone, institution, department,
+      designation, employeeId, officeLocation, bio, preferences
+    } = req.body;
 
     if (!userId) {
       return res.status(401).json({ success: false, message: 'Authentication required' });
@@ -590,6 +603,38 @@ export const updateUserProfile = async (req, res) => {
 
     if (avatarUrl !== undefined) {
       user.avatarUrl = avatarUrl;
+    }
+
+    if (phone !== undefined) {
+      user.phone = phone.trim();
+    }
+
+    if (department !== undefined) {
+      user.department = department.trim();
+    }
+
+    if (designation !== undefined) {
+      user.designation = designation.trim();
+    }
+
+    if (institution !== undefined) {
+      user.institution = institution.trim();
+    }
+
+    if (employeeId !== undefined) {
+      user.employeeId = employeeId.trim();
+    }
+
+    if (officeLocation !== undefined) {
+      user.officeLocation = officeLocation.trim();
+    }
+
+    if (bio !== undefined) {
+      user.bio = bio.trim();
+    }
+
+    if (preferences !== undefined) {
+      user.preferences = { ...(user.preferences || {}), ...preferences };
     }
 
     await user.save();
@@ -625,6 +670,57 @@ export const updateUserProfile = async (req, res) => {
   } catch (error) {
     console.error('updateUserProfile error:', error);
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+// ---------------------------------------------------------------------------
+// POST /api/auth/upload-avatar — Multipart profile photo upload
+// ---------------------------------------------------------------------------
+export const uploadAvatar = async (req, res) => {
+  try {
+    const userId = req.user?._id || req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please select an image file (JPG, PNG, WebP) under 5MB.'
+      });
+    }
+
+    const avatarUrl = `/uploads/profiles/${req.file.filename}`;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    user.avatarUrl = avatarUrl;
+    await user.save();
+
+    // Also sync StudentProfile or Company if applicable
+    if (user.role === 'student') {
+      await StudentProfile.findOneAndUpdate({ userId }, { $set: { profilePhoto: avatarUrl } }, { upsert: true });
+    } else if (user.role === 'company') {
+      await Company.findOneAndUpdate({ userId }, { $set: { logoUrl: avatarUrl } }, { upsert: true });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile photo uploaded successfully!',
+      avatarUrl,
+      user: userPayload(user)
+    });
+  } catch (error) {
+    console.error('uploadAvatar error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to upload profile photo.'
+    });
   }
 };
 

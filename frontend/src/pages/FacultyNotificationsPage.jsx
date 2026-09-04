@@ -1,45 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { 
-  Bell, CheckCircle2, AlertCircle, RefreshCw, ArrowLeft, 
-  Briefcase, Building2, Users, Award, ExternalLink, 
-  Clock, Check, Sparkles, Filter, ShieldCheck, Video, ChevronRight
+import {
+  Bell, CheckCircle2, AlertCircle, RefreshCw, ArrowLeft,
+  Briefcase, Building2, Users, Award, ExternalLink,
+  Clock, Check, Filter, Video, ChevronRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+function timeAgo(ts) {
+  const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
+  if (diff < 60)    return 'Just now';
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+function getNotifStyle(type) {
+  switch (type) {
+    case 'placement':   return { Icon: Award,     iconBg: 'var(--fac-emerald-tint)', iconColor: 'var(--fac-emerald-bright)' };
+    case 'job':         return { Icon: Building2, iconBg: 'var(--fac-emerald-tint)', iconColor: 'var(--fac-emerald-bright)' };
+    case 'internship':  return { Icon: Briefcase, iconBg: 'var(--fac-gold-tint)',    iconColor: 'var(--fac-gold)' };
+    case 'interview':   return { Icon: Video,     iconBg: 'var(--fac-gold-tint)',    iconColor: 'var(--fac-gold)' };
+    default:            return { Icon: Users,     iconBg: 'var(--fac-bg-surface)',   iconColor: 'var(--fac-text-secondary)' };
+  }
+}
+
 export default function FacultyNotificationsPage() {
-  const { token, user } = useAuth();
+  const { token } = useAuth();
 
-  // Data & Status State
   const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'unread' | 'placement' | 'drives' | 'application'
+  const [unreadCount,   setUnreadCount]   = useState(0);
+  const [loading,       setLoading]       = useState(true);
+  const [refreshing,    setRefreshing]    = useState(false);
+  const [errorMsg,      setErrorMsg]      = useState('');
+  const [activeTab,     setActiveTab]     = useState('all');
 
-  // Fetch Notifications from MongoDB
   const fetchNotifications = async (isManual = false) => {
-    if (isManual) setRefreshing(true);
-    else setLoading(true);
+    if (isManual) setRefreshing(true); else setLoading(true);
     setErrorMsg('');
-
     try {
-      const response = await fetch('/api/faculty/notifications', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const res = await fetch('/api/faculty/notifications', {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      const resData = await response.json();
-      if (!response.ok || !resData.success) {
-        throw new Error(resData.message || 'Failed to retrieve faculty notifications.');
-      }
-
+      const resData = await res.json();
+      if (!res.ok || !resData.success) throw new Error(resData.message || 'Failed to retrieve faculty notifications.');
       setNotifications(resData.notifications || []);
       setUnreadCount(resData.unreadCount || 0);
     } catch (err) {
-      console.error('Error loading notifications:', err);
       setErrorMsg(err.message || 'Unable to connect to notifications service.');
     } finally {
       setLoading(false);
@@ -47,274 +54,189 @@ export default function FacultyNotificationsPage() {
     }
   };
 
-  useEffect(() => {
-    if (token) {
-      fetchNotifications();
-    }
-  }, [token]);
+  useEffect(() => { if (token) fetchNotifications(); }, [token]);
 
-  // Mark single notification as read
   const handleMarkAsRead = async (id) => {
     try {
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
-
       await fetch(`/api/faculty/notifications/${id}/read`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-    } catch (err) {
-      console.error('Error marking notification read:', err);
-    }
+    } catch (err) { console.error('Error marking notification read:', err); }
   };
 
-  // Mark all notifications as read
   const handleMarkAllAsRead = async () => {
     try {
       const allIds = notifications.map(n => n.id);
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
-
       await fetch('/api/faculty/notifications/read-all', {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: allIds })
       });
-    } catch (err) {
-      console.error('Error marking all notifications read:', err);
-    }
+    } catch (err) { console.error('Error marking all notifications read:', err); }
   };
 
-  // Client-side filtering by tab
-  const filteredNotifications = notifications.filter(notif => {
-    if (activeTab === 'unread') return !notif.isRead;
-    if (activeTab === 'placement') return notif.type === 'placement';
-    if (activeTab === 'drives') return notif.type === 'job' || notif.type === 'internship';
-    if (activeTab === 'application') return notif.type === 'application' || notif.type === 'interview';
+  const filteredNotifications = notifications.filter(n => {
+    if (activeTab === 'unread')      return !n.isRead;
+    if (activeTab === 'placement')   return n.type === 'placement';
+    if (activeTab === 'drives')      return n.type === 'job' || n.type === 'internship';
+    if (activeTab === 'application') return n.type === 'application' || n.type === 'interview';
     return true;
   });
 
-  const getNotifIcon = (type) => {
-    switch (type) {
-      case 'placement':
-        return { icon: Award, color: 'text-emerald-500', bg: 'bg-emerald-500/10' };
-      case 'job':
-        return { icon: Building2, color: 'text-indigo-500', bg: 'bg-indigo-500/10' };
-      case 'internship':
-        return { icon: Briefcase, color: 'text-blue-500', bg: 'bg-blue-500/10' };
-      case 'interview':
-        return { icon: Video, color: 'text-purple-500', bg: 'bg-purple-500/10' };
-      default:
-        return { icon: Users, color: 'text-amber-500', bg: 'bg-amber-500/10' };
-    }
-  };
+  const tabs = [
+    { key: 'all',         label: 'All Activity',           count: notifications.length },
+    { key: 'unread',      label: 'Unread',                 count: unreadCount },
+    { key: 'placement',   label: 'Placement Offers',        count: notifications.filter(n => n.type === 'placement').length },
+    { key: 'drives',      label: 'Campus Drives',           count: notifications.filter(n => n.type === 'job' || n.type === 'internship').length },
+    { key: 'application', label: 'Applications & Interviews', count: notifications.filter(n => n.type === 'application' || n.type === 'interview').length },
+  ];
 
   return (
-    <div className="space-y-8 pb-20 text-left max-w-5xl mx-auto">
+    <div className="fac-theme-page" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
-      {/* ━━━━━━━━━━━━━━━━━━━━ HEADER BAR ━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
         <div>
-          <div className="flex items-center space-x-2">
-            <Link 
-              to="/faculty" 
-              className="text-xs font-bold text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center space-x-1 transition"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              <span>Back to Dashboard</span>
-            </Link>
+          <Link to="/faculty" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', fontWeight: 600, color: 'var(--fac-emerald-bright)', textDecoration: 'none', marginBottom: '6px' }}>
+            <ArrowLeft style={{ width: '12px', height: '12px' }} /> Back to Command Center
+          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--fac-gold-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+              <Bell style={{ width: '18px', height: '18px', color: 'var(--fac-gold)' }} />
+              {unreadCount > 0 && (
+                <div style={{ position: 'absolute', top: '-3px', right: '-3px', width: '15px', height: '15px', borderRadius: '50%', background: 'var(--fac-emerald-bright)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 800, color: '#FFFFFF' }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </div>
+              )}
+            </div>
+            <div>
+              <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--fac-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Institutional Activity & Alerts</h1>
+              <p style={{ fontSize: '12px', color: 'var(--fac-text-secondary)', margin: 0 }}>Real-time campus recruitment drives, student assessment completions, and verified offer letters</p>
+            </div>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-1 flex items-center space-x-2.5">
-            <Bell className="h-7 w-7 text-amber-500" />
-            <span>Institutional Activity & Alerts</span>
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Real-time feed of new campus job/internship drives, student applications, and verified placement offers.
-          </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '20px' }}>
           {unreadCount > 0 && (
-            <button
-              onClick={handleMarkAllAsRead}
-              className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-extrabold transition shadow-xs flex items-center space-x-1.5 cursor-pointer"
-            >
-              <Check className="h-3.5 w-3.5" />
-              <span>Mark All as Read</span>
+            <button onClick={handleMarkAllAsRead} className="fac-btn-emerald" style={{ fontSize: '11px', padding: '6px 12px' }}>
+              <Check style={{ width: '12px', height: '12px' }} /> Mark All Read
             </button>
           )}
-
-          <button
-            onClick={() => fetchNotifications(true)}
-            disabled={refreshing}
-            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer shadow-xs disabled:opacity-50"
-            title="Refresh Feed"
-          >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-amber-500' : ''}`} />
+          <button onClick={() => fetchNotifications(true)} disabled={refreshing} className="fac-btn-dark" style={{ padding: '6px 10px' }}>
+            <RefreshCw style={{ width: '12px', height: '12px', ...(refreshing ? { animation: 'spin 1s linear infinite' } : {}) }} />
           </button>
         </div>
       </div>
 
-      {/* ━━━━━━━━━━━━━━━━━━━━ ALERTS ━━━━━━━━━━━━━━━━━━━━ */}
       {errorMsg && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-700 dark:text-rose-400 text-xs font-bold flex items-center space-x-2 shadow-xs">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{errorMsg}</span>
+        <div style={{ padding: '12px 16px', borderRadius: '8px', background: 'rgba(224, 82, 82, 0.1)', border: '1px solid rgba(224, 82, 82, 0.25)', color: 'var(--fac-error)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <AlertCircle style={{ width: '14px', height: '14px', flexShrink: 0 }} /> {errorMsg}
         </div>
       )}
 
-      {/* ━━━━━━━━━━━━━━━━━━━━ CATEGORY TABS ━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-        <button
-          onClick={() => setActiveTab('all')}
-          className={`px-4 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
-            activeTab === 'all'
-              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-          }`}
-        >
-          All Activity ({notifications.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab('unread')}
-          className={`px-4 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center space-x-1.5 ${
-            activeTab === 'unread'
-              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-          }`}
-        >
-          <span>Unread</span>
-          {unreadCount > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-white font-mono text-[10px]">
-              {unreadCount}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab('placement')}
-          className={`px-4 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
-            activeTab === 'placement'
-              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-          }`}
-        >
-          Placement Offers
-        </button>
-
-        <button
-          onClick={() => setActiveTab('drives')}
-          className={`px-4 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
-            activeTab === 'drives'
-              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-          }`}
-        >
-          Campus Drives
-        </button>
-
-        <button
-          onClick={() => setActiveTab('application')}
-          className={`px-4 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
-            activeTab === 'application'
-              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-          }`}
-        >
-          Applications & Interviews
-        </button>
-      </div>
-
-      {/* ━━━━━━━━━━━━━━━━━━━━ NOTIFICATIONS LIST ━━━━━━━━━━━━━━━━━━━━ */}
-      {loading ? (
-        <div className="flex flex-col items-center justify-center p-16 text-slate-500 space-y-3">
-          <RefreshCw className="h-7 w-7 animate-spin text-amber-500" />
-          <span className="text-xs font-mono font-bold uppercase tracking-wider">Loading Live Alerts...</span>
+      {/* Tabs & List */}
+      <div className="fac-theme-card" style={{ overflow: 'hidden' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--fac-border)', padding: '0 16px', background: 'var(--fac-table-head-bg)', overflowX: 'auto' }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              style={{
+                padding: '12px 16px', border: 'none', background: 'none', cursor: 'pointer',
+                fontSize: '12px', fontWeight: activeTab === tab.key ? 700 : 500,
+                color: activeTab === tab.key ? 'var(--fac-text-primary)' : 'var(--fac-text-muted)',
+                borderBottom: activeTab === tab.key ? '2px solid var(--fac-emerald-bright)' : '2px solid transparent',
+                display: 'flex', alignItems: 'center', gap: '6px',
+                transition: 'all 0.14s ease', marginBottom: '-1px', whiteSpace: 'nowrap',
+              }}
+            >
+              {tab.label}
+              <span style={{
+                fontSize: '9.5px', fontWeight: 800, padding: '1px 6px', borderRadius: '9999px',
+                background: 'var(--fac-bg-surface)',
+                border: '1px solid var(--fac-border)',
+                color: activeTab === tab.key ? 'var(--fac-emerald-bright)' : 'var(--fac-text-muted)',
+              }}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
         </div>
-      ) : filteredNotifications.length === 0 ? (
-        <div className="glass-card p-12 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-3 shadow-sm">
-          <Bell className="h-8 w-8 mx-auto text-slate-300 dark:text-slate-700" />
-          <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-200">
-            No notifications in this view
-          </h3>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">
-            You're all caught up! New campus activity and recruiter drives will show up here automatically.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredNotifications.map((notif) => {
-            const { icon: Icon, color, bg } = getNotifIcon(notif.type);
-            const notifDate = notif.timestamp ? new Date(notif.timestamp) : new Date();
 
-            return (
-              <div 
-                key={notif.id}
-                className={`glass-card p-5 sm:p-6 rounded-2xl border transition shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                  !notif.isRead 
-                    ? 'border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/5' 
-                    : 'border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 opacity-90'
-                }`}
-              >
-                <div className="flex items-start space-x-3.5">
-                  <div className={`w-10 h-10 rounded-xl ${bg} ${color} flex items-center justify-center shrink-0 mt-0.5`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
+        {/* Notifications list */}
+        <div style={{ padding: '8px 0' }}>
+          {loading ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: '10px', color: 'var(--fac-text-secondary)' }}>
+              <RefreshCw style={{ width: '15px', height: '15px', animation: 'spin 1s linear infinite', color: 'var(--fac-emerald-bright)' }} />
+              <span style={{ fontSize: '12.5px', fontWeight: 600 }}>Loading live alerts…</span>
+            </div>
+          ) : filteredNotifications.length === 0 ? (
+            <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--fac-text-muted)' }}>
+              <Bell style={{ width: '28px', height: '28px', margin: '0 auto 10px', color: 'var(--fac-border-hover)' }} />
+              <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--fac-text-primary)', margin: '0 0 4px' }}>No notifications in this view</p>
+              <p style={{ fontSize: '12px', margin: 0 }}>You're all caught up! New campus activity and corporate drives will appear here.</p>
+            </div>
+          ) : (
+            filteredNotifications.map(notif => {
+              const { Icon, iconBg, iconColor } = getNotifStyle(notif.type);
+              const notifDate = notif.timestamp ? new Date(notif.timestamp) : null;
 
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      {!notif.isRead && (
-                        <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="Unread" />
-                      )}
-                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                        {notif.title}
-                      </h4>
+              return (
+                <div
+                  key={notif.id}
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+                    gap: '12px', padding: '14px 20px',
+                    borderBottom: '1px solid var(--fac-table-border)',
+                    background: !notif.isRead ? 'var(--fac-emerald-tint)' : 'transparent',
+                    borderLeft: !notif.isRead ? '3px solid var(--fac-emerald-bright)' : '3px solid transparent',
+                    transition: 'background 0.12s ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flex: 1, minWidth: 0 }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
+                      <Icon style={{ width: '15px', height: '15px', color: iconColor }} />
                     </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '3px', flexWrap: 'wrap' }}>
+                        {!notif.isRead && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--fac-emerald-bright)', flexShrink: 0 }} />}
+                        <span style={{ fontSize: '13px', fontWeight: !notif.isRead ? 700 : 600, color: 'var(--fac-text-primary)' }}>{notif.title}</span>
+                        {notifDate && (
+                          <span style={{ fontSize: '10px', color: 'var(--fac-text-muted)', fontWeight: 500 }}>· {timeAgo(notif.timestamp)}</span>
+                        )}
+                      </div>
+                      <p style={{ fontSize: '12px', color: 'var(--fac-text-secondary)', margin: 0, lineHeight: 1.55 }}>{notif.message}</p>
+                    </div>
+                  </div>
 
-                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                      {notif.message}
-                    </p>
-
-                    <span className="text-[10px] font-mono text-slate-400 block pt-0.5">
-                      {notifDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {notifDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                    {notif.link && (
+                      <Link to={notif.link} className="fac-btn-dark" style={{ padding: '4px 10px', fontSize: '11px', textDecoration: 'none' }}>
+                        View <ChevronRight style={{ width: '10px', height: '10px' }} />
+                      </Link>
+                    )}
+                    {!notif.isRead && (
+                      <button
+                        onClick={() => handleMarkAsRead(notif.id)}
+                        className="fac-btn-dark"
+                        style={{ padding: '4px 8px', fontSize: '11px', color: 'var(--fac-emerald-bright)' }}
+                        title="Mark read"
+                      >
+                        <Check style={{ width: '11px', height: '11px' }} />
+                      </button>
+                    )}
                   </div>
                 </div>
-
-                <div className="flex items-center space-x-2 shrink-0 self-end sm:self-center">
-                  {notif.link && (
-                    <Link
-                      to={notif.link}
-                      className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
-                    >
-                      <span>View</span>
-                      <ChevronRight className="h-3 w-3" />
-                    </Link>
-                  )}
-
-                  {!notif.isRead && (
-                    <button
-                      onClick={() => handleMarkAsRead(notif.id)}
-                      className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 text-xs font-bold transition cursor-pointer"
-                      title="Mark as read"
-                    >
-                      Mark read
-                    </button>
-                  )}
-                </div>
-
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
-      )}
-
+      </div>
     </div>
   );
 }
