@@ -1,29 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { 
-  Lock, Mail, Eye, EyeOff, Sparkles, ArrowRight, 
-  GraduationCap, Building2, School, Shield, AlertCircle, 
-  CheckCircle2, Loader2, ArrowLeft, KeyRound, RotateCcw, 
-  ShieldCheck, Globe
+  Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, 
+  Sun, Moon, ArrowRight, ShieldCheck, Sparkles, Mail, Lock, KeyRound
 } from 'lucide-react';
-
-const ROLES = [
-  { id: 'student', label: 'Student', icon: GraduationCap, color: 'text-emerald-400', desc: 'Skill assessment, gap analysis & campus placements' },
-  { id: 'company', label: 'Company', icon: Building2, color: 'text-purple-400', desc: 'Talent discovery, job drives & verified screening' },
-  { id: 'faculty', label: 'Faculty', icon: School, color: 'text-blue-400', desc: 'Department analytics, curriculum & drive monitoring' },
-  { id: 'admin', label: 'Admin', icon: Shield, color: 'text-rose-400', desc: 'Global platform supervision & verification controls' }
-];
 
 export default function Login() {
   const { login, loginWithToken } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const isLight = theme === 'light';
 
   // Mode: 'password' | 'otp'
   const [authMode, setAuthMode] = useState('password');
 
-  // Form State
-  const [selectedRole, setSelectedRole] = useState('student');
+  // Form State - Unified single login
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -45,7 +38,7 @@ export default function Login() {
 
   // Forgot Password Modal State
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
-  const [forgotStep, setForgotStep] = useState(1); // 1: Email | 2: OTP & New Password
+  const [forgotStep, setForgotStep] = useState(1);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotOtp, setForgotOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -72,7 +65,7 @@ export default function Login() {
   };
 
   const redirectUserByRole = (userRole) => {
-    const cleanRole = (userRole || selectedRole).toLowerCase();
+    const cleanRole = (userRole || 'student').toLowerCase();
     if (cleanRole === 'company') {
       navigate('/company', { replace: true });
     } else if (['faculty', 'institution', 'academician'].includes(cleanRole)) {
@@ -206,7 +199,7 @@ export default function Login() {
     }
   };
 
-  // 4. OAuth Handlers (Google / LinkedIn)
+  // 4. OAuth Handlers
   const handleGoogleLogin = () => {
     window.location.href = '/api/auth/google';
   };
@@ -288,589 +281,934 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-slate-950 text-slate-100 relative overflow-hidden font-sans">
-      
-      {/* Background ambient lighting */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Main Two-Column Card Container */}
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl border border-slate-800 bg-slate-900/70 backdrop-blur-xl shadow-2xl overflow-hidden z-10">
-        
-        {/* ━━━━━━━━━━━━━━━━━━━━ LEFT COLUMN: HERO IMAGE & BRANDING ━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="lg:col-span-5 relative hidden lg:flex flex-col justify-between p-8 bg-slate-950/60 border-r border-slate-800 overflow-hidden">
-          
-          {/* Realistic Professional Background Image */}
-          <div className="absolute inset-0 z-0">
-            <img 
-              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80" 
-              alt="Students and technology professionals collaborating" 
-              className="w-full h-full object-cover object-center filter brightness-[0.32] contrast-105 scale-105 transition duration-700 hover:scale-100"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+    <div 
+      className="min-h-screen w-full flex flex-col justify-between font-sans selection:bg-purple-500 selection:text-white"
+      style={{
+        background: isLight 
+          ? 'linear-gradient(135deg, #F0F2F8 0%, #E2E8F0 50%, #ECEEF5 100%)' 
+          : 'linear-gradient(135deg, #0D0E15 0%, #13141F 50%, #1A162B 100%)',
+        color: 'var(--fac-text-primary)',
+        transition: 'background 0.3s ease, color 0.3s ease'
+      }}
+    >
+      {/* ── Top Header Navigation ── */}
+      <header className="w-full max-w-7xl mx-auto px-6 sm:px-12 pt-6 pb-2 flex items-center justify-between z-10">
+        <Link to="/" className="inline-flex items-center gap-2.5 no-underline group">
+          <div 
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)',
+              color: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800,
+              fontSize: '14px',
+              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.35)'
+            }}
+          >
+            <Sparkles style={{ width: '17px', height: '17px' }} />
           </div>
+          <span style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em', color: isLight ? '#090C0B' : '#F5F7F6' }}>
+            SkillNexus
+          </span>
+        </Link>
 
-          {/* Top Logo & Tagline */}
-          <div className="relative z-10 space-y-2">
-            <Link to="/" className="inline-flex items-center space-x-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-600 p-0.5 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                  <Sparkles className="h-4 w-4 text-emerald-400" />
-                </div>
-              </div>
-              <span className="font-extrabold text-lg text-white tracking-tight">
-                Skill<span className="text-emerald-400">Nexus</span> AI
-              </span>
-            </Link>
-            <p className="text-xs text-slate-400 leading-relaxed font-medium">
-              Enterprise AI engine bridging student capabilities, institutional curriculum, and corporate hiring demand.
-            </p>
-          </div>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={toggleTheme}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              border: isLight ? '1px solid #DDE2DD' : '1px solid rgba(255, 255, 255, 0.1)',
+              background: isLight ? '#FFFFFF' : 'rgba(255, 255, 255, 0.05)',
+              color: isLight ? '#1F2926' : '#F5F7F6',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease'
+            }}
+            title={isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            aria-label="Toggle Theme"
+          >
+            {isLight ? (
+              <Moon style={{ width: '16px', height: '16px' }} />
+            ) : (
+              <Sun style={{ width: '16px', height: '16px', color: '#FBBF24' }} />
+            )}
+          </button>
 
-          {/* Center Feature Highlights */}
-          <div className="relative z-10 space-y-3.5 my-8">
-            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-1">
-              <div className="flex items-center space-x-2 text-emerald-400 text-xs font-bold font-mono">
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                <span>Real-Time Skill Gap DNA</span>
-              </div>
-              <p className="text-[11px] text-slate-300">
-                AI-driven analysis benchmarking academic proficiency against live corporate tech stacks.
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-1">
-              <div className="flex items-center space-x-2 text-purple-400 text-xs font-bold font-mono">
-                <Building2 className="h-3.5 w-3.5 shrink-0" />
-                <span>Verified Corporate Drives</span>
-              </div>
-              <p className="text-[11px] text-slate-300">
-                Direct recruitment pipelines with verified hiring managers and transparent interview tracking.
-              </p>
-            </div>
-          </div>
-
-          {/* Bottom Security Assurance */}
-          <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400 font-mono">
-            <span>2FA & OAuth Enabled</span>
-            <span className="flex items-center space-x-1 text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>SOC2 Verified</span>
-            </span>
-          </div>
-
+          <Link
+            to="/"
+            className="nav-link-notion"
+            style={{ fontSize: '13.5px', fontWeight: 600 }}
+          >
+            Back to Home
+          </Link>
         </div>
+      </header>
 
-        {/* ━━━━━━━━━━━━━━━━━━━━ RIGHT COLUMN: LOGIN FORM ━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-between text-left space-y-6">
-          
-          {/* Header */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Link 
-                to="/" 
-                className="text-xs font-bold text-slate-400 hover:text-emerald-400 flex items-center space-x-1 transition"
+      {/* ── Main Centered Split Card (Inspired by Image 1) ── */}
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-10 z-10">
+        <div 
+          className="w-full max-w-4xl rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 shadow-2xl transition-all duration-300"
+          style={{
+            background: isLight ? '#FFFFFF' : '#14151E',
+            border: isLight ? '1px solid #E2E8F0' : '1px solid rgba(255, 255, 255, 0.08)',
+            boxShadow: isLight 
+              ? '0 25px 50px -12px rgba(139, 92, 246, 0.12), 0 10px 25px -5px rgba(0, 0, 0, 0.08)' 
+              : '0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(139, 92, 246, 0.15)'
+          }}
+        >
+          {/* ══════════════ LEFT COLUMN: Login Form Card ══════════════ */}
+          <div 
+            className="lg:col-span-6 p-8 sm:p-12 flex flex-col justify-between"
+            style={{
+              background: isLight ? '#FFFFFF' : '#12131C',
+              color: isLight ? '#090C0B' : '#F5F7F6'
+            }}
+          >
+            <div>
+              {/* Form Header */}
+              <div className="mb-6">
+                <h1 
+                  style={{
+                    fontSize: '2rem',
+                    fontWeight: 800,
+                    letterSpacing: '-0.03em',
+                    color: isLight ? '#090C0B' : '#FFFFFF',
+                    margin: 0
+                  }}
+                >
+                  Login
+                </h1>
+                <p 
+                  style={{ 
+                    fontSize: '13.5px', 
+                    color: isLight ? '#4B5854' : '#94A3B8', 
+                    marginTop: '6px' 
+                  }}
+                >
+                  Enter your account details to access SkillNexus
+                </p>
+              </div>
+
+              {/* Mode Toggle: Password vs Email OTP */}
+              <div 
+                className="flex items-center gap-4 mb-6 pb-2"
+                style={{ borderBottom: isLight ? '1px solid #E2E8F0' : '1px solid rgba(255, 255, 255, 0.08)' }}
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Return to Home</span>
-              </Link>
-              <span className="text-[11px] text-slate-500 font-mono">Secure Access</span>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('password');
+                    setLoginOtpSent(false);
+                    setErrorMsg('');
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: authMode === 'password' ? '2px solid #8B5CF6' : '2px solid transparent',
+                    paddingBottom: '8px',
+                    fontSize: '13.5px',
+                    fontWeight: authMode === 'password' ? 700 : 500,
+                    color: authMode === 'password' ? (isLight ? '#6D28D9' : '#A78BFA') : (isLight ? '#64748B' : '#64748B'),
+                    cursor: 'pointer',
+                    marginBottom: '-10px',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Password Login
+                </button>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Welcome Back
-            </h1>
-            <p className="text-xs text-slate-400">
-              Sign in to your SkillNexus AI account to continue to your dashboard.
-            </p>
-          </div>
-
-          {/* Role Selection Tabs */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-300 block">
-              Select Your Portal Role:
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {ROLES.map(r => {
-                const IconComponent = r.icon;
-                const isSelected = selectedRole === r.id;
-
-                return (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedRole(r.id);
-                      setErrorMsg('');
-                    }}
-                    className={`p-2.5 rounded-2xl border text-left transition flex flex-col items-center justify-center space-y-1 cursor-pointer ${
-                      isSelected
-                        ? 'border-indigo-500/80 bg-indigo-500/10 text-white shadow-xs'
-                        : 'border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700 hover:text-slate-200'
-                    }`}
-                  >
-                    <IconComponent className={`h-5 w-5 ${isSelected ? r.color : 'text-slate-500'}`} />
-                    <span className="text-xs font-bold tracking-tight">{r.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Auth Method Switcher (Password vs Email OTP) */}
-          <div className="flex items-center space-x-2 border-b border-slate-800 pb-2.5 text-xs">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode('password');
-                setLoginOtpSent(false);
-                setErrorMsg('');
-              }}
-              className={`pb-1 font-bold transition cursor-pointer flex items-center space-x-1.5 ${
-                authMode === 'password'
-                  ? 'text-indigo-400 border-b-2 border-indigo-400'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Lock className="h-3.5 w-3.5" />
-              <span>Password Login</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode('otp');
-                setErrorMsg('');
-              }}
-              className={`pb-1 font-bold transition cursor-pointer flex items-center space-x-1.5 ${
-                authMode === 'otp'
-                  ? 'text-indigo-400 border-b-2 border-indigo-400'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <KeyRound className="h-3.5 w-3.5" />
-              <span>Email OTP Login</span>
-            </button>
-          </div>
-
-          {/* Alerts */}
-          {errorMsg && (
-            <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold flex items-center space-x-2.5 animate-fadeIn">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {successMsg && (
-            <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center space-x-2.5 animate-fadeIn">
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              <span>{successMsg}</span>
-            </div>
-          )}
-
-          {/* ══════════════ METHOD 1: PASSWORD LOGIN FORM ══════════════ */}
-          {authMode === 'password' && (
-            <form onSubmit={handlePasswordLogin} className="space-y-4 pt-1">
-              
-              {/* Email Field */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-300 block">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="h-4 w-4 absolute left-3.5 top-3.5 text-slate-500" />
-                  <input
-                    type="email"
-                    placeholder="name@university.edu or corporate email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: '' });
-                    }}
-                    className={`w-full pl-10 pr-4 py-2.5 bg-slate-950 border rounded-xl text-xs text-white placeholder-slate-600 outline-none transition focus:border-indigo-500 ${
-                      fieldErrors.email ? 'border-rose-500/80' : 'border-slate-800'
-                    }`}
-                    disabled={loading}
-                  />
-                </div>
-                {fieldErrors.email && (
-                  <span className="text-[11px] font-bold text-rose-400 block pt-0.5">
-                    {fieldErrors.email}
-                  </span>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('otp');
+                    setErrorMsg('');
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: authMode === 'otp' ? '2px solid #8B5CF6' : '2px solid transparent',
+                    paddingBottom: '8px',
+                    fontSize: '13.5px',
+                    fontWeight: authMode === 'otp' ? 700 : 500,
+                    color: authMode === 'otp' ? (isLight ? '#6D28D9' : '#A78BFA') : (isLight ? '#64748B' : '#64748B'),
+                    cursor: 'pointer',
+                    marginBottom: '-10px',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  OTP Sign-in
+                </button>
               </div>
 
-              {/* Password Field */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-300">
-                    Password
-                  </label>
-                  <Link
-                    to="/forgot-password"
-                    className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 hover:underline transition"
-                  >
-                    Forgot password?
-                  </Link>
+              {/* Error & Success Feedback Alerts */}
+              {errorMsg && (
+                <div 
+                  className="mb-5 p-3 rounded-xl flex items-center gap-2.5 text-xs font-medium"
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                    color: '#EF4444'
+                  }}
+                >
+                  <AlertCircle style={{ width: '15px', height: '15px', flexShrink: 0 }} />
+                  <span>{errorMsg}</span>
                 </div>
+              )}
 
-                <div className="relative">
-                  <Lock className="h-4 w-4 absolute left-3.5 top-3.5 text-slate-500" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your secure password"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: '' });
-                    }}
-                    className={`w-full pl-10 pr-10 py-2.5 bg-slate-950 border rounded-xl text-xs text-white placeholder-slate-600 outline-none transition focus:border-indigo-500 ${
-                      fieldErrors.password ? 'border-rose-500/80' : 'border-slate-800'
-                    }`}
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+              {successMsg && (
+                <div 
+                  className="mb-5 p-3 rounded-xl flex items-center gap-2.5 text-xs font-medium"
+                  style={{
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    border: '1px solid rgba(16, 185, 129, 0.25)',
+                    color: '#10B981'
+                  }}
+                >
+                  <CheckCircle2 style={{ width: '15px', height: '15px', flexShrink: 0 }} />
+                  <span>{successMsg}</span>
                 </div>
-                {fieldErrors.password && (
-                  <span className="text-[11px] font-bold text-rose-400 block pt-0.5">
-                    {fieldErrors.password}
-                  </span>
-                )}
-              </div>
+              )}
 
-              {/* Remember Me Checkbox */}
-              <div className="flex items-center space-x-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="rememberMe"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer accent-indigo-500"
-                />
-                <label htmlFor="rememberMe" className="text-xs text-slate-400 cursor-pointer select-none">
-                  Remember me on this browser session
-                </label>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-xl transition shadow-lg shadow-indigo-600/25 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 mt-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Authenticating...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Sign In</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-
-            </form>
-          )}
-
-          {/* ══════════════ METHOD 2: EMAIL OTP LOGIN FORM ══════════════ */}
-          {authMode === 'otp' && (
-            <div className="space-y-4">
-              {!loginOtpSent ? (
-                <form onSubmit={handleSendLoginOtp} className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-300 block">
-                      Registered Email Address
+              {/* ── Password Auth Form ── */}
+              {authMode === 'password' && (
+                <form onSubmit={handlePasswordLogin} className="space-y-4">
+                  {/* Username / Email Field */}
+                  <div className="space-y-1.5">
+                    <label 
+                      style={{ 
+                        fontSize: '12px', 
+                        fontWeight: 600, 
+                        color: isLight ? '#1F2926' : '#CBD5E1' 
+                      }}
+                    >
+                      Email Address
                     </label>
                     <div className="relative">
-                      <Mail className="h-4 w-4 absolute left-3.5 top-3.5 text-slate-500" />
                       <input
                         type="email"
-                        placeholder="Enter your registered email address"
+                        placeholder="name@institution.edu"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className={`w-full pl-10 pr-4 py-2.5 bg-slate-950 border rounded-xl text-xs text-white placeholder-slate-600 outline-none transition focus:border-emerald-500 ${
-                          fieldErrors.email ? 'border-rose-500/80' : 'border-slate-800'
-                        }`}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: '' });
+                        }}
                         disabled={loading}
+                        style={{
+                          width: '100%',
+                          height: '44px',
+                          borderRadius: '12px',
+                          padding: '0 14px 0 40px',
+                          fontSize: '13.5px',
+                          background: isLight ? '#F8FAFC' : 'rgba(255, 255, 255, 0.04)',
+                          border: fieldErrors.email 
+                            ? '1px solid #EF4444' 
+                            : (isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.1)'),
+                          color: isLight ? '#090C0B' : '#FFFFFF',
+                          outline: 'none',
+                          transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#8B5CF6'}
+                        onBlur={(e) => e.target.style.borderColor = fieldErrors.email ? '#EF4444' : (isLight ? '#CBD5E1' : 'rgba(255, 255, 255, 0.1)')}
+                      />
+                      <Mail 
+                        style={{ 
+                          position: 'absolute', 
+                          left: '13px', 
+                          top: '50%', 
+                          transform: 'translateY(-50%)', 
+                          width: '16px', 
+                          height: '16px', 
+                          color: '#94A3B8' 
+                        }} 
                       />
                     </div>
                     {fieldErrors.email && (
-                      <span className="text-[11px] font-bold text-rose-400 block pt-0.5">
-                        {fieldErrors.email}
-                      </span>
+                      <span style={{ fontSize: '11px', color: '#EF4444' }}>{fieldErrors.email}</span>
                     )}
                   </div>
 
+                  {/* Password Field */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label 
+                        style={{ 
+                          fontSize: '12px', 
+                          fontWeight: 600, 
+                          color: isLight ? '#1F2926' : '#CBD5E1' 
+                        }}
+                      >
+                        Password
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setForgotModalOpen(true)}
+                        style={{
+                          fontSize: '12px',
+                          color: isLight ? '#6D28D9' : '#A78BFA',
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: 0,
+                          fontWeight: 500
+                        }}
+                        className="hover:underline"
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••••••"
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: '' });
+                        }}
+                        disabled={loading}
+                        style={{
+                          width: '100%',
+                          height: '44px',
+                          borderRadius: '12px',
+                          padding: '0 40px 0 40px',
+                          fontSize: '13.5px',
+                          background: isLight ? '#F8FAFC' : 'rgba(255, 255, 255, 0.04)',
+                          border: fieldErrors.password 
+                            ? '1px solid #EF4444' 
+                            : (isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.1)'),
+                          color: isLight ? '#090C0B' : '#FFFFFF',
+                          outline: 'none',
+                          transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#8B5CF6'}
+                        onBlur={(e) => e.target.style.borderColor = fieldErrors.password ? '#EF4444' : (isLight ? '#CBD5E1' : 'rgba(255, 255, 255, 0.1)')}
+                      />
+                      <Lock 
+                        style={{ 
+                          position: 'absolute', 
+                          left: '13px', 
+                          top: '50%', 
+                          transform: 'translateY(-50%)', 
+                          width: '16px', 
+                          height: '16px', 
+                          color: '#94A3B8' 
+                        }} 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#94A3B8',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '4px'
+                        }}
+                        title={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <EyeOff style={{ width: '16px', height: '16px' }} /> : <Eye style={{ width: '16px', height: '16px' }} />}
+                      </button>
+                    </div>
+                    {fieldErrors.password && (
+                      <span style={{ fontSize: '11px', color: '#EF4444' }}>{fieldErrors.password}</span>
+                    )}
+                  </div>
+
+                  {/* Remember Me */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      style={{
+                        accentColor: '#8B5CF6',
+                        width: '14px',
+                        height: '14px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <label 
+                      htmlFor="rememberMe" 
+                      style={{ 
+                        fontSize: '12.5px', 
+                        color: isLight ? '#4B5854' : '#94A3B8', 
+                        cursor: 'pointer' 
+                      }}
+                    >
+                      Keep me logged in
+                    </label>
+                  </div>
+
+                  {/* Main Login Button (Vibrant Purple Pill matching Image 1) */}
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs rounded-xl transition shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+                    style={{
+                      width: '100%',
+                      height: '46px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                      color: '#FFFFFF',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      border: 'none',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      boxShadow: '0 8px 20px -4px rgba(139, 92, 246, 0.5)',
+                      transition: 'all 0.2s ease',
+                      marginTop: '12px'
+                    }}
+                    className="hover:brightness-110 active:scale-[0.99]"
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Sending Verification Code...</span>
+                        <Loader2 className="animate-spin" style={{ width: '16px', height: '16px' }} />
+                        <span>Signing In...</span>
                       </>
                     ) : (
-                      <>
-                        <span>Send 6-Digit Login Code</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </>
+                      <span>Login</span>
                     )}
                   </button>
-                </form>
-              ) : (
-                <form onSubmit={handleVerifyLoginOtp} className="space-y-4 animate-fadeIn">
-                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-slate-300">
-                    6-digit code sent to <strong className="font-mono text-emerald-400">{email}</strong>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-300 block">
-                      Enter 6-Digit OTP Code:
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      placeholder="• • • • • •"
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
-                      className="w-full py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-center text-lg font-mono tracking-[0.5em] text-emerald-400 outline-none focus:border-emerald-500"
-                      autoFocus
-                    />
-                    <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
-                      <span>Code Expiry: <strong className={otpTimer < 60 ? 'text-rose-400' : 'text-white'}>{formatTimer(otpTimer)}</strong></span>
-                      <span>Attempts: <strong>{otpAttempts}/{MAX_OTP_ATTEMPTS}</strong></span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading || otpCode.length !== 6 || otpTimer <= 0 || otpAttempts >= MAX_OTP_ATTEMPTS}
-                    className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs rounded-xl transition shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Verifying Code...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Verify & Sign In</span>
-                        <CheckCircle2 className="h-4 w-4" />
-                      </>
-                    )}
-                  </button>
-
-                  <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setLoginOtpSent(false)}
-                      className="hover:underline cursor-pointer"
-                    >
-                      Change Email
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSendLoginOtp()}
-                      disabled={loading || resendCooldown > 0}
-                      className="text-emerald-400 hover:underline disabled:opacity-50 cursor-pointer"
-                    >
-                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
-                    </button>
-                  </div>
                 </form>
               )}
-            </div>
-          )}
 
-          {/* ══════════════ 3. OAUTH LOGIN OPTIONS (GOOGLE & LINKEDIN) ══════════════ */}
-          <div className="space-y-3 pt-2">
-            <div className="relative flex items-center justify-center">
-              <div className="border-t border-slate-800 w-full" />
-              <span className="bg-slate-900 px-3 text-[11px] font-mono text-slate-500 uppercase shrink-0">
-                Or Continue With
+              {/* ── OTP Login Form ── */}
+              {authMode === 'otp' && (
+                <div className="space-y-4">
+                  {!loginOtpSent ? (
+                    <form onSubmit={handleSendLoginOtp} className="space-y-4">
+                      <div className="space-y-1.5">
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: isLight ? '#1F2926' : '#CBD5E1' }}>
+                          Registered Email Address
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="email"
+                            placeholder="name@institution.edu"
+                            value={email}
+                            onChange={(e) => {
+                              setEmail(e.target.value);
+                              if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: '' });
+                            }}
+                            disabled={loading}
+                            style={{
+                              width: '100%',
+                              height: '44px',
+                              borderRadius: '12px',
+                              padding: '0 14px 0 40px',
+                              fontSize: '13.5px',
+                              background: isLight ? '#F8FAFC' : 'rgba(255, 255, 255, 0.04)',
+                              border: fieldErrors.email ? '1px solid #EF4444' : (isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.1)'),
+                              color: isLight ? '#090C0B' : '#FFFFFF',
+                              outline: 'none'
+                            }}
+                          />
+                          <Mail style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: '#94A3B8' }} />
+                        </div>
+                        {fieldErrors.email && <span style={{ fontSize: '11px', color: '#EF4444' }}>{fieldErrors.email}</span>}
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        style={{
+                          width: '100%',
+                          height: '46px',
+                          borderRadius: '12px',
+                          background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                          color: '#FFFFFF',
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          border: 'none',
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          boxShadow: '0 8px 20px -4px rgba(139, 92, 246, 0.5)'
+                        }}
+                      >
+                        {loading ? <Loader2 className="animate-spin" style={{ width: '16px', height: '16px' }} /> : 'Send Verification OTP'}
+                      </button>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleVerifyLoginOtp} className="space-y-4">
+                      <div className="space-y-1.5">
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: isLight ? '#1F2926' : '#CBD5E1' }}>
+                          Enter 6-Digit OTP
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={6}
+                          placeholder="000000"
+                          value={otpCode}
+                          onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                          disabled={loading}
+                          style={{
+                            width: '100%',
+                            height: '44px',
+                            borderRadius: '12px',
+                            padding: '0 14px',
+                            fontSize: '18px',
+                            letterSpacing: '0.3em',
+                            textAlign: 'center',
+                            fontWeight: 700,
+                            background: isLight ? '#F8FAFC' : 'rgba(255, 255, 255, 0.04)',
+                            border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: isLight ? '#090C0B' : '#FFFFFF',
+                            outline: 'none'
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span style={{ color: '#94A3B8' }}>Code expires in: {formatTimer(otpTimer)}</span>
+                        <button
+                          type="button"
+                          onClick={handleSendLoginOtp}
+                          disabled={resendCooldown > 0 || loading}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: resendCooldown > 0 ? '#94A3B8' : '#8B5CF6',
+                            cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
+                            fontWeight: 600
+                          }}
+                        >
+                          {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
+                        </button>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        style={{
+                          width: '100%',
+                          height: '46px',
+                          borderRadius: '12px',
+                          background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                          color: '#FFFFFF',
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          border: 'none',
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          boxShadow: '0 8px 20px -4px rgba(139, 92, 246, 0.5)'
+                        }}
+                      >
+                        {loading ? <Loader2 className="animate-spin" style={{ width: '16px', height: '16px' }} /> : 'Verify & Sign In'}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )}
+
+              {/* OAuth Buttons */}
+              <div className="mt-6 pt-5" style={{ borderTop: isLight ? '1px solid #E2E8F0' : '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    style={{
+                      height: '38px',
+                      borderRadius: '10px',
+                      border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.1)',
+                      background: isLight ? '#FFFFFF' : 'rgba(255, 255, 255, 0.03)',
+                      color: isLight ? '#090C0B' : '#F5F7F6',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      transition: 'all 0.15s ease'
+                    }}
+                    className="hover:bg-slate-500/10"
+                  >
+                    <svg style={{ width: '14px', height: '14px' }} viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                    </svg>
+                    <span>Google</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleLinkedInLogin}
+                    style={{
+                      height: '38px',
+                      borderRadius: '10px',
+                      border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.1)',
+                      background: isLight ? '#FFFFFF' : 'rgba(255, 255, 255, 0.03)',
+                      color: isLight ? '#090C0B' : '#F5F7F6',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      transition: 'all 0.15s ease'
+                    }}
+                    className="hover:bg-slate-500/10"
+                  >
+                    <svg style={{ width: '14px', height: '14px', fill: '#0A66C2' }} viewBox="0 0 24 24">
+                      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.6 1.6 0 0 0 1.6-1.6 1.6 1.6 0 0 0-3.2 0 1.6 1.6 0 0 0 1.6 1.6m1.4 9.74v-8.37H5.06v8.37h2.8z"/>
+                    </svg>
+                    <span>LinkedIn</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom: Sign up link styled matching Image 1 */}
+            <div className="mt-8 pt-4 flex items-center justify-between text-xs">
+              <span style={{ color: isLight ? '#4B5854' : '#94A3B8' }}>
+                Don't have an account?
               </span>
-              <div className="border-t border-slate-800 w-full" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              
-              {/* Google OAuth */}
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                className="py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 hover:border-slate-700 text-slate-300 text-xs font-bold transition flex items-center justify-center space-x-2 cursor-pointer"
+              <Link
+                to="/register"
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  background: isLight ? '#F1F5F9' : 'rgba(255, 255, 255, 0.08)',
+                  color: isLight ? '#090C0B' : '#FFFFFF',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.1)',
+                  transition: 'all 0.15s ease'
+                }}
+                className="hover:brightness-110"
               >
-                <svg className="h-4 w-4" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                </svg>
-                <span>Google</span>
-              </button>
-
-              {/* LinkedIn OAuth */}
-              <button
-                type="button"
-                onClick={handleLinkedInLogin}
-                className="py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 hover:border-slate-700 text-slate-300 text-xs font-bold transition flex items-center justify-center space-x-2 cursor-pointer"
-              >
-                <svg className="h-4 w-4 fill-[#0A66C2]" viewBox="0 0 24 24">
-                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
-                </svg>
-                <span>LinkedIn</span>
-              </button>
-
+                Sign up
+              </Link>
             </div>
           </div>
 
-          {/* Register Link */}
-          <div className="text-center pt-2 border-t border-slate-800/80 text-xs text-slate-400">
-            <span>Don't have an account yet? </span>
-            <Link 
-              to="/register" 
-              className="font-extrabold text-emerald-400 hover:text-emerald-300 hover:underline transition"
-            >
-              Create an account
-            </Link>
-          </div>
+          {/* ══════════════ RIGHT COLUMN: Purple Portal Graphic (Image 1 Aesthetic) ══════════════ */}
+          <div 
+            className="hidden lg:flex lg:col-span-6 relative p-10 flex-col justify-between overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 60%, #6D28D9 100%)',
+              color: '#FFFFFF'
+            }}
+          >
+            {/* Background artistic organic bubble layers */}
+            <div 
+              style={{
+                position: 'absolute',
+                top: '-40px',
+                right: '-40px',
+                width: '320px',
+                height: '320px',
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.1)',
+                filter: 'blur(30px)',
+                pointerEvents: 'none'
+              }} 
+            />
+            <div 
+              style={{
+                position: 'absolute',
+                bottom: '-20px',
+                left: '-20px',
+                width: '280px',
+                height: '280px',
+                borderRadius: '50%',
+                background: 'rgba(0, 0, 0, 0.15)',
+                filter: 'blur(20px)',
+                pointerEvents: 'none'
+              }} 
+            />
 
+            {/* Portal Banner Text */}
+            <div className="relative z-10 space-y-2">
+              <h2 
+                style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 900,
+                  lineHeight: '1.15',
+                  letterSpacing: '-0.035em',
+                  color: '#FFFFFF',
+                  margin: 0
+                }}
+              >
+                Welcome to<br />student portal
+              </h2>
+              <p 
+                style={{
+                  fontSize: '14px',
+                  color: 'rgba(255, 255, 255, 0.85)',
+                  fontWeight: 500,
+                  margin: 0
+                }}
+              >
+                Login to access your personalized career & skill account
+              </p>
+            </div>
+
+            {/* Stylized Clean Vector Art (Inspired by Image 1) */}
+            <div className="relative z-10 flex items-center justify-center my-6">
+              <svg 
+                viewBox="0 0 400 320" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ width: '100%', maxWidth: '340px', height: 'auto' }}
+              >
+                {/* Modern document/checklist board */}
+                <rect x="120" y="90" width="160" height="200" rx="16" fill="#FFFFFF" />
+                <rect x="145" y="115" width="50" height="10" rx="5" fill="#E2E8F0" />
+                
+                {/* Checklist items */}
+                <circle cx="150" cy="150" r="10" stroke="#8B5CF6" strokeWidth="3" fill="none" />
+                <rect x="170" y="146" width="85" height="8" rx="4" fill="#CBD5E1" />
+                
+                <circle cx="150" cy="185" r="10" stroke="#8B5CF6" strokeWidth="3" fill="none" />
+                <rect x="170" y="181" width="75" height="8" rx="4" fill="#CBD5E1" />
+                
+                <circle cx="150" cy="220" r="10" stroke="#8B5CF6" strokeWidth="3" fill="none" />
+                <rect x="170" y="216" width="90" height="8" rx="4" fill="#CBD5E1" />
+
+                <rect x="145" y="255" width="110" height="8" rx="4" fill="#E2E8F0" />
+
+                {/* Decorative plant in pot */}
+                <path d="M280 270 L310 270 L305 300 L285 300 Z" fill="#1E1B4B" />
+                <path d="M295 270 Q320 220 300 190 Q290 230 295 270" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2" />
+                <path d="M295 270 Q270 230 280 200 Q290 240 295 270" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2" />
+
+                {/* Character 1: Sitting with laptop on top of board */}
+                <circle cx="280" cy="70" r="14" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2.5" />
+                <path d="M272 64 Q280 58 290 66" stroke="#1E1B4B" strokeWidth="2.5" strokeLinecap="round" />
+                {/* Body */}
+                <path d="M266 84 C260 105 260 130 285 130 C295 130 305 120 305 100 C305 84 285 84 266 84 Z" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2.5" />
+                {/* Laptop */}
+                <path d="M290 115 L320 115 L315 95 Z" fill="#1E1B4B" />
+                {/* Legs */}
+                <path d="M285 130 L320 150 L335 140" stroke="#1E1B4B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M295 130 L310 170 L325 175" stroke="#1E1B4B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+
+                {/* Character 2: Standing with mobile */}
+                <circle cx="85" cy="130" r="14" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2.5" />
+                <path d="M78 124 Q85 118 95 126" stroke="#1E1B4B" strokeWidth="2.5" strokeLinecap="round" />
+                {/* Body */}
+                <path d="M75 144 L95 144 L100 200 L70 200 Z" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2.5" />
+                {/* Mobile */}
+                <rect x="62" y="160" width="10" height="18" rx="2" fill="#1E1B4B" />
+                {/* Legs & Shoes */}
+                <path d="M78 200 L74 270 L65 275" stroke="#1E1B4B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M92 200 L98 270 L110 275" stroke="#1E1B4B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+
+            {/* Bottom trust footer */}
+            <div className="relative z-10 flex items-center justify-between text-xs pt-4" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
+              <span style={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600 }}>
+                Universal Academia-Industry Login
+              </span>
+              <span style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+                SkillNexus v2.4
+              </span>
+            </div>
+          </div>
         </div>
+      </main>
 
-      </div>
-
-      {/* ━━━━━━━━━━━━━━━━━━━━ FORGOT PASSWORD MODAL WITH OTP RESET ━━━━━━━━━━━━━━━━━━━━ */}
+      {/* ── Forgot Password Modal ── */}
       {forgotModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl border border-slate-800 bg-slate-950 space-y-5 shadow-2xl text-left">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-extrabold text-white flex items-center space-x-2">
-                <KeyRound className="h-5 w-5 text-emerald-400" />
-                <span>Password Recovery (OTP)</span>
-              </h3>
-              <button 
-                onClick={() => setForgotModalOpen(false)}
-                className="text-slate-500 hover:text-slate-300 cursor-pointer"
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(8px)' }}
+        >
+          <div 
+            className="w-full max-w-md rounded-2xl p-6 sm:p-8 space-y-5"
+            style={{
+              background: isLight ? '#FFFFFF' : '#14151E',
+              border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(139, 92, 246, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6' }}>
+                  <KeyRound style={{ width: '16px', height: '16px' }} />
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: isLight ? '#090C0B' : '#FFFFFF' }}>
+                  Reset Password
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setForgotModalOpen(false);
+                  setForgotStep(1);
+                  setForgotError('');
+                  setForgotSuccess(false);
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#94A3B8',
+                  fontSize: '20px',
+                  cursor: 'pointer'
+                }}
               >
                 ✕
               </button>
             </div>
 
+            {forgotError && (
+              <div className="p-3 rounded-xl flex items-center gap-2 text-xs" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' }}>
+                <AlertCircle style={{ width: '14px', height: '14px' }} />
+                <span>{forgotError}</span>
+              </div>
+            )}
+
             {forgotSuccess ? (
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400 text-xs font-bold flex items-center space-x-2">
-                <CheckCircle2 className="h-4 w-4 shrink-0" />
-                <span>Password updated successfully! You can now log in with your new password.</span>
+              <div className="p-4 rounded-xl text-center space-y-2" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10B981' }}>
+                <CheckCircle2 style={{ width: '28px', height: '28px', margin: '0 auto' }} />
+                <p style={{ fontSize: '13px', fontWeight: 600 }}>Password successfully updated!</p>
+                <p style={{ fontSize: '11.5px', color: '#94A3B8' }}>You may now login with your new credentials.</p>
               </div>
             ) : forgotStep === 1 ? (
-              <form onSubmit={handleSendForgotOtp} className="space-y-4 text-xs">
-                <p className="text-slate-400">
-                  Enter your registered email address and we'll dispatch a 6-digit verification code.
+              <form onSubmit={handleSendForgotOtp} className="space-y-4">
+                <p style={{ fontSize: '13px', color: isLight ? '#4B5854' : '#94A3B8' }}>
+                  Enter your registered email address. We'll send a 6-digit verification code.
                 </p>
-
-                {forgotError && (
-                  <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 font-bold">
-                    {forgotError}
-                  </div>
-                )}
-
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-300">Registered Email</label>
-                  <input
-                    type="email"
-                    placeholder="Enter your registered email"
-                    value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500"
-                    required
-                  />
-                </div>
-
-                <div className="flex items-center justify-end space-x-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setForgotModalOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={forgotLoading}
-                    className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold transition cursor-pointer disabled:opacity-50"
-                  >
-                    {forgotLoading ? 'Sending Code...' : 'Send OTP Code'}
-                  </button>
-                </div>
+                <input
+                  type="email"
+                  placeholder="name@institution.edu"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    height: '42px',
+                    borderRadius: '10px',
+                    padding: '0 12px',
+                    fontSize: '13px',
+                    background: isLight ? '#F8FAFC' : 'rgba(255, 255, 255, 0.04)',
+                    border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.1)',
+                    color: isLight ? '#090C0B' : '#FFFFFF',
+                    outline: 'none'
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  style={{
+                    width: '100%',
+                    height: '42px',
+                    borderRadius: '10px',
+                    background: '#8B5CF6',
+                    color: '#FFFFFF',
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    border: 'none',
+                    cursor: forgotLoading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {forgotLoading ? 'Sending...' : 'Send Reset Code'}
+                </button>
               </form>
             ) : (
-              <form onSubmit={handleResetPassword} className="space-y-4 text-xs animate-fadeIn">
-                <p className="text-slate-400">
-                  Enter the 6-digit code sent to <strong className="font-mono text-emerald-400">{forgotEmail}</strong> and your new password.
-                </p>
-
-                {forgotError && (
-                  <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 font-bold">
-                    {forgotError}
-                  </div>
-                )}
-
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-300">6-Digit Verification Code</label>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    placeholder="• • • • • •"
-                    value={forgotOtp}
-                    onChange={(e) => setForgotOtp(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-center text-base font-mono tracking-widest text-emerald-400 outline-none focus:border-emerald-500"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-300">New Password</label>
-                  <input
-                    type="password"
-                    placeholder="At least 6 characters"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500"
-                    required
-                  />
-                </div>
-
-                <div className="flex items-center justify-end space-x-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setForgotStep(1)}
-                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold transition cursor-pointer"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={forgotLoading}
-                    className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold transition cursor-pointer disabled:opacity-50"
-                  >
-                    {forgotLoading ? 'Resetting...' : 'Reset Password'}
-                  </button>
-                </div>
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <input
+                  type="text"
+                  maxLength={6}
+                  placeholder="6-Digit OTP"
+                  value={forgotOtp}
+                  onChange={(e) => setForgotOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                  required
+                  style={{
+                    width: '100%',
+                    height: '42px',
+                    borderRadius: '10px',
+                    padding: '0 12px',
+                    fontSize: '14px',
+                    textAlign: 'center',
+                    letterSpacing: '0.2em',
+                    fontWeight: 700,
+                    background: isLight ? '#F8FAFC' : 'rgba(255, 255, 255, 0.04)',
+                    border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.1)',
+                    color: isLight ? '#090C0B' : '#FFFFFF',
+                    outline: 'none'
+                  }}
+                />
+                <input
+                  type="password"
+                  placeholder="New Password (min. 6 chars)"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    height: '42px',
+                    borderRadius: '10px',
+                    padding: '0 12px',
+                    fontSize: '13px',
+                    background: isLight ? '#F8FAFC' : 'rgba(255, 255, 255, 0.04)',
+                    border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.1)',
+                    color: isLight ? '#090C0B' : '#FFFFFF',
+                    outline: 'none'
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  style={{
+                    width: '100%',
+                    height: '42px',
+                    borderRadius: '10px',
+                    background: '#8B5CF6',
+                    color: '#FFFFFF',
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    border: 'none',
+                    cursor: forgotLoading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {forgotLoading ? 'Updating...' : 'Set New Password'}
+                </button>
               </form>
             )}
           </div>
         </div>
       )}
 
+      {/* ── Footer ── */}
+      <footer className="w-full max-w-7xl mx-auto px-6 sm:px-12 py-4 flex items-center justify-between text-xs" style={{ color: isLight ? '#4B5854' : '#64748B' }}>
+        <span>© {new Date().getFullYear()} SkillNexus. All rights reserved.</span>
+        <div className="flex items-center gap-4">
+          <Link to="/" className="hover:underline">Privacy</Link>
+          <Link to="/" className="hover:underline">Terms</Link>
+          <Link to="/" className="hover:underline">Support</Link>
+        </div>
+      </footer>
     </div>
   );
 }

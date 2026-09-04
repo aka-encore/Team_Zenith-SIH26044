@@ -12,11 +12,10 @@ try {
   console.log("Error to connect dns", error);
 }
 
-// Function to seed default demo accounts if database is empty or ensure seed users exist
+// Function to seed default admin accounts if database is empty
 export async function seedDefaultUsersIfEmpty() {
   try {
     const seedAccounts = [
-      { name: "TechNova Solutions", email: "company@test.com", password: "password123", role: "company" },
       { name: "Zenith Institute Admin", email: "institution@test.com", password: "password123", role: "institution" },
       { name: "Dr. Arvind Sharma", email: "faculty@test.com", password: "password123", role: "faculty" },
       { name: "System Admin", email: "admin@test.com", password: "password123", role: "admin" }
@@ -34,19 +33,6 @@ export async function seedDefaultUsersIfEmpty() {
           emailVerified: true
         });
         await user.save();
-      }
-
-      if (acc.role === "company") {
-        await Company.findOneAndUpdate(
-          { userId: user._id },
-          {
-            companyName: "TechNova Solutions",
-            industry: "Enterprise Software & Cloud",
-            location: "Bengaluru / Remote",
-            verificationStatus: "verified"
-          },
-          { upsert: true }
-        );
       }
     }
   } catch (err) {

@@ -2637,8 +2637,28 @@ export const submitDsaMockTest = async (req, res) => {
  */
 export const getCompanyPrepCompanies = async (req, res) => {
   try {
+    const dummyNames = [
+      'technova',
+      'technova solutions',
+      'technova global solutions',
+      'apex cloud',
+      'apex systems',
+      'demo company',
+      'test company',
+      'sample company',
+      'example company'
+    ];
+
+    const isDummyName = (name) => {
+      if (!name) return true;
+      const lower = name.trim().toLowerCase();
+      return dummyNames.some(d => lower.includes(d)) || /\d{10,}/.test(lower);
+    };
+
     const [allDbCompanies, opportunities] = await Promise.all([
-      Company.find({ verificationStatus: { $ne: 'rejected' } }).lean(),
+      Company.find({ verificationStatus: { $ne: 'rejected' } })
+        .populate('userId', 'name email status')
+        .lean(),
       Opportunity.find({ status: { $ne: 'closed' } })
         .populate('companyId', 'companyName industry website logoUrl location description')
         .lean()
@@ -2648,17 +2668,18 @@ export const getCompanyPrepCompanies = async (req, res) => {
 
     // 1. Add valid Company records from MongoDB
     allDbCompanies.forEach(comp => {
-      const rawName = (comp.companyName || '').trim();
-      // Skip empty or timestamped test junk
-      if (!rawName || /\d{10,}/.test(rawName)) return;
+      const rawName = (comp.companyName || comp.userId?.name || '').trim();
+      if (!rawName || isDummyName(rawName)) return;
 
       const compId = comp._id.toString();
       companyMap.set(compId, {
         _id: compId,
+        id: compId,
         companyName: rawName,
-        industry: comp.industry || 'Technology & Software',
+        industry: comp.industry || 'Technology',
+        category: comp.industry || 'Technology',
         website: comp.website || '',
-        location: comp.location || 'Remote / Hybrid',
+        location: comp.location || 'Remote / On-site',
         logoUrl: comp.logoUrl || '',
         description: comp.description || '',
         opportunityCount: 0,
@@ -2670,17 +2691,19 @@ export const getCompanyPrepCompanies = async (req, res) => {
     opportunities.forEach(opp => {
       if (!opp.companyId && !opp.companyName) return;
       const rawName = (opp.companyId?.companyName || opp.companyName || '').trim();
-      if (!rawName || /\d{10,}/.test(rawName)) return;
+      if (!rawName || isDummyName(rawName)) return;
 
-      const compId = opp.companyId?._id?.toString() || rawName;
+      const compId = opp.companyId?._id?.toString() || (opp.companyId ? opp.companyId.toString() : rawName);
 
       if (!companyMap.has(compId)) {
         companyMap.set(compId, {
           _id: compId,
+          id: compId,
           companyName: rawName,
-          industry: opp.companyId?.industry || 'Technology & Software',
+          industry: opp.companyId?.industry || 'Technology',
+          category: opp.companyId?.industry || 'Technology',
           website: opp.companyId?.website || '',
-          location: opp.companyId?.location || opp.location || 'Remote / Hybrid',
+          location: opp.companyId?.location || opp.location || 'Remote / On-site',
           logoUrl: opp.companyId?.logoUrl || '',
           description: opp.companyId?.description || opp.description || '',
           opportunityCount: 0,
@@ -2709,7 +2732,7 @@ export const getCompanyPrepCompanies = async (req, res) => {
     });
   } catch (error) {
     console.error('Get Company Prep Companies Error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error loading real companies: ' + error.message });
+    res.status(500).json({ success: false, message: 'Server error loading real companies: ' + error.message, companies: [] });
   }
 };
 

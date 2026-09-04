@@ -52,6 +52,7 @@ import StudentProfilePage from './pages/StudentProfilePage';
 import SkillsAssessmentPage from './pages/SkillsAssessmentPage';
 import SkillGapPage from './pages/SkillGapPage';
 import CompanyPrepPage from './pages/CompanyPrepPage';
+import MockInterviewPage from './pages/MockInterviewPage';
 import OpportunityDiscoveryPage from './pages/OpportunityDiscoveryPage';
 import StudentApplicationsPage from './pages/StudentApplicationsPage';
 import StudentInterviewsPage from './pages/StudentInterviewsPage';
@@ -127,30 +128,46 @@ function AppContent() {
   const isHomePage = location.pathname === '/';
 
   if (!user && (isPublicPage || isHomePage)) {
+    if (isHomePage) {
+      return (
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+        </Routes>
+      );
+    }
+
+    if (['/login', '/register', '/forgot-password'].includes(location.pathname)) {
+      return (
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      );
+    }
+
     return (
-      <div className="min-h-screen bg-slate-100 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col justify-between transition-colors selection:bg-emerald-600 selection:text-white">
+      <div 
+        className="min-h-screen flex flex-col justify-between transition-colors selection:bg-emerald-600 selection:text-white"
+        style={{ backgroundColor: 'var(--fac-bg-page)', color: 'var(--fac-text-primary)' }}
+      >
         <PublicNavbar />
-        {isHomePage ? (
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 flex flex-col justify-center">
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
-        ) : (
-          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 flex flex-col justify-center">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/how-it-works" element={<HowItWorksPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-          </main>
-        )}
-        <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md py-8 text-center text-xs text-slate-500 dark:text-slate-400">
+        </main>
+        <footer 
+          className="border-t py-8 text-center text-xs"
+          style={{ borderColor: 'var(--fac-border)', color: 'var(--fac-text-muted)', backgroundColor: 'var(--fac-bg-surface)' }}
+        >
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="font-semibold text-slate-800 dark:text-slate-200">SkillNexus AI Enterprise v3.2</span>
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--fac-emerald-bright)' }} />
+              <span className="font-semibold" style={{ color: 'var(--fac-text-primary)' }}>SkillNexus AI Enterprise v3.2</span>
               <span>• SIH AI-Driven Micro-Curricular & Dynamic Placement Engine</span>
             </div>
             <div>© 2026 SkillNexus. All rights reserved.</div>
@@ -214,6 +231,14 @@ function AppContent() {
         <Route path="/company-prep/learning" element={<Navigate to="/company-prep" replace />} />
         <Route path="/company-prep/practice" element={<Navigate to="/company-prep" replace />} />
         <Route path="/company-prep/mock-test" element={<Navigate to="/company-prep" replace />} />
+        <Route 
+          path="/mock-interview" 
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <MockInterviewPage />
+            </ProtectedRoute>
+          } 
+        />
         <Route 
           path="/opportunities" 
           element={

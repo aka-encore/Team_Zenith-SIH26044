@@ -30,7 +30,7 @@ router.post('/upload-photo', protect, authorize('student'), uploadProfilePhoto.s
 // 2. Skill Passport, Career Readiness & DSA Coding Practice
 router.get('/skill-passport', protect, authorize('student', 'faculty', 'institution', 'company', 'admin'), getSkillPassport);
 router.get('/readiness-score', protect, authorize('student'), getCareerReadinessScore);
-router.get('/companies', protect, authorize('student'), getCompanyPrepCompanies);
+router.get('/companies', protect, authorize('student', 'faculty', 'institution', 'company', 'admin'), getCompanyPrepCompanies);
 router.get('/topic-video', protect, authorize('student'), getTopicVideo);
 router.get('/dsa-problems', protect, authorize('student'), getDsaPracticeProblems);
 router.post('/dsa-submit', protect, authorize('student'), submitDsaProblem);

@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 import { 
-  KeyRound, Mail, Lock, Eye, EyeOff, Sparkles, 
-  ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, 
-  Loader2, RotateCcw, ShieldCheck
+  Lock, Mail, Eye, EyeOff, Loader2, AlertCircle, 
+  CheckCircle2, Sun, Moon, ArrowLeft, Sparkles
 } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+  const isLight = theme === 'light';
+  const accentColor = isLight ? '#063F3A' : '#19B874';
 
   // Steps: 1: Enter Email | 2: Verify OTP & Set New Password
   const [step, setStep] = useState(1);
@@ -193,188 +196,293 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-slate-950 text-slate-100 relative overflow-hidden font-sans">
-      
-      {/* Ambient background glows */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Main Container */}
-      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl border border-slate-800 bg-slate-900/70 backdrop-blur-xl shadow-2xl overflow-hidden z-10 my-8">
-        
-        {/* ━━━━━━━━━━━━━━━━━━━━ LEFT COLUMN: HERO & INFO ━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="lg:col-span-5 relative hidden lg:flex flex-col justify-between p-8 bg-slate-950/60 border-r border-slate-800 overflow-hidden">
-          
-          <div className="absolute inset-0 z-0">
-            <img 
-              src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80" 
-              alt="Cybersecurity and technology workspace" 
-              className="w-full h-full object-cover object-center filter brightness-[0.28] contrast-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
+    <div 
+      className="min-h-screen w-full flex flex-col justify-between font-sans selection:bg-emerald-600 selection:text-white"
+      style={{ 
+        backgroundColor: 'var(--fac-bg-page)', 
+        color: 'var(--fac-text-primary)',
+        transition: 'background-color 0.2s ease, color 0.2s ease'
+      }}
+    >
+      {/* ── Minimal Header ── */}
+      <header className="w-full max-w-7xl mx-auto px-6 sm:px-12 pt-8 pb-4 flex items-center justify-between">
+        <Link to="/" className="inline-flex items-center gap-2.5 no-underline group">
+          <div 
+            style={{
+              width: '30px',
+              height: '30px',
+              borderRadius: '7px',
+              background: accentColor,
+              color: isLight ? '#FFFFFF' : '#000000',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800,
+              fontSize: '14px',
+              letterSpacing: '-0.02em',
+              flexShrink: 0
+            }}
+          >
+            <Sparkles style={{ width: '16px', height: '16px' }} />
           </div>
+          <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--fac-text-primary)', letterSpacing: '-0.02em' }}>
+            SkillNexus
+          </span>
+        </Link>
 
-          <div className="relative z-10 space-y-2">
-            <Link to="/" className="inline-flex items-center space-x-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-600 p-0.5 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                  <Sparkles className="h-4 w-4 text-emerald-400" />
-                </div>
-              </div>
-              <span className="font-extrabold text-lg text-white tracking-tight">
-                Skill<span className="text-emerald-400">Nexus</span> AI
-              </span>
-            </Link>
-            <p className="text-xs text-slate-400 leading-relaxed font-medium">
-              Enterprise security infrastructure protecting user identity and platform access.
+        <div className="flex items-center gap-4">
+          <button
+            onClick={toggleTheme}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--fac-text-secondary)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '6px'
+            }}
+            title={isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            aria-label="Toggle Theme"
+          >
+            {isLight ? (
+              <Moon style={{ width: '16px', height: '16px' }} />
+            ) : (
+              <Sun style={{ width: '16px', height: '16px', color: 'var(--fac-gold)' }} />
+            )}
+          </button>
+
+          <Link
+            to="/login"
+            style={{
+              fontSize: '13px',
+              color: 'var(--fac-text-secondary)',
+              textDecoration: 'none',
+              fontWeight: 500
+            }}
+            className="hover:text-emerald-600 transition"
+          >
+            Sign in
+          </Link>
+        </div>
+      </header>
+
+      {/* ── Main Two-Column Editorial Layout ── */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-6 sm:px-12 py-10 lg:py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
+        
+        {/* ── LEFT COLUMN: Brand & Info ── */}
+        <div className="hidden lg:flex lg:col-span-5 flex-col justify-center space-y-8 pr-4 text-left">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: 'var(--fac-emerald-tint)', color: accentColor }}>
+              <span>Account Recovery</span>
+            </div>
+
+            <h1 
+              style={{
+                fontSize: '2.5rem',
+                lineHeight: '1.2',
+                fontWeight: 800,
+                letterSpacing: '-0.035em',
+                color: 'var(--fac-text-primary)'
+              }}
+            >
+              Reset your password securely.
+            </h1>
+            <p style={{ fontSize: '15px', lineHeight: '1.6', color: 'var(--fac-text-secondary)' }}>
+              Follow the two-step verification flow using a time-limited one-time password dispatched to your inbox.
             </p>
           </div>
 
-          <div className="relative z-10 space-y-3.5 my-8">
-            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-1">
-              <div className="flex items-center space-x-2 text-emerald-400 text-xs font-bold font-mono">
-                <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-                <span>Zero-Knowledge Email Verification</span>
-              </div>
-              <p className="text-[11px] text-slate-300">
-                Time-limited 6-digit authentication codes dispatched directly to your registered inbox.
-              </p>
+          <div className="space-y-3 pt-2 text-xs" style={{ color: 'var(--fac-text-secondary)' }}>
+            <div className="flex items-center gap-2">
+              <span style={{ color: accentColor, fontWeight: 700 }}>•</span>
+              <span>6-digit time-sensitive verification code</span>
             </div>
-
-            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md space-y-1">
-              <div className="flex items-center space-x-2 text-indigo-400 text-xs font-bold font-mono">
-                <KeyRound className="h-3.5 w-3.5 shrink-0" />
-                <span>Instant Credential Revocation</span>
-              </div>
-              <p className="text-[11px] text-slate-300">
-                Previous verification tokens and sessions are automatically invalidated upon password reset.
-              </p>
+            <div className="flex items-center gap-2">
+              <span style={{ color: accentColor, fontWeight: 700 }}>•</span>
+              <span>Immediate session credential refresh</span>
             </div>
           </div>
-
-          <div className="relative z-10 pt-4 border-t border-white/10 text-[11px] text-slate-400 font-mono flex items-center justify-between">
-            <span>256-Bit Cryptographic Hash</span>
-            <span className="text-emerald-400 font-bold">● Active 2FA</span>
-          </div>
-
         </div>
 
-        {/* ━━━━━━━━━━━━━━━━━━━━ RIGHT COLUMN: RECOVERY FORM ━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-between text-left space-y-6">
-          
-          {/* Top Return Link */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              {step === 2 ? (
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="text-xs font-bold text-slate-400 hover:text-emerald-400 flex items-center space-x-1 transition cursor-pointer"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  <span>Change Email</span>
-                </button>
-              ) : (
-                <Link 
-                  to="/login" 
-                  className="text-xs font-bold text-slate-400 hover:text-emerald-400 flex items-center space-x-1 transition"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  <span>Return to Login</span>
-                </Link>
-              )}
-              <span className="text-[11px] text-slate-500 font-mono">
-                {step === 1 ? 'Step 1 of 2: Email' : 'Step 2 of 2: Verify & Reset'}
-              </span>
+        {/* ── RIGHT COLUMN: Password Recovery Form ── */}
+        <div className="lg:col-span-7 w-full max-w-md mx-auto lg:mx-0">
+          <div className="space-y-6 text-left">
+            
+            {/* Top Return Link */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                {step === 2 ? (
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    style={{
+                      fontSize: '12px',
+                      color: accentColor,
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: 0
+                    }}
+                    className="hover:underline"
+                  >
+                    <ArrowLeft style={{ width: '14px', height: '14px' }} />
+                    <span>Change Email</span>
+                  </button>
+                ) : (
+                  <Link 
+                    to="/login" 
+                    style={{
+                      fontSize: '12px',
+                      color: 'var(--fac-text-secondary)',
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                    className="hover:underline"
+                  >
+                    <ArrowLeft style={{ width: '14px', height: '14px' }} />
+                    <span>Return to Login</span>
+                  </Link>
+                )}
+                <span style={{ fontSize: '11px', color: 'var(--fac-text-muted)' }}>
+                  {step === 1 ? 'Step 1 of 2' : 'Step 2 of 2'}
+                </span>
+              </div>
+
+              <h2 
+                style={{
+                  fontSize: '1.875rem',
+                  fontWeight: 800,
+                  letterSpacing: '-0.025em',
+                  color: 'var(--fac-text-primary)'
+                }}
+              >
+                {step === 1 ? 'Recover password' : 'Set new password'}
+              </h2>
+              <p style={{ fontSize: '13.5px', color: 'var(--fac-text-secondary)' }}>
+                {step === 1 
+                  ? 'Enter your registered email address to receive a secure 6-digit OTP.'
+                  : `Enter the 6-digit code sent to ${email} and choose a new password.`}
+              </p>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              {step === 1 ? 'Recover Password' : 'Set New Password'}
-            </h1>
-            <p className="text-xs text-slate-400">
-              {step === 1 
-                ? 'Enter your registered email address to receive a secure 6-digit OTP verification code.'
-                : `Enter the 6-digit code sent to ${email} and choose a new password.`}
-            </p>
-          </div>
+            {/* Alerts */}
+            {errorMsg && (
+              <div 
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  background: 'rgba(224, 82, 82, 0.08)',
+                  border: '1px solid rgba(224, 82, 82, 0.25)',
+                  color: 'var(--fac-error)',
+                  fontSize: '12.5px',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <AlertCircle style={{ width: '14px', height: '14px', flexShrink: 0 }} />
+                <span>{errorMsg}</span>
+              </div>
+            )}
 
-          {/* Alerts */}
-          {errorMsg && (
-            <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold flex items-center space-x-2.5 animate-fadeIn">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+            {successMsg && (
+              <div 
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  background: 'var(--fac-emerald-tint)',
+                  border: '1px solid rgba(22, 163, 106, 0.25)',
+                  color: 'var(--fac-emerald-bright)',
+                  fontSize: '12.5px',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <CheckCircle2 style={{ width: '14px', height: '14px', flexShrink: 0 }} />
+                <span>{successMsg}</span>
+              </div>
+            )}
 
-          {successMsg && (
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center space-x-2.5 animate-fadeIn">
-              <CheckCircle2 className="h-5 w-5 shrink-0" />
-              <span>{successMsg}</span>
-            </div>
-          )}
-
-          {/* ══════════════ STEP 1: ENTER EMAIL ══════════════ */}
-          {step === 1 && (
-            <form onSubmit={handleSendOtp} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-300 block">
-                  Registered Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="h-4 w-4 absolute left-3.5 top-3.5 text-slate-500" />
+            {/* ══════════════ STEP 1: ENTER EMAIL ══════════════ */}
+            {step === 1 && (
+              <form onSubmit={handleSendOtp} className="space-y-4">
+                <div className="space-y-1">
+                  <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--fac-text-primary)' }}>
+                    Registered Email Address
+                  </label>
                   <input
                     type="email"
-                    placeholder="Enter your registered account email"
+                    placeholder="Enter your registered email"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
                       if (fieldErrors.email) setFieldErrors({});
                     }}
-                    className={`w-full pl-10 pr-4 py-2.5 bg-slate-950 border rounded-xl text-xs text-white placeholder-slate-600 outline-none transition focus:border-emerald-500 ${
-                      fieldErrors.email ? 'border-rose-500' : 'border-slate-800'
-                    }`}
+                    className="fac-theme-input"
+                    style={{
+                      height: '40px',
+                      fontSize: '13.5px',
+                      borderColor: fieldErrors.email ? 'var(--fac-error)' : undefined
+                    }}
                     disabled={loading}
                     autoFocus
                   />
+                  {fieldErrors.email && (
+                    <span style={{ fontSize: '11px', color: 'var(--fac-error)' }}>
+                      {fieldErrors.email}
+                    </span>
+                  )}
                 </div>
-                {fieldErrors.email && (
-                  <span className="text-[11px] font-bold text-rose-400 block pt-0.5">
-                    {fieldErrors.email}
-                  </span>
-                )}
-              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs rounded-xl transition shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 mt-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Dispatching Verification Code...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Send 6-Digit OTP Code</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-            </form>
-          )}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    height: '40px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: accentColor,
+                    color: isLight ? '#FFFFFF' : '#000000',
+                    fontSize: '13.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    transition: 'all 0.15s ease'
+                  }}
+                  className="hover:brightness-105 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 style={{ width: '14px', height: '14px' }} className="animate-spin" />
+                      <span>Sending verification code...</span>
+                    </>
+                  ) : (
+                    <span>Send 6-digit OTP code</span>
+                  )}
+                </button>
+              </form>
+            )}
 
-          {/* ══════════════ STEP 2: VERIFY OTP & SET NEW PASSWORD ══════════════ */}
-          {step === 2 && (
-            <form onSubmit={handleResetPassword} className="space-y-4 animate-fadeIn">
-              
-              {/* 6-Digit OTP Input */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-300 block">
-                  6-Digit Verification Code *
-                </label>
-                <div className="relative">
-                  <KeyRound className="h-4 w-4 absolute left-3.5 top-3.5 text-slate-500" />
+            {/* ══════════════ STEP 2: VERIFY & RESET ══════════════ */}
+            {step === 2 && (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--fac-text-primary)' }}>
+                    6-Digit Verification Code
+                  </label>
                   <input
                     type="text"
                     maxLength={6}
@@ -384,138 +492,189 @@ export default function ForgotPasswordPage() {
                       setOtp(e.target.value.replace(/[^0-9]/g, ''));
                       if (fieldErrors.otp) setFieldErrors({ ...fieldErrors, otp: '' });
                     }}
-                    className={`w-full pl-10 pr-4 py-2.5 bg-slate-950 border rounded-xl text-center text-base font-mono tracking-widest text-emerald-400 outline-none transition focus:border-emerald-500 ${
-                      fieldErrors.otp ? 'border-rose-500' : 'border-slate-800'
-                    }`}
+                    className="fac-theme-input text-center font-mono tracking-[0.3em]"
+                    style={{
+                      height: '42px',
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      borderColor: fieldErrors.otp ? 'var(--fac-error)' : undefined
+                    }}
                     disabled={loading}
                     autoFocus
                   />
+                  {fieldErrors.otp && (
+                    <span style={{ fontSize: '11px', color: 'var(--fac-error)' }}>
+                      {fieldErrors.otp}
+                    </span>
+                  )}
+                  <div className="flex items-center justify-between text-xs pt-1" style={{ color: 'var(--fac-text-muted)', fontSize: '11px' }}>
+                    <span>Expires in: <strong style={{ color: otpTimer < 60 ? 'var(--fac-error)' : 'var(--fac-text-primary)' }}>{formatTimer(otpTimer)}</strong></span>
+                    <span>Attempts: <strong>{attempts}/{MAX_ATTEMPTS}</strong></span>
+                  </div>
                 </div>
-                {fieldErrors.otp && (
-                  <span className="text-[11px] font-bold text-rose-400 block pt-0.5">
-                    {fieldErrors.otp}
-                  </span>
-                )}
 
-                <div className="flex items-center justify-between text-xs text-slate-400 font-mono pt-1">
-                  <span>Code Expiry: <strong className={otpTimer < 60 ? 'text-rose-400' : 'text-white'}>{formatTimer(otpTimer)}</strong></span>
-                  <span>Attempts: <strong>{attempts}/{MAX_ATTEMPTS}</strong></span>
+                <div className="space-y-1">
+                  <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--fac-text-primary)' }}>
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="At least 6 characters"
+                      value={newPassword}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        if (fieldErrors.newPassword) setFieldErrors({ ...fieldErrors, newPassword: '' });
+                      }}
+                      className="fac-theme-input"
+                      style={{
+                        paddingRight: '38px',
+                        height: '40px',
+                        fontSize: '13.5px',
+                        borderColor: fieldErrors.newPassword ? 'var(--fac-error)' : undefined
+                      }}
+                      disabled={loading}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'var(--fac-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    >
+                      {showPassword ? <EyeOff style={{ width: '14px', height: '14px' }} /> : <Eye style={{ width: '14px', height: '14px' }} />}
+                    </button>
+                  </div>
+                  {fieldErrors.newPassword && (
+                    <span style={{ fontSize: '11px', color: 'var(--fac-error)' }}>
+                      {fieldErrors.newPassword}
+                    </span>
+                  )}
                 </div>
-              </div>
 
-              {/* New Password */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-300 block">
-                  New Password *
-                </label>
-                <div className="relative">
-                  <Lock className="h-4 w-4 absolute left-3.5 top-3.5 text-slate-500" />
+                <div className="space-y-1">
+                  <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--fac-text-primary)' }}>
+                    Confirm New Password
+                  </label>
                   <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="At least 6 characters"
-                    value={newPassword}
-                    onChange={(e) => {
-                      setNewPassword(e.target.value);
-                      if (fieldErrors.newPassword) setFieldErrors({ ...fieldErrors, newPassword: '' });
-                    }}
-                    className={`w-full pl-10 pr-10 py-2.5 bg-slate-950 border rounded-xl text-xs text-white placeholder-slate-600 outline-none transition focus:border-emerald-500 ${
-                      fieldErrors.newPassword ? 'border-rose-500' : 'border-slate-800'
-                    }`}
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {fieldErrors.newPassword && (
-                  <span className="text-[11px] font-bold text-rose-400 block pt-0.5">
-                    {fieldErrors.newPassword}
-                  </span>
-                )}
-              </div>
-
-              {/* Confirm New Password */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-300 block">
-                  Confirm New Password *
-                </label>
-                <div className="relative">
-                  <Lock className="h-4 w-4 absolute left-3.5 top-3.5 text-slate-500" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
+                    type="password"
                     placeholder="Repeat your new password"
                     value={confirmPassword}
                     onChange={(e) => {
                       setConfirmPassword(e.target.value);
                       if (fieldErrors.confirmPassword) setFieldErrors({ ...fieldErrors, confirmPassword: '' });
                     }}
-                    className={`w-full pl-10 pr-10 py-2.5 bg-slate-950 border rounded-xl text-xs text-white placeholder-slate-600 outline-none transition focus:border-emerald-500 ${
-                      fieldErrors.confirmPassword ? 'border-rose-500' : 'border-slate-800'
-                    }`}
+                    className="fac-theme-input"
+                    style={{
+                      height: '40px',
+                      fontSize: '13.5px',
+                      borderColor: fieldErrors.confirmPassword ? 'var(--fac-error)' : undefined
+                    }}
                     disabled={loading}
                   />
+                  {fieldErrors.confirmPassword && (
+                    <span style={{ fontSize: '11px', color: 'var(--fac-error)' }}>
+                      {fieldErrors.confirmPassword}
+                    </span>
+                  )}
                 </div>
-                {fieldErrors.confirmPassword && (
-                  <span className="text-[11px] font-bold text-rose-400 block pt-0.5">
-                    {fieldErrors.confirmPassword}
-                  </span>
-                )}
-              </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading || otp.length !== 6 || otpTimer <= 0 || attempts >= MAX_ATTEMPTS}
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs rounded-xl transition shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 mt-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Updating Password...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Confirm & Reset Password</span>
-                    <CheckCircle2 className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-
-              {/* Resend OTP Row */}
-              <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-xs text-slate-400">
-                <span>Didn't receive code?</span>
                 <button
-                  type="button"
-                  onClick={handleResendOtp}
-                  disabled={loading || resendCooldown > 0}
-                  className="font-bold text-emerald-400 hover:text-emerald-300 hover:underline flex items-center space-x-1 disabled:opacity-50 cursor-pointer"
+                  type="submit"
+                  disabled={loading || otp.length !== 6 || otpTimer <= 0 || attempts >= MAX_ATTEMPTS}
+                  style={{
+                    width: '100%',
+                    height: '40px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: accentColor,
+                    color: isLight ? '#FFFFFF' : '#000000',
+                    fontSize: '13.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    transition: 'all 0.15s ease'
+                  }}
+                  className="hover:brightness-105 disabled:opacity-50"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  <span>{resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}</span>
+                  {loading ? (
+                    <>
+                      <Loader2 style={{ width: '14px', height: '14px' }} className="animate-spin" />
+                      <span>Updating password...</span>
+                    </>
+                  ) : (
+                    <span>Confirm &amp; reset password</span>
+                  )}
                 </button>
-              </div>
 
-            </form>
-          )}
+                <div className="flex items-center justify-between text-xs pt-1" style={{ color: 'var(--fac-text-secondary)', fontSize: '12px' }}>
+                  <span>Didn't receive code?</span>
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={loading || resendCooldown > 0}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: accentColor,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      padding: 0
+                    }}
+                    className="hover:underline disabled:opacity-50"
+                  >
+                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
+                  </button>
+                </div>
+              </form>
+            )}
 
-          {/* Bottom Back to Sign In */}
-          <div className="text-center pt-2 border-t border-slate-800/80 text-xs text-slate-400">
-            <span>Remember your password? </span>
-            <Link 
-              to="/login" 
-              className="font-extrabold text-emerald-400 hover:text-emerald-300 hover:underline transition"
+            {/* Bottom Back to Sign In */}
+            <div 
+              style={{
+                textAlign: 'center',
+                paddingTop: '8px',
+                fontSize: '13px',
+                color: 'var(--fac-text-secondary)'
+              }}
             >
-              Sign in to your portal
-            </Link>
-          </div>
+              <span>Remember your password? </span>
+              <Link 
+                to="/login" 
+                style={{
+                  fontWeight: 600,
+                  color: accentColor,
+                  textDecoration: 'none'
+                }}
+                className="hover:underline"
+              >
+                Sign in
+              </Link>
+            </div>
 
+          </div>
         </div>
 
-      </div>
+      </main>
+
+      {/* ── Minimal Editorial Footer ── */}
+      <footer 
+        style={{
+          borderTop: '1px solid var(--fac-border)',
+          color: 'var(--fac-text-muted)',
+          fontSize: '12px'
+        }}
+        className="w-full max-w-7xl mx-auto px-6 sm:px-12 py-6 flex flex-col sm:flex-row items-center justify-between gap-2"
+      >
+        <div>
+          © 2026 SkillNexus Platform. All rights reserved.
+        </div>
+        <div className="flex items-center gap-4">
+          <Link to="/about" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:underline">About</Link>
+          <Link to="/how-it-works" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:underline">How It Works</Link>
+        </div>
+      </footer>
 
     </div>
   );
