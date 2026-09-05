@@ -1,6 +1,6 @@
 # SkillNexus AI — AI-Driven Micro-Curricular & Dynamic Placement Engine
 
-> **Smart India Hackathon (SIH 2024)**  
+> **Smart India Hackathon (SIH 2026)**  
 > **Team Zenith (SIH26044)**
 
 ---
