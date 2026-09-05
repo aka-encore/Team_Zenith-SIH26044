@@ -81,10 +81,24 @@ function NotificationsRoleRouter() {
 function SettingsRoleRouter() {
   const { user } = useAuth();
   const role = (user?.role || '').toLowerCase();
-  if (['faculty', 'institution', 'academician'].includes(role)) {
+  if (['faculty', 'institution', 'academician', 'college'].includes(role)) {
     return <FacultySettingsPage />;
   }
   return <StudentSettingsPage />;
+}
+
+export function getRoleDashboardPath(role) {
+  const r = (role || '').toLowerCase();
+  if (r === 'company') return '/company';
+  if (['faculty', 'institution', 'academician', 'college'].includes(r)) return '/faculty';
+  if (r === 'admin') return '/admin';
+  return '/student';
+}
+
+function RoleDashboardRedirect() {
+  const { user } = useAuth();
+  const targetPath = getRoleDashboardPath(user?.role);
+  return <Navigate to={targetPath} replace />;
 }
 
 function AppContent() {
@@ -92,17 +106,10 @@ function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // If user is already authenticated and visits /login or /register, redirect to their role dashboard
+  // If user is already authenticated and visits /login, /register, or /forgot-password, redirect to their role dashboard
   useEffect(() => {
-    if (!loading && user && ['/login', '/register'].includes(location.pathname)) {
-      const userRole = (user?.role || '').toLowerCase();
-      const defaultDashboardPath = userRole === 'company' 
-        ? '/company' 
-        : (userRole === 'faculty' || userRole === 'institution' || userRole === 'academician') 
-          ? '/faculty' 
-          : userRole === 'admin' 
-            ? '/admin' 
-            : '/student';
+    if (!loading && user && ['/login', '/register', '/forgot-password'].includes(location.pathname)) {
+      const defaultDashboardPath = getRoleDashboardPath(user?.role);
       navigate(defaultDashboardPath, { replace: true });
     }
   }, [user, loading, location.pathname, navigate]);
@@ -185,7 +192,13 @@ function AppContent() {
   return (
     <DashboardLayout>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<RoleDashboardRedirect />} />
+        <Route path="/dashboard" element={<RoleDashboardRedirect />} />
+        <Route path="/student/dashboard" element={<Navigate to="/student" replace />} />
+        <Route path="/company/dashboard" element={<Navigate to="/company" replace />} />
+        <Route path="/faculty/dashboard" element={<Navigate to="/faculty" replace />} />
+        <Route path="/college/dashboard" element={<Navigate to="/faculty" replace />} />
+        <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
 
         {/* ══════════════ 1. CONSOLIDATED 9 STUDENT PORTAL ROUTES ══════════════ */}
         <Route 

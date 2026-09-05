@@ -32,12 +32,13 @@ export const getFacultyDashboardStats = async (req, res) => {
     let totalSkillInstances = 0;
     allStudents.forEach(s => {
       const skills = (s.skillsList && s.skillsList.length > 0)
-        ? s.skillsList.map(sk => sk.name)
+        ? s.skillsList.map(sk => (typeof sk === 'string' ? sk : (sk?.name || '')))
         : (s.skills || []);
 
       skills.forEach(sk => {
-        if (sk) {
-          const norm = sk.trim();
+        const rawName = typeof sk === 'string' ? sk : (sk?.name || '');
+        if (rawName && rawName.trim()) {
+          const norm = rawName.trim();
           skillCountMap[norm] = (skillCountMap[norm] || 0) + 1;
           totalSkillInstances++;
         }
@@ -351,8 +352,9 @@ export const getFacultySkillsAnalytics = async (req, res) => {
     const marketDemandMap = {};
     opportunities.forEach(opp => {
       (opp.requiredSkills || []).forEach(reqSk => {
-        if (reqSk) {
-          const norm = reqSk.trim();
+        const rawName = typeof reqSk === 'string' ? reqSk : (reqSk?.name || '');
+        if (rawName && rawName.trim()) {
+          const norm = rawName.trim();
           marketDemandMap[norm] = (marketDemandMap[norm] || 0) + 1;
         }
       });
@@ -456,8 +458,9 @@ export const getFacultySkillGap = async (req, res) => {
     const marketDemandMap = {};
     opportunities.forEach(opp => {
       (opp.requiredSkills || []).forEach(reqSk => {
-        if (reqSk) {
-          const norm = reqSk.trim();
+        const rawName = typeof reqSk === 'string' ? reqSk : (reqSk?.name || '');
+        if (rawName && rawName.trim()) {
+          const norm = rawName.trim();
           if (!marketDemandMap[norm]) {
             marketDemandMap[norm] = {
               skill: norm,

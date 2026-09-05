@@ -343,20 +343,37 @@ export default function Register() {
 
   const roleMeta = ROLE_INFO[selectedRole] || ROLE_INFO.student;
 
+  const inputStyle = (hasError) => ({
+    width: '100%',
+    height: '44px',
+    borderRadius: '12px',
+    padding: '0 14px 0 38px',
+    fontSize: '13px',
+    background: isLight ? '#F8FAFC' : 'rgba(255, 255, 255, 0.04)',
+    border: hasError ? '1px solid #EF4444' : (isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.12)'),
+    color: isLight ? '#090C0B' : '#FFFFFF',
+    outline: 'none',
+    transition: 'border-color 0.2s ease, background 0.2s ease'
+  });
+
+  const iconStyle = {
+    position: 'absolute',
+    left: '12px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    width: '15px',
+    height: '15px',
+    color: isLight ? '#94A3B8' : 'rgba(255, 255, 255, 0.55)',
+    pointerEvents: 'none'
+  };
+
   return (
     <div 
-      className="min-h-screen w-full relative flex flex-col justify-between font-sans selection:bg-rose-500 selection:text-white"
+      className="min-h-screen w-full relative flex flex-col justify-between font-sans selection:bg-emerald-500/20 selection:text-emerald-500"
       style={{
-        backgroundImage: `
-          radial-gradient(circle at 20% 30%, rgba(20, 184, 166, 0.25) 0%, transparent 40%),
-          radial-gradient(circle at 80% 20%, rgba(244, 63, 94, 0.3) 0%, transparent 50%),
-          radial-gradient(circle at 50% 80%, rgba(234, 88, 12, 0.25) 0%, transparent 60%),
-          linear-gradient(180deg, #090E17 0%, #111A2E 50%, #1A1224 100%)
-        `,
-        backgroundAttachment: 'fixed',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: '#FFFFFF'
+        background: isLight ? '#F8FAFC' : '#090D16',
+        color: isLight ? '#0F172A' : '#FFFFFF',
+        transition: 'background 0.3s ease, color 0.3s ease'
       }}
     >
       {/* ── Top Floating Header ── */}
@@ -367,106 +384,95 @@ export default function Register() {
               width: '34px',
               height: '34px',
               borderRadius: '10px',
-              background: 'linear-gradient(135deg, #14B8A6 0%, #F43F5E 100%)',
+              background: '#059669',
               color: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 800,
               fontSize: '15px',
-              boxShadow: '0 4px 15px rgba(244, 63, 94, 0.4)'
+              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)'
             }}
           >
             <Sparkles style={{ width: '18px', height: '18px' }} />
           </div>
-          <span style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em', color: '#FFFFFF' }}>
+          <span style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em', color: isLight ? '#090C0B' : '#FFFFFF' }}>
             SkillNexus
           </span>
         </Link>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleTheme}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              border: isLight ? '1px solid #DDE2DD' : '1px solid rgba(255, 255, 255, 0.1)',
+              background: isLight ? '#FFFFFF' : 'rgba(255, 255, 255, 0.05)',
+              color: isLight ? '#1F2926' : '#F5F7F6',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            title="Toggle theme"
+          >
+            {isLight ? <Moon style={{ width: '16px', height: '16px' }} /> : <Sun style={{ width: '16px', height: '16px' }} />}
+          </button>
+
           <Link
             to="/login"
             style={{
-              padding: '6px 16px',
+              padding: '7px 18px',
               borderRadius: '10px',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
-              background: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(10px)',
-              color: '#FFFFFF',
+              border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.2)',
+              background: isLight ? '#FFFFFF' : 'rgba(255, 255, 255, 0.08)',
+              color: isLight ? '#0F172A' : '#FFFFFF',
               fontSize: '13px',
               fontWeight: 600,
               textDecoration: 'none',
               transition: 'all 0.2s ease'
             }}
-            className="hover:bg-white/20"
+            className="hover:bg-slate-100 dark:hover:bg-white/20"
           >
             Sign in
           </Link>
         </div>
       </header>
 
-      {/* ── Main Glassmorphism Registration Card (Inspired by Image 2) ── */}
+      {/* ── Main Registration Card ── */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-10 z-10">
         <div 
-          className="w-full max-w-2xl rounded-[28px] overflow-hidden p-8 sm:p-12 relative transition-all duration-300"
+          className="w-full max-w-2xl rounded-[24px] overflow-hidden p-8 sm:p-12 relative transition-all duration-300"
           style={{
-            background: 'rgba(15, 23, 42, 0.55)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255, 255, 255, 0.22)',
-            boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.8), 0 0 40px rgba(20, 184, 166, 0.15)'
+            background: isLight ? '#FFFFFF' : '#14151E',
+            border: isLight ? '1px solid #E2E8F0' : '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: isLight 
+              ? '0 20px 40px -12px rgba(0, 0, 0, 0.08)' 
+              : '0 30px 60px -12px rgba(0, 0, 0, 0.7)'
           }}
         >
-          {/* Subtle Ambient Glowing Spheres */}
-          <div 
-            style={{
-              position: 'absolute',
-              top: '-50px',
-              right: '-50px',
-              width: '200px',
-              height: '200px',
-              borderRadius: '50%',
-              background: 'rgba(244, 63, 94, 0.15)',
-              filter: 'blur(40px)',
-              pointerEvents: 'none'
-            }} 
-          />
-          <div 
-            style={{
-              position: 'absolute',
-              bottom: '-50px',
-              left: '-50px',
-              width: '200px',
-              height: '200px',
-              borderRadius: '50%',
-              background: 'rgba(20, 184, 166, 0.15)',
-              filter: 'blur(40px)',
-              pointerEvents: 'none'
-            }} 
-          />
-
           <div className="relative z-10 space-y-6">
             
-            {/* Header: Centered Title matching Image 2 */}
+            {/* Header: Centered Title */}
             <div className="text-center space-y-2">
               <h1 
                 style={{
                   fontSize: '2rem',
                   fontWeight: 800,
                   letterSpacing: '-0.025em',
-                  color: '#FFFFFF',
+                  color: isLight ? '#090C0B' : '#FFFFFF',
                   margin: 0
                 }}
               >
-                {step === 1 ? 'Register' : 'Verify Email OTP'}
+                {step === 1 ? 'Create Account' : 'Verify Email OTP'}
               </h1>
               
-              {/* Dynamic Subtitle / Realtime Helper Text ("jas field change karl tas side cha text change kar") */}
               <p 
                 style={{ 
                   fontSize: '13.5px', 
-                  color: 'rgba(255, 255, 255, 0.75)', 
+                  color: isLight ? '#475569' : '#94A3B8', 
                   maxWidth: '480px',
                   margin: '0 auto',
                   lineHeight: '1.5'
@@ -481,8 +487,8 @@ export default function Register() {
               <div 
                 className="grid grid-cols-3 gap-2 p-1.5 rounded-2xl"
                 style={{
-                  background: 'rgba(0, 0, 0, 0.35)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)'
+                  background: isLight ? '#F1F5F9' : 'rgba(0, 0, 0, 0.35)',
+                  border: isLight ? '1px solid #E2E8F0' : '1px solid rgba(255, 255, 255, 0.1)'
                 }}
               >
                 {REG_ROLES.map(r => {
@@ -501,11 +507,15 @@ export default function Register() {
                         padding: '10px 8px',
                         borderRadius: '12px',
                         border: 'none',
-                        background: isSelected ? 'rgba(255, 255, 255, 0.18)' : 'transparent',
-                        color: isSelected ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
-                        boxShadow: isSelected ? '0 4px 12px rgba(0, 0, 0, 0.25)' : 'none',
+                        background: isSelected 
+                          ? (isLight ? '#FFFFFF' : 'rgba(255, 255, 255, 0.18)') 
+                          : 'transparent',
+                        color: isSelected 
+                          ? (isLight ? '#059669' : '#10B981') 
+                          : (isLight ? '#64748B' : '#94A3B8'),
+                        boxShadow: isSelected ? (isLight ? '0 2px 8px rgba(0, 0, 0, 0.06)' : '0 4px 12px rgba(0, 0, 0, 0.25)') : 'none',
                         fontSize: '13px',
-                        fontWeight: isSelected ? 700 : 500,
+                        fontWeight: isSelected ? 700 : 600,
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -513,7 +523,6 @@ export default function Register() {
                         gap: '6px',
                         transition: 'all 0.2s ease'
                       }}
-                      className="hover:text-white"
                     >
                       <Icon style={{ width: '15px', height: '15px' }} />
                       <span>{r.label}</span>
@@ -528,9 +537,9 @@ export default function Register() {
               <div 
                 className="p-3.5 rounded-xl flex items-center gap-2.5 text-xs font-medium"
                 style={{
-                  background: 'rgba(239, 68, 68, 0.2)',
-                  border: '1px solid rgba(239, 68, 68, 0.4)',
-                  color: '#FECDD3'
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#EF4444'
                 }}
               >
                 <AlertCircle style={{ width: '16px', height: '16px', flexShrink: 0 }} />
@@ -542,9 +551,9 @@ export default function Register() {
               <div 
                 className="p-3.5 rounded-xl flex items-center gap-2.5 text-xs font-medium"
                 style={{
-                  background: 'rgba(20, 184, 166, 0.2)',
-                  border: '1px solid rgba(20, 184, 166, 0.4)',
-                  color: '#99F6E4'
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  color: '#10B981'
                 }}
               >
                 <CheckCircle2 style={{ width: '16px', height: '16px', flexShrink: 0 }} />
@@ -654,18 +663,18 @@ export default function Register() {
                           borderRadius: '12px',
                           padding: '0 14px',
                           fontSize: '13px',
-                          background: 'rgba(0, 0, 0, 0.4)',
-                          border: '1px solid rgba(255, 255, 255, 0.18)',
-                          color: '#FFFFFF',
+                          background: isLight ? '#F8FAFC' : 'rgba(255, 255, 255, 0.04)',
+                          border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.12)',
+                          color: isLight ? '#090C0B' : '#FFFFFF',
                           outline: 'none',
                           cursor: 'pointer'
                         }}
                       >
-                        <option value="1st Year" style={{ background: '#0F172A' }}>1st Year Undergraduate</option>
-                        <option value="2nd Year" style={{ background: '#0F172A' }}>2nd Year Undergraduate</option>
-                        <option value="3rd Year" style={{ background: '#0F172A' }}>3rd Year Undergraduate</option>
-                        <option value="Final Year" style={{ background: '#0F172A' }}>Final Year Undergraduate</option>
-                        <option value="Postgraduate" style={{ background: '#0F172A' }}>Postgraduate / Masters</option>
+                        <option value="1st Year" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>1st Year Undergraduate</option>
+                        <option value="2nd Year" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>2nd Year Undergraduate</option>
+                        <option value="3rd Year" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>3rd Year Undergraduate</option>
+                        <option value="Final Year" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>Final Year Undergraduate</option>
+                        <option value="Postgraduate" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>Postgraduate / Masters</option>
                       </select>
                     </div>
                   </div>
@@ -690,7 +699,7 @@ export default function Register() {
                           />
                           <Building2 style={iconStyle} />
                         </div>
-                        {fieldErrors.companyName && <span className="text-[11px] text-rose-300">{fieldErrors.companyName}</span>}
+                        {fieldErrors.companyName && <span className="text-[11px] text-rose-500">{fieldErrors.companyName}</span>}
                       </div>
 
                       <div className="space-y-1">
@@ -708,7 +717,7 @@ export default function Register() {
                           />
                           <User style={iconStyle} />
                         </div>
-                        {fieldErrors.hrName && <span className="text-[11px] text-rose-300">{fieldErrors.hrName}</span>}
+                        {fieldErrors.hrName && <span className="text-[11px] text-rose-500">{fieldErrors.hrName}</span>}
                       </div>
                     </div>
 
@@ -728,7 +737,7 @@ export default function Register() {
                           />
                           <Globe style={iconStyle} />
                         </div>
-                        {fieldErrors.website && <span className="text-[11px] text-rose-300">{fieldErrors.website}</span>}
+                        {fieldErrors.website && <span className="text-[11px] text-rose-500">{fieldErrors.website}</span>}
                       </div>
 
                       <div className="space-y-1">
@@ -746,7 +755,7 @@ export default function Register() {
                           />
                           <MapPin style={iconStyle} />
                         </div>
-                        {fieldErrors.address && <span className="text-[11px] text-rose-300">{fieldErrors.address}</span>}
+                        {fieldErrors.address && <span className="text-[11px] text-rose-500">{fieldErrors.address}</span>}
                       </div>
                     </div>
 
@@ -760,18 +769,18 @@ export default function Register() {
                           borderRadius: '12px',
                           padding: '0 14px',
                           fontSize: '13px',
-                          background: 'rgba(0, 0, 0, 0.4)',
-                          border: '1px solid rgba(255, 255, 255, 0.18)',
-                          color: '#FFFFFF',
+                          background: isLight ? '#F8FAFC' : 'rgba(255, 255, 255, 0.04)',
+                          border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.12)',
+                          color: isLight ? '#090C0B' : '#FFFFFF',
                           outline: 'none',
                           cursor: 'pointer'
                         }}
                       >
-                        <option value="Technology & Software" style={{ background: '#0F172A' }}>Technology & Software</option>
-                        <option value="Financial Services & Fintech" style={{ background: '#0F172A' }}>Financial Services & Fintech</option>
-                        <option value="Core Engineering & Manufacturing" style={{ background: '#0F172A' }}>Core Engineering & Manufacturing</option>
-                        <option value="Healthcare & Life Sciences" style={{ background: '#0F172A' }}>Healthcare & Life Sciences</option>
-                        <option value="Consulting & Business Services" style={{ background: '#0F172A' }}>Consulting & Business Services</option>
+                        <option value="Technology & Software" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>Technology & Software</option>
+                        <option value="Financial Services & Fintech" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>Financial Services & Fintech</option>
+                        <option value="Core Engineering & Manufacturing" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>Core Engineering & Manufacturing</option>
+                        <option value="Healthcare & Life Sciences" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>Healthcare & Life Sciences</option>
+                        <option value="Consulting & Business Services" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>Consulting & Business Services</option>
                       </select>
                     </div>
                   </div>
@@ -796,7 +805,7 @@ export default function Register() {
                           />
                           <User style={iconStyle} />
                         </div>
-                        {fieldErrors.name && <span className="text-[11px] text-rose-300">{fieldErrors.name}</span>}
+                        {fieldErrors.name && <span className="text-[11px] text-rose-500">{fieldErrors.name}</span>}
                       </div>
 
                       <div className="space-y-1">
@@ -814,7 +823,7 @@ export default function Register() {
                           />
                           <Hash style={iconStyle} />
                         </div>
-                        {fieldErrors.employeeId && <span className="text-[11px] text-rose-300">{fieldErrors.employeeId}</span>}
+                        {fieldErrors.employeeId && <span className="text-[11px] text-rose-500">{fieldErrors.employeeId}</span>}
                       </div>
                     </div>
 
@@ -834,7 +843,7 @@ export default function Register() {
                           />
                           <School style={iconStyle} />
                         </div>
-                        {fieldErrors.college && <span className="text-[11px] text-rose-300">{fieldErrors.college}</span>}
+                        {fieldErrors.college && <span className="text-[11px] text-rose-500">{fieldErrors.college}</span>}
                       </div>
 
                       <div className="space-y-1">
@@ -852,7 +861,7 @@ export default function Register() {
                           />
                           <BookOpen style={iconStyle} />
                         </div>
-                        {fieldErrors.department && <span className="text-[11px] text-rose-300">{fieldErrors.department}</span>}
+                        {fieldErrors.department && <span className="text-[11px] text-rose-500">{fieldErrors.department}</span>}
                       </div>
                     </div>
 
@@ -866,18 +875,18 @@ export default function Register() {
                           borderRadius: '12px',
                           padding: '0 14px',
                           fontSize: '13px',
-                          background: 'rgba(0, 0, 0, 0.4)',
-                          border: '1px solid rgba(255, 255, 255, 0.18)',
-                          color: '#FFFFFF',
+                          background: isLight ? '#F8FAFC' : 'rgba(255, 255, 255, 0.04)',
+                          border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.12)',
+                          color: isLight ? '#090C0B' : '#FFFFFF',
                           outline: 'none',
                           cursor: 'pointer'
                         }}
                       >
-                        <option value="Assistant Professor" style={{ background: '#0F172A' }}>Assistant Professor</option>
-                        <option value="Associate Professor" style={{ background: '#0F172A' }}>Associate Professor</option>
-                        <option value="Professor & Head of Department" style={{ background: '#0F172A' }}>Professor & Head of Department</option>
-                        <option value="Training & Placement Officer (TPO)" style={{ background: '#0F172A' }}>Training & Placement Officer (TPO)</option>
-                        <option value="Dean / Principal" style={{ background: '#0F172A' }}>Dean / Principal</option>
+                        <option value="Assistant Professor" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>Assistant Professor</option>
+                        <option value="Associate Professor" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>Associate Professor</option>
+                        <option value="Professor & Head of Department" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>Professor & Head of Department</option>
+                        <option value="Training & Placement Officer (TPO)" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>Training & Placement Officer (TPO)</option>
+                        <option value="Dean / Principal" style={{ background: isLight ? '#FFFFFF' : '#0F172A', color: isLight ? '#0F172A' : '#FFFFFF' }}>Dean / Principal</option>
                       </select>
                     </div>
                   </div>
@@ -901,7 +910,7 @@ export default function Register() {
                       />
                       <Mail style={iconStyle} />
                     </div>
-                    {fieldErrors.email && <span className="text-[11px] text-rose-300">{fieldErrors.email}</span>}
+                    {fieldErrors.email && <span className="text-[11px] text-rose-500">{fieldErrors.email}</span>}
                   </div>
 
                   {/* Phone */}
@@ -920,7 +929,7 @@ export default function Register() {
                       />
                       <Phone style={iconStyle} />
                     </div>
-                    {fieldErrors.phone && <span className="text-[11px] text-rose-300">{fieldErrors.phone}</span>}
+                    {fieldErrors.phone && <span className="text-[11px] text-rose-500">{fieldErrors.phone}</span>}
                   </div>
                 </div>
 
@@ -950,14 +959,14 @@ export default function Register() {
                           transform: 'translateY(-50%)',
                           background: 'transparent',
                           border: 'none',
-                          color: 'rgba(255, 255, 255, 0.6)',
+                          color: isLight ? '#94A3B8' : 'rgba(255, 255, 255, 0.6)',
                           cursor: 'pointer'
                         }}
                       >
                         {showPassword ? <EyeOff style={{ width: '15px', height: '15px' }} /> : <Eye style={{ width: '15px', height: '15px' }} />}
                       </button>
                     </div>
-                    {fieldErrors.password && <span className="text-[11px] text-rose-300">{fieldErrors.password}</span>}
+                    {fieldErrors.password && <span className="text-[11px] text-rose-500">{fieldErrors.password}</span>}
                   </div>
 
                   {/* Confirm Password */}
@@ -976,7 +985,7 @@ export default function Register() {
                       />
                       <Lock style={iconStyle} />
                     </div>
-                    {fieldErrors.confirmPassword && <span className="text-[11px] text-rose-300">{fieldErrors.confirmPassword}</span>}
+                    {fieldErrors.confirmPassword && <span className="text-[11px] text-rose-500">{fieldErrors.confirmPassword}</span>}
                   </div>
                 </div>
 
@@ -987,9 +996,9 @@ export default function Register() {
                   style={{
                     width: '100%',
                     height: '46px',
-                    borderRadius: '14px',
-                    background: '#FFFFFF',
-                    color: '#0F172A',
+                    borderRadius: '12px',
+                    background: isLight ? '#059669' : '#10B981',
+                    color: '#FFFFFF',
                     fontSize: '14px',
                     fontWeight: 700,
                     border: 'none',
@@ -998,11 +1007,11 @@ export default function Register() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
                     marginTop: '16px',
                     transition: 'all 0.2s ease'
                   }}
-                  className="hover:bg-slate-100 active:scale-[0.99]"
+                  className="hover:brightness-110 active:scale-[0.99]"
                 >
                   {loading ? (
                     <>
@@ -1036,16 +1045,16 @@ export default function Register() {
                       letterSpacing: '0.4em',
                       textAlign: 'center',
                       fontWeight: 800,
-                      background: 'rgba(0, 0, 0, 0.45)',
-                      border: '1px solid rgba(255, 255, 255, 0.25)',
-                      color: '#FFFFFF',
+                      background: isLight ? '#F8FAFC' : 'rgba(0, 0, 0, 0.45)',
+                      border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.25)',
+                      color: isLight ? '#090C0B' : '#FFFFFF',
                       outline: 'none'
                     }}
                   />
                 </div>
 
                 <div className="flex items-center justify-between text-xs">
-                  <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Code expires: {formatTimer(otpTimer)}</span>
+                  <span style={{ color: isLight ? '#64748B' : 'rgba(255, 255, 255, 0.7)' }}>Code expires: {formatTimer(otpTimer)}</span>
                   <button
                     type="button"
                     onClick={handleResendOtp}
@@ -1053,7 +1062,7 @@ export default function Register() {
                     style={{
                       background: 'transparent',
                       border: 'none',
-                      color: resendCooldown > 0 ? 'rgba(255, 255, 255, 0.4)' : '#38BDF8',
+                      color: resendCooldown > 0 ? '#94A3B8' : (isLight ? '#059669' : '#10B981'),
                       cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
                       fontWeight: 600
                     }}
@@ -1070,9 +1079,9 @@ export default function Register() {
                     style={{
                       height: '44px',
                       borderRadius: '12px',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      background: 'rgba(255, 255, 255, 0.06)',
-                      color: '#FFFFFF',
+                      border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255, 255, 255, 0.2)',
+                      background: isLight ? '#F1F5F9' : 'rgba(255, 255, 255, 0.06)',
+                      color: isLight ? '#0F172A' : '#FFFFFF',
                       fontSize: '13px',
                       fontWeight: 600,
                       cursor: 'pointer'
@@ -1088,8 +1097,8 @@ export default function Register() {
                       height: '44px',
                       borderRadius: '12px',
                       border: 'none',
-                      background: '#FFFFFF',
-                      color: '#0F172A',
+                      background: isLight ? '#059669' : '#10B981',
+                      color: '#FFFFFF',
                       fontSize: '13px',
                       fontWeight: 700,
                       cursor: loading ? 'not-allowed' : 'pointer',
@@ -1107,12 +1116,12 @@ export default function Register() {
 
             {/* Bottom: Already have an account? Login */}
             <div className="text-center pt-2">
-              <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.75)' }}>
+              <span style={{ fontSize: '13px', color: isLight ? '#64748B' : 'rgba(255, 255, 255, 0.75)' }}>
                 Already have an account?{' '}
                 <Link
                   to="/login"
                   style={{
-                    color: '#FFFFFF',
+                    color: isLight ? '#059669' : '#10B981',
                     fontWeight: 700,
                     textDecoration: 'none'
                   }}
@@ -1128,11 +1137,11 @@ export default function Register() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="w-full max-w-7xl mx-auto px-6 sm:px-12 py-4 flex items-center justify-between text-xs z-10" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+      <footer className="w-full max-w-7xl mx-auto px-6 sm:px-12 py-4 flex items-center justify-between text-xs z-10" style={{ color: isLight ? '#64748B' : 'rgba(255, 255, 255, 0.6)' }}>
         <span>© {new Date().getFullYear()} SkillNexus Institutional Platform</span>
         <div className="flex items-center gap-4">
-          <Link to="/" className="hover:text-white transition">Privacy Policy</Link>
-          <Link to="/" className="hover:text-white transition">Terms of Service</Link>
+          <Link to="/" className="hover:underline transition">Privacy Policy</Link>
+          <Link to="/" className="hover:underline transition">Terms of Service</Link>
         </div>
       </footer>
     </div>

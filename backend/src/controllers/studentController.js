@@ -987,17 +987,24 @@ export const getSkillGapAnalysis = async (req, res) => {
     const assessments = await AssessmentResult.find({ userId }).sort({ createdAt: -1 });
 
     // Format current student skills with structured categories and proficiencies
-    const currentSkills = (profile.skillsList && profile.skillsList.length > 0)
-      ? profile.skillsList.map(s => ({
-          name: s.name,
-          category: s.category || 'Technical',
-          proficiency: s.proficiency || s.proficiencyLevel || 'Intermediate'
-        }))
-      : (profile.skills || []).map(s => ({
-          name: s,
-          category: 'Technical',
-          proficiency: 'Intermediate'
-        }));
+    const rawStudentSkills = (profile.skillsList && profile.skillsList.length > 0)
+      ? profile.skillsList
+      : (profile.skills || []);
+
+    const currentSkills = rawStudentSkills.map(s => {
+      let name = '';
+      let category = 'Technical';
+      let proficiency = 'Intermediate';
+
+      if (typeof s === 'string') {
+        name = s.trim();
+      } else if (s && typeof s === 'object') {
+        name = typeof s.name === 'string' ? s.name.trim() : (s.skill || '');
+        category = s.category || 'Technical';
+        proficiency = s.proficiency || s.proficiencyLevel || 'Intermediate';
+      }
+      return { name: name || 'Skill', category, proficiency };
+    });
 
     // Fetch active opportunities from MongoDB for real target options
     const opportunities = await Opportunity.find({ status: 'open' })
@@ -1042,9 +1049,9 @@ export const getSkillGapAnalysis = async (req, res) => {
       matchData = matchSkills(profile, targetSkills);
 
       // Find weak skills (skills student has that are at Beginner proficiency and in required skills)
-      const targetLookup = new Set(targetSkills.map(s => s.toLowerCase().trim()));
+      const targetLookup = new Set(targetSkills.map(s => (typeof s === 'string' ? s : (s?.name || '')).toLowerCase().trim()));
       weakSkills = currentSkills.filter(s => 
-        s.proficiency.toLowerCase() === 'beginner' && targetLookup.has(s.name.toLowerCase().trim())
+        s.proficiency.toLowerCase() === 'beginner' && targetLookup.has((s.name || '').toLowerCase().trim())
       );
 
       // ─────────────────────────────────────────────────────────────
@@ -1055,11 +1062,12 @@ export const getSkillGapAnalysis = async (req, res) => {
 
       // 1. Missing Skills (High Priority - Required by target role)
       matchData.missingSkills.forEach(sk => {
-        const norm = sk.toLowerCase().trim();
-        if (!seenRoadmapSkills.has(norm)) {
+        const rawName = typeof sk === 'string' ? sk : (sk?.name || '');
+        const norm = rawName.toLowerCase().trim();
+        if (norm && !seenRoadmapSkills.has(norm)) {
           seenRoadmapSkills.add(norm);
           roadmapItems.push({
-            skill: sk,
+            skill: rawName,
             priority: 'High',
             reason: 'Required by target role',
             type: 'missing',
@@ -1071,8 +1079,8 @@ export const getSkillGapAnalysis = async (req, res) => {
 
       // 2. Weak Skills (Medium Priority - Below requirement)
       weakSkills.forEach(ws => {
-        const norm = ws.name.toLowerCase().trim();
-        if (!seenRoadmapSkills.has(norm)) {
+        const norm = (ws.name || '').toLowerCase().trim();
+        if (norm && !seenRoadmapSkills.has(norm)) {
           seenRoadmapSkills.add(norm);
           roadmapItems.push({
             skill: ws.name,
@@ -1120,23 +1128,28 @@ export const getSkillGapAnalysis = async (req, res) => {
       const skillFrequency = {};
       opportunities.forEach(opp => {
         (opp.requiredSkills || []).forEach(sk => {
-          const norm = sk.trim();
-          skillFrequency[norm] = (skillFrequency[norm] || 0) + 1;
+          const rawName = typeof sk === 'string' ? sk : (sk?.name || '');
+          const norm = rawName.trim();
+          if (norm) {
+            skillFrequency[norm] = (skillFrequency[norm] || 0) + 1;
+          }
         });
       });
 
-      const studentSkillSet = new Set(currentSkills.map(s => s.name.toLowerCase().trim()));
+      const studentSkillSet = new Set(currentSkills.map(s => (s.name || '').toLowerCase().trim()));
       const recommendedSet = new Set();
       recommendedSkills = [];
 
       matchData.missingSkills.forEach(sk => {
-        if (!recommendedSet.has(sk.toLowerCase())) {
-          recommendedSet.add(sk.toLowerCase());
+        const rawName = typeof sk === 'string' ? sk : (sk?.name || '');
+        const norm = rawName.toLowerCase().trim();
+        if (norm && !recommendedSet.has(norm)) {
+          recommendedSet.add(norm);
           recommendedSkills.push({
-            skill: sk,
+            skill: rawName,
             reason: 'Required for selected target opening',
             priority: 'High',
-            marketDemandCount: skillFrequency[sk] || 1
+            marketDemandCount: skillFrequency[rawName] || 1
           });
         }
       });
@@ -1152,7 +1165,8 @@ export const getSkillGapAnalysis = async (req, res) => {
       if (opp.requiredSkills && opp.requiredSkills.length > 0) {
         totalTrackedPostings++;
         opp.requiredSkills.forEach(sk => {
-          const norm = sk.trim();
+          const rawName = typeof sk === 'string' ? sk : (sk?.name || '');
+          const norm = rawName.trim();
           if (norm) {
             demandFrequency[norm] = (demandFrequency[norm] || 0) + 1;
           }
@@ -1162,7 +1176,7 @@ export const getSkillGapAnalysis = async (req, res) => {
 
     const studentSkillsMap = new Map();
     currentSkills.forEach(s => {
-      studentSkillsMap.set(s.name.toLowerCase().trim(), s.proficiency || 'Intermediate');
+      studentSkillsMap.set((s.name || '').toLowerCase().trim(), s.proficiency || 'Intermediate');
     });
 
     const assessmentScoreMap = new Map();
@@ -1517,9 +1531,18 @@ export const getCareerReadinessScore = async (req, res) => {
     // ─────────────────────────────────────────────────────────────
     // 1. Skill Strength (Max 25 pts)
     // ─────────────────────────────────────────────────────────────
-    const skillsList = (profile.skillsList && profile.skillsList.length > 0)
+    const rawSkillsList = (profile.skillsList && profile.skillsList.length > 0)
       ? profile.skillsList
-      : (profile.skills || []).map(s => ({ name: s, proficiency: 'Intermediate' }));
+      : (profile.skills || []);
+
+    const skillsList = rawSkillsList.map(s => {
+      if (typeof s === 'string') return { name: s.trim(), proficiency: 'Intermediate' };
+      const name = typeof s?.name === 'string' ? s.name.trim() : (s?.skill || 'Skill');
+      return {
+        name,
+        proficiency: s?.proficiency || s?.proficiencyLevel || 'Intermediate'
+      };
+    });
 
     const totalSkillsCount = skillsList.length;
     let skillQuantityPts = Math.min(10, totalSkillsCount * 2); // 5 skills = 10 pts
@@ -1668,12 +1691,15 @@ export const getCareerReadinessScore = async (req, res) => {
     const skillDemandMap = {};
     opportunities.forEach(opp => {
       (opp.requiredSkills || []).forEach(sk => {
-        const norm = sk.trim();
-        skillDemandMap[norm] = (skillDemandMap[norm] || 0) + 1;
+        const rawName = typeof sk === 'string' ? sk : (sk?.name || '');
+        const norm = rawName.trim();
+        if (norm) {
+          skillDemandMap[norm] = (skillDemandMap[norm] || 0) + 1;
+        }
       });
     });
 
-    const studentSkillLookup = new Set(skillsList.map(s => s.name.toLowerCase().trim()));
+    const studentSkillLookup = new Set(skillsList.map(s => (s.name || '').toLowerCase().trim()));
     const missingMarketSkills = Object.entries(skillDemandMap)
       .filter(([sk]) => !studentSkillLookup.has(sk.toLowerCase()))
       .sort((a, b) => b[1] - a[1])

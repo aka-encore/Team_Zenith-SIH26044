@@ -757,48 +757,48 @@
 :root,
 .dark,
 [data-theme="dark"] {
-  --fac-bg-page:         #000000;
-  --fac-bg-sidebar:      #000000;
-  --fac-bg-header:       #000000;
-  --fac-bg-card:         #080B0A;
-  --fac-bg-card-hover:   #0D1210;
-  --fac-bg-surface:      #050807;
-  --fac-bg-input:        #080B0A;
-  --fac-bg-subtle:       #0D1210;
+  --fac-bg-page:         #070A09;
+  --fac-bg-sidebar:      #050807;
+  --fac-bg-header:       #070A09;
+  --fac-bg-card:         #0D1210;
+  --fac-bg-card-hover:   #151D19;
+  --fac-bg-surface:      #090D0C;
+  --fac-bg-input:        #0B100E;
+  --fac-bg-subtle:       #151D19;
   
-  --fac-border:          #18201D;
-  --fac-border-subtle:   #141A18;
-  --fac-border-hover:    #26332E;
+  --fac-border:          #1E2B25;
+  --fac-border-subtle:   #17221D;
+  --fac-border-hover:    #2F443B;
 
-  --fac-hero-bg:         linear-gradient(135deg, #050807 0%, #080B0A 50%, #0A100D 100%);
-  --fac-hero-border:     #18201D;
-  --fac-hero-title:      #F5F7F6;
-  --fac-hero-desc:       #A8B2AE;
+  --fac-hero-bg:         linear-gradient(135deg, #070B09 0%, #0D1512 50%, #12201B 100%);
+  --fac-hero-border:     #1E2B25;
+  --fac-hero-title:      #F8FAFC;
+  --fac-hero-desc:       #CBD5E1;
 
-  --fac-text-primary:    #F5F7F6;
-  --fac-text-secondary:  #A8B2AE;
-  --fac-text-muted:      #69736F;
+  --fac-text-primary:    #F8FAFC;
+  --fac-text-secondary:  #CBD5E1;
+  --fac-text-muted:      #94A3B8;
 
-  --fac-emerald:         #16A36A;
-  --fac-emerald-bright:  #19B874;
-  --fac-emerald-tint:    rgba(22, 163, 106, 0.12);
-  --fac-gold:            #D6A84F;
-  --fac-gold-light:      #E0B75F;
-  --fac-gold-tint:       rgba(214, 168, 79, 0.12);
-  --fac-error:           #E05252;
+  --fac-emerald:         #10B981;
+  --fac-emerald-bright:  #34D399;
+  --fac-emerald-tint:    rgba(16, 185, 129, 0.16);
+  --fac-gold:            #F59E0B;
+  --fac-gold-light:      #FBBF24;
+  --fac-gold-tint:       rgba(245, 158, 11, 0.16);
+  --fac-error:           #EF4444;
 
-  --fac-table-head-bg:   #050807;
-  --fac-table-row-hover: #0D1210;
-  --fac-table-border:    #121815;
+  --fac-table-head-bg:   #090D0C;
+  --fac-table-row-hover: #151D19;
+  --fac-table-border:    #1E2B25;
 
-  --fac-nav-active-bg:   #080D0B;
-  --fac-nav-active-border: #182820;
-  --fac-nav-active-color: #F5F7F6;
-  --fac-nav-active-icon: #19B874;
-  --fac-nav-color:       #A8B2AE;
+  --fac-nav-active-bg:   rgba(16, 185, 129, 0.18);
+  --fac-nav-active-border: rgba(16, 185, 129, 0.4);
+  --fac-nav-active-color: #34D399;
+  --fac-nav-active-icon: #34D399;
+  --fac-nav-color:       #CBD5E1;
 
-  --fac-card-shadow:     none;
-  --fac-track-bg:        #141A18;
+  --fac-card-shadow:     0 4px 12px rgba(0, 0, 0, 0.35);
+  --fac-track-bg:        #17221D;
 }
 
 /* ── Light Mode Tokens (.light / [data-theme="light"]) ── */

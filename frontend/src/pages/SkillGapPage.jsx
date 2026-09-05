@@ -338,7 +338,7 @@ export default function SkillGapPage() {
                   </div>
 
                   <div className="text-[11px] text-slate-500 font-mono line-clamp-2">
-                    {(opp.requiredSkills || []).join(' • ')}
+                    {(opp.requiredSkills || []).map(s => typeof s === 'string' ? s : s?.name || s?.skill || '').filter(Boolean).join(' • ')}
                   </div>
                 </button>
               );

@@ -113,9 +113,14 @@ export default function StudentDashboardView() {
   // 2. Verified Profile Skills
   const rawSkillsList = profile?.skillsList || [];
   const flatSkills = profile?.skills || [];
-  const structuredSkills = rawSkillsList.length > 0
-    ? rawSkillsList
-    : flatSkills.map(s => ({ name: s, proficiency: 'Intermediate' }));
+  const structuredSkills = (rawSkillsList.length > 0 ? rawSkillsList : flatSkills).map(s => {
+    if (typeof s === 'string') return { name: s, proficiency: 'Intermediate' };
+    const name = typeof s?.name === 'string' ? s.name : (s?.skill || (typeof s === 'object' ? Object.values(s).filter(v => typeof v === 'string').join('') : 'Skill'));
+    return {
+      name: name || 'Skill',
+      proficiency: s?.proficiency || s?.proficiencyLevel || 'Intermediate'
+    };
+  });
 
   const proficiencyWeights = { 'Expert': 4, 'Advanced': 3, 'Intermediate': 2, 'Beginner': 1 };
   const verifiedSkills = [...structuredSkills].sort((a, b) => 
@@ -449,14 +454,15 @@ export default function StudentDashboardView() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {verifiedSkills.map((s, idx) => {
-                  const lvl = s.proficiency || 'Intermediate';
+                  const skillTitle = typeof s?.name === 'string' ? s.name : (typeof s === 'string' ? s : 'Skill');
+                  const lvl = typeof s?.proficiency === 'string' ? s.proficiency : 'Intermediate';
                   const lvlColor = SKILL_LEVEL_COLORS[lvl] || SKILL_LEVEL_COLORS['Beginner'];
                   return (
                     <div
                       key={idx}
                       className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1 text-left"
                     >
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">{s.name}</h4>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">{skillTitle}</h4>
                       <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border ${lvlColor}`}>
                         {lvl}
                       </span>
@@ -493,14 +499,17 @@ export default function StudentDashboardView() {
                   Identified Missing Skills:
                 </span>
                 <div className="flex flex-wrap gap-1.5">
-                  {skillGapData.missingSkills.map((sk, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
-                    >
-                      {sk}
-                    </span>
-                  ))}
+                  {skillGapData.missingSkills.map((sk, idx) => {
+                    const skName = typeof sk === 'string' ? sk : (sk?.name || sk?.skill || 'Skill');
+                    return (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                      >
+                        {skName}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             ) : (
@@ -585,14 +594,17 @@ export default function StudentDashboardView() {
                     </p>
 
                     <div className="flex flex-wrap gap-1 pt-1">
-                      {(opp.requiredSkills || []).slice(0, 3).map((sk, sIdx) => (
-                        <span
-                          key={sIdx}
-                          className="px-2 py-0.5 rounded text-[10px] bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 font-mono"
-                        >
-                          {sk}
-                        </span>
-                      ))}
+                      {(opp.requiredSkills || []).slice(0, 3).map((sk, sIdx) => {
+                        const skName = typeof sk === 'string' ? sk : (sk?.name || sk?.skill || 'Skill');
+                        return (
+                          <span
+                            key={sIdx}
+                            className="px-2 py-0.5 rounded text-[10px] bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 font-mono"
+                          >
+                            {skName}
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
 

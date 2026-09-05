@@ -7,7 +7,7 @@ export default function HowItWorksPage() {
     <div className="space-y-16 pb-20 text-left max-w-5xl mx-auto">
       {/* HERO */}
       <div className="text-center space-y-4 pt-6">
-        <span className="text-xs px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold border border-blue-200 dark:border-blue-500/20 font-mono uppercase">
+        <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-extrabold border border-emerald-200 dark:border-emerald-500/20 font-mono uppercase">
           Platform Architecture
         </span>
         <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">
@@ -21,8 +21,8 @@ export default function HowItWorksPage() {
       {/* 3 ROLES PROCESS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Student Workflow */}
-        <div className="sb-glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-          <div className="p-3 bg-blue-500/10 rounded-xl text-blue-600 dark:text-blue-400 w-fit">
+        <div className="app-card p-6 space-y-4">
+          <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400 w-fit">
             <GraduationCap className="h-6 w-6" />
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">For Students</h3>
@@ -42,8 +42,8 @@ export default function HowItWorksPage() {
         </div>
 
         {/* Company Workflow */}
-        <div className="sb-glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-          <div className="p-3 bg-purple-500/10 rounded-xl text-purple-600 dark:text-purple-400 w-fit">
+        <div className="app-card p-6 space-y-4">
+          <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400 w-fit">
             <Building2 className="h-6 w-6" />
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">For Companies</h3>
@@ -63,7 +63,7 @@ export default function HowItWorksPage() {
         </div>
 
         {/* Institution Workflow */}
-        <div className="sb-glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <div className="app-card p-6 space-y-4">
           <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400 w-fit">
             <BookOpen className="h-6 w-6" />
           </div>
@@ -88,7 +88,7 @@ export default function HowItWorksPage() {
       <div className="text-center pt-8">
         <Link
           to="/register"
-          className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl text-sm transition shadow-lg shadow-blue-600/20"
+          className="btn-primary px-8 py-3.5 text-sm"
         >
           <span>Get Started on SkillNexus AI</span>
           <ArrowRight className="h-4 w-4" />

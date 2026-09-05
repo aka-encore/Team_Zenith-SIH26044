@@ -269,14 +269,17 @@ export default function OpportunityDiscoveryPage() {
                   {/* Required Skills */}
                   <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
                     <div className="flex flex-wrap gap-1.5">
-                      {(opp.requiredSkills || []).map((sk, idx) => (
-                        <span 
-                          key={idx} 
-                          className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                        >
-                          {sk}
-                        </span>
-                      ))}
+                      {(opp.requiredSkills || []).map((sk, idx) => {
+                        const skName = typeof sk === 'string' ? sk : (sk?.name || sk?.skill || 'Skill');
+                        return (
+                          <span 
+                            key={idx} 
+                            className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                          >
+                            {skName}
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -361,11 +364,14 @@ export default function OpportunityDiscoveryPage() {
             <div className="space-y-1.5">
               <span className="text-[10px] font-mono uppercase font-bold text-slate-400">Required Skills & Prerequisites</span>
               <div className="flex flex-wrap gap-1.5">
-                {(selectedOpp.requiredSkills || []).map((sk, idx) => (
-                  <span key={idx} className="text-xs font-mono px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 font-bold">
-                    {sk}
-                  </span>
-                ))}
+                {(selectedOpp.requiredSkills || []).map((sk, idx) => {
+                  const skName = typeof sk === 'string' ? sk : (sk?.name || sk?.skill || 'Skill');
+                  return (
+                    <span key={idx} className="text-xs font-mono px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 font-bold">
+                      {skName}
+                    </span>
+                  );
+                })}
               </div>
             </div>
 

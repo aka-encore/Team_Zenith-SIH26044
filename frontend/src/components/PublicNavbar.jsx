@@ -32,10 +32,8 @@ export function PublicNavbar() {
           
           {/* SkillNexus AI Logo Brand */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-blue-600 to-indigo-400 p-0.5 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-white dark:bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              </div>
+            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+              <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div className="text-left">
               <span className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight block">
@@ -56,8 +54,8 @@ export function PublicNavbar() {
                   to={link.path}
                   className={`text-xs font-bold px-4 py-2 rounded-xl transition ${
                     isActive
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-slate-800 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-slate-800 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'
                   }`}
                 >
                   {link.label}
@@ -73,7 +71,7 @@ export function PublicNavbar() {
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2 sm:p-2.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition cursor-pointer flex items-center space-x-1.5 text-xs font-bold"
+              className="p-2 sm:p-2.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer flex items-center space-x-1.5 text-xs font-bold"
               title="Toggle Theme"
             >
               {theme === 'dark' ? (
@@ -83,7 +81,7 @@ export function PublicNavbar() {
                 </>
               ) : (
                 <>
-                  <Moon className="h-4 w-4 text-indigo-600" />
+                  <Moon className="h-4 w-4 text-emerald-600" />
                   <span className="hidden lg:inline">Dark</span>
                 </>
               )}
@@ -93,7 +91,7 @@ export function PublicNavbar() {
             {/* Auth Buttons */}
             <Link
               to="/login"
-              className="text-xs font-bold text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 transition"
+              className="text-xs font-bold text-slate-800 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 transition"
             >
               Login
             </Link>
@@ -104,7 +102,7 @@ export function PublicNavbar() {
                 onClick={() => setIsRoleMenuOpen((isOpen) => !isOpen)}
                 aria-expanded={isRoleMenuOpen}
                 aria-haspopup="menu"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-md shadow-indigo-600/20 transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-md shadow-emerald-600/20 transition cursor-pointer"
               >
                 Register
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isRoleMenuOpen ? 'rotate-180' : ''}`} />
@@ -119,7 +117,7 @@ export function PublicNavbar() {
                       to={`/register?role=${role.value}`}
                       role="menuitem"
                       onClick={() => setIsRoleMenuOpen(false)}
-                      className="block rounded-xl px-3 py-2.5 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10"
+                      className="block rounded-xl px-3 py-2.5 transition hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
                     >
                       <span className="block text-xs font-bold text-slate-900 dark:text-white">{role.label}</span>
                       <span className="block pt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{role.description}</span>
@@ -151,7 +149,7 @@ export function PublicNavbar() {
                   key={link.path}
                   to={link.path}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-indigo-50 hover:text-indigo-700 dark:text-slate-200 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300"
+                  className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-200 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
                 >
                   {link.label}
                 </Link>
@@ -162,7 +160,7 @@ export function PublicNavbar() {
                   key={role.value}
                   to={`/register?role=${role.value}`}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="rounded-xl px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-500/10"
+                  className="rounded-xl px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
                 >
                   {role.label}
                 </Link>

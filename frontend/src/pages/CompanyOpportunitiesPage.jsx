@@ -545,11 +545,15 @@ export default function CompanyOpportunitiesPage() {
 
                 {/* Required Skills */}
                 <div className="pt-1 flex flex-wrap gap-1">
-                  {(opp.requiredSkills || []).slice(0, 4).map((sk, idx) => (
-                    <span key={idx} className="text-[10px] font-mono px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700">
-                      {sk}
-                    </span>
-                  ))}
+                  {(opp.requiredSkills || []).slice(0, 4).map((sk, idx) => {
+                    const skName = typeof sk === 'string' ? sk : (sk?.name || sk?.skill || '');
+                    if (!skName) return null;
+                    return (
+                      <span key={idx} className="text-[10px] font-mono px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700">
+                        {skName}
+                      </span>
+                    );
+                  })}
                   {(opp.requiredSkills || []).length > 4 && (
                     <span className="text-[10px] font-mono px-1.5 py-0.5 text-slate-400">
                       +{opp.requiredSkills.length - 4} more
@@ -647,11 +651,15 @@ export default function CompanyOpportunitiesPage() {
             <div className="space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Required Skills</h4>
               <div className="flex flex-wrap gap-1.5">
-                {(viewOpp.requiredSkills || []).map((sk, idx) => (
-                  <span key={idx} className="text-xs font-mono px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded-lg">
-                    {sk}
-                  </span>
-                ))}
+                {(viewOpp.requiredSkills || []).map((sk, idx) => {
+                  const skName = typeof sk === 'string' ? sk : (sk?.name || sk?.skill || '');
+                  if (!skName) return null;
+                  return (
+                    <span key={idx} className="text-xs font-mono px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded-lg">
+                      {skName}
+                    </span>
+                  );
+                })}
               </div>
             </div>
 

@@ -559,14 +559,18 @@ export default function CompanyDashboardView() {
                 <span>Required Skills ({activeRecOpportunity.title}):</span>
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {(activeRecOpportunity.requiredSkills || []).map((sk, idx) => (
-                  <span 
-                    key={idx}
-                    className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30"
-                  >
-                    {sk}
-                  </span>
-                ))}
+                {(activeRecOpportunity.requiredSkills || []).map((sk, idx) => {
+                  const skName = typeof sk === 'string' ? sk : sk?.name || sk?.skill || '';
+                  if (!skName) return null;
+                  return (
+                    <span 
+                      key={idx}
+                      className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30"
+                    >
+                      {skName}
+                    </span>
+                  );
+                })}
               </div>
             </div>
 
@@ -927,11 +931,15 @@ export default function CompanyDashboardView() {
 
                   {/* Required Skills */}
                   <div className="flex flex-wrap gap-1 pt-1">
-                    {(opp.requiredSkills || []).slice(0, 4).map((sk, sidx) => (
-                      <span key={sidx} className="text-[10px] font-mono px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded">
-                        {sk}
-                      </span>
-                    ))}
+                    {(opp.requiredSkills || []).slice(0, 4).map((sk, sidx) => {
+                      const skName = typeof sk === 'string' ? sk : sk?.name || sk?.skill || '';
+                      if (!skName) return null;
+                      return (
+                        <span key={sidx} className="text-[10px] font-mono px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded">
+                          {skName}
+                        </span>
+                      );
+                    })}
                     {(opp.requiredSkills || []).length > 4 && (
                       <span className="text-[10px] font-mono px-1.5 py-0.5 text-slate-400">
                         +{opp.requiredSkills.length - 4} more

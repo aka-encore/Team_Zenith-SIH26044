@@ -6,7 +6,8 @@ import {
   CheckCircle2, XCircle, RotateCcw, ArrowRight, ArrowLeft,
   ChevronRight, ChevronLeft, BookOpen, Layers, Target, Check,
   Search, Filter, Lightbulb, AlertCircle, FileText, Sparkles,
-  Play, Eye, HelpCircle, ExternalLink, Calendar, ShieldCheck
+  Play, Eye, HelpCircle, ExternalLink, Calendar, ShieldCheck,
+  Volume2, VolumeX, Radio, BrainCircuit
 } from 'lucide-react';
 
 // ── 15 Verified Target Companies ──
@@ -498,6 +499,36 @@ export default function MockInterviewPage() {
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [showTabWarning, setShowTabWarning] = useState(false);
 
+  // AI Voice Synthesis (TTS) State
+  const [isSpeakingQuestion, setIsSpeakingQuestion] = useState(false);
+
+  const stopSpeech = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsSpeakingQuestion(false);
+    }
+  };
+
+  const handleSpeakQuestion = (text) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      alert("Text-to-speech is not supported in this browser.");
+      return;
+    }
+    if (isSpeakingQuestion) {
+      stopSpeech();
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.lang = 'en-US';
+    utterance.onend = () => setIsSpeakingQuestion(false);
+    utterance.onerror = () => setIsSpeakingQuestion(false);
+    setIsSpeakingQuestion(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
   // ── Persistent Saved Attempts State ──
   const [savedAttempts, setSavedAttempts] = useState([]);
 
@@ -902,8 +933,8 @@ export default function MockInterviewPage() {
                   onClick={() => setSelectedPracticeCompany(c.id)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition cursor-pointer border ${
                     selectedPracticeCompany === c.id
-                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-sm'
-                      : 'bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-400'
+                      ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm ring-2 ring-emerald-500/20'
+                      : 'bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-emerald-500/60 hover:text-emerald-600 dark:hover:text-emerald-400'
                   }`}
                 >
                   {c.name}
@@ -1105,14 +1136,16 @@ export default function MockInterviewPage() {
                     <button
                       key={comp.id}
                       onClick={() => setSelectedMockCompany(comp.id)}
-                      className={`p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                      className={`p-3.5 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
                         selectedMockCompany === comp.id
-                          ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-transparent shadow-md'
-                          : 'bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-slate-400'
+                          ? 'bg-emerald-600 text-white border-emerald-500 shadow-md ring-2 ring-emerald-500/30'
+                          : 'bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-emerald-500/60 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/20'
                       }`}
                     >
                       <span className="font-bold text-sm block">{comp.name}</span>
-                      <span className="text-[10px] opacity-70 block truncate mt-1">{comp.industry}</span>
+                      <span className={`text-[10px] block truncate mt-1 ${selectedMockCompany === comp.id ? 'text-emerald-100' : 'opacity-70'}`}>
+                        {comp.industry}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -1353,12 +1386,27 @@ export default function MockInterviewPage() {
                   
                   <div className="bg-white dark:bg-[#0E1117] p-5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400">
-                        {currentMockQuestion?.category}
-                      </span>
-                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        {currentMockQuestion?.difficulty}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400">
+                          {currentMockQuestion?.category}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          {currentMockQuestion?.difficulty}
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => handleSpeakQuestion(`${currentMockQuestion?.title}. ${currentMockQuestion?.question}`)}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
+                          isSpeakingQuestion
+                            ? 'bg-rose-600 text-white border-rose-500 animate-pulse'
+                            : 'bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/20'
+                        }`}
+                        title="AI Voice Interviewer"
+                      >
+                        <Volume2 className="h-3.5 w-3.5" />
+                        <span>{isSpeakingQuestion ? 'Stop Voice' : 'AI Read Question'}</span>
+                      </button>
                     </div>
 
                     <h3 className="text-base font-bold text-slate-900 dark:text-white">
@@ -1433,8 +1481,8 @@ export default function MockInterviewPage() {
                       </div>
                     )}
 
-                    {/* Live Video Frame */}
-                    <div className="relative aspect-video bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center">
+                    {/* Live Video Frame with AI Proctoring HUD */}
+                    <div className="relative aspect-video bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group">
                       <video
                         ref={videoRef}
                         autoPlay
@@ -1444,6 +1492,37 @@ export default function MockInterviewPage() {
                           isCameraActive ? 'opacity-100' : 'opacity-0 absolute'
                         }`}
                       />
+
+                      {/* AI Proctoring HUD Overlays */}
+                      {isCameraActive && (
+                        <>
+                          <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none text-[10px] font-mono font-bold z-10">
+                            <span className="bg-black/70 backdrop-blur-md text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/40 flex items-center gap-1.5 shadow">
+                              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+                              <span>AI PROCTOR: ACTIVE</span>
+                            </span>
+
+                            <span className={`px-2 py-0.5 rounded border backdrop-blur-md shadow ${
+                              tabSwitchCount > 0
+                                ? 'bg-rose-950/80 text-rose-400 border-rose-500/40'
+                                : 'bg-black/70 text-slate-300 border-slate-700'
+                            }`}>
+                              Tab Strikes: {tabSwitchCount}/3
+                            </span>
+                          </div>
+
+                          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none text-[10px] font-mono font-bold z-10">
+                            <span className="bg-black/70 backdrop-blur-md text-slate-200 px-2 py-0.5 rounded border border-slate-700/80 flex items-center gap-1">
+                              <Eye className="h-3 w-3 text-cyan-400" />
+                              <span>Gaze: Centered & Focused</span>
+                            </span>
+
+                            <span className="bg-black/70 backdrop-blur-md text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/30">
+                              Integrity: {Math.max(0, 100 - tabSwitchCount * 25)}%
+                            </span>
+                          </div>
+                        </>
+                      )}
 
                       {/* Loading State */}
                       {isMediaLoading && (

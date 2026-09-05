@@ -97,7 +97,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const result = await login(email.trim(), password, selectedRole);
+      const result = await login(email.trim(), password);
 
       if (!result.success) {
         throw new Error(result.message || 'Invalid email or password credentials.');
@@ -129,7 +129,7 @@ export default function Login() {
       const res = await fetch('/api/auth/send-login-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), role: selectedRole })
+        body: JSON.stringify({ email: email.trim().toLowerCase() })
       });
 
       const data = await res.json();
@@ -180,8 +180,7 @@ export default function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
-          otp: otpCode.trim(),
-          role: selectedRole
+          otp: otpCode.trim()
         })
       });
 
@@ -301,14 +300,14 @@ export default function Login() {
               width: '32px',
               height: '32px',
               borderRadius: '8px',
-              background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)',
+              background: '#059669',
               color: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 800,
               fontSize: '14px',
-              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.35)'
+              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.35)'
             }}
           >
             <Sparkles style={{ width: '17px', height: '17px' }} />
@@ -346,8 +345,13 @@ export default function Login() {
 
           <Link
             to="/"
-            className="nav-link-notion"
-            style={{ fontSize: '13.5px', fontWeight: 600 }}
+            style={{
+              fontSize: '13px',
+              fontWeight: 600,
+              color: isLight ? '#4B5854' : '#94A3B8',
+              textDecoration: 'none'
+            }}
+            className="hover:underline"
           >
             Back to Home
           </Link>
@@ -362,8 +366,8 @@ export default function Login() {
             background: isLight ? '#FFFFFF' : '#14151E',
             border: isLight ? '1px solid #E2E8F0' : '1px solid rgba(255, 255, 255, 0.08)',
             boxShadow: isLight 
-              ? '0 25px 50px -12px rgba(139, 92, 246, 0.12), 0 10px 25px -5px rgba(0, 0, 0, 0.08)' 
-              : '0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(139, 92, 246, 0.15)'
+              ? '0 20px 40px -12px rgba(0, 0, 0, 0.08)' 
+              : '0 30px 60px -12px rgba(0, 0, 0, 0.7)'
           }}
         >
           {/* ══════════════ LEFT COLUMN: Login Form Card ══════════════ */}
@@ -414,11 +418,11 @@ export default function Login() {
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    borderBottom: authMode === 'password' ? '2px solid #8B5CF6' : '2px solid transparent',
+                    borderBottom: authMode === 'password' ? `2px solid ${isLight ? '#059669' : '#10B981'}` : '2px solid transparent',
                     paddingBottom: '8px',
                     fontSize: '13.5px',
                     fontWeight: authMode === 'password' ? 700 : 500,
-                    color: authMode === 'password' ? (isLight ? '#6D28D9' : '#A78BFA') : (isLight ? '#64748B' : '#64748B'),
+                    color: authMode === 'password' ? (isLight ? '#059669' : '#10B981') : (isLight ? '#64748B' : '#64748B'),
                     cursor: 'pointer',
                     marginBottom: '-10px',
                     transition: 'all 0.2s ease'
@@ -436,11 +440,11 @@ export default function Login() {
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    borderBottom: authMode === 'otp' ? '2px solid #8B5CF6' : '2px solid transparent',
+                    borderBottom: authMode === 'otp' ? `2px solid ${isLight ? '#059669' : '#10B981'}` : '2px solid transparent',
                     paddingBottom: '8px',
                     fontSize: '13.5px',
                     fontWeight: authMode === 'otp' ? 700 : 500,
-                    color: authMode === 'otp' ? (isLight ? '#6D28D9' : '#A78BFA') : (isLight ? '#64748B' : '#64748B'),
+                    color: authMode === 'otp' ? (isLight ? '#059669' : '#10B981') : (isLight ? '#64748B' : '#64748B'),
                     cursor: 'pointer',
                     marginBottom: '-10px',
                     transition: 'all 0.2s ease'
@@ -517,7 +521,7 @@ export default function Login() {
                           outline: 'none',
                           transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
                         }}
-                        onFocus={(e) => e.target.style.borderColor = '#8B5CF6'}
+                        onFocus={(e) => e.target.style.borderColor = '#059669'}
                         onBlur={(e) => e.target.style.borderColor = fieldErrors.email ? '#EF4444' : (isLight ? '#CBD5E1' : 'rgba(255, 255, 255, 0.1)')}
                       />
                       <Mail 
@@ -554,7 +558,7 @@ export default function Login() {
                         onClick={() => setForgotModalOpen(true)}
                         style={{
                           fontSize: '12px',
-                          color: isLight ? '#6D28D9' : '#A78BFA',
+                          color: isLight ? '#059669' : '#10B981',
                           background: 'transparent',
                           border: 'none',
                           cursor: 'pointer',
@@ -591,7 +595,7 @@ export default function Login() {
                           outline: 'none',
                           transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
                         }}
-                        onFocus={(e) => e.target.style.borderColor = '#8B5CF6'}
+                        onFocus={(e) => e.target.style.borderColor = '#059669'}
                         onBlur={(e) => e.target.style.borderColor = fieldErrors.password ? '#EF4444' : (isLight ? '#CBD5E1' : 'rgba(255, 255, 255, 0.1)')}
                       />
                       <Lock 
@@ -639,7 +643,7 @@ export default function Login() {
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
                       style={{
-                        accentColor: '#8B5CF6',
+                        accentColor: '#059669',
                         width: '14px',
                         height: '14px',
                         cursor: 'pointer'
@@ -657,7 +661,7 @@ export default function Login() {
                     </label>
                   </div>
 
-                  {/* Main Login Button (Vibrant Purple Pill matching Image 1) */}
+                  {/* Main Login Button */}
                   <button
                     type="submit"
                     disabled={loading}
@@ -665,7 +669,7 @@ export default function Login() {
                       width: '100%',
                       height: '46px',
                       borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                      background: isLight ? '#059669' : '#10B981',
                       color: '#FFFFFF',
                       fontSize: '14px',
                       fontWeight: 700,
@@ -675,7 +679,7 @@ export default function Login() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '8px',
-                      boxShadow: '0 8px 20px -4px rgba(139, 92, 246, 0.5)',
+                      boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
                       transition: 'all 0.2s ease',
                       marginTop: '12px'
                     }}
@@ -736,7 +740,7 @@ export default function Login() {
                           width: '100%',
                           height: '46px',
                           borderRadius: '12px',
-                          background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                          background: isLight ? '#059669' : '#10B981',
                           color: '#FFFFFF',
                           fontSize: '14px',
                           fontWeight: 700,
@@ -746,7 +750,7 @@ export default function Login() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '8px',
-                          boxShadow: '0 8px 20px -4px rgba(139, 92, 246, 0.5)'
+                          boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)'
                         }}
                       >
                         {loading ? <Loader2 className="animate-spin" style={{ width: '16px', height: '16px' }} /> : 'Send Verification OTP'}
@@ -791,7 +795,7 @@ export default function Login() {
                           style={{
                             background: 'transparent',
                             border: 'none',
-                            color: resendCooldown > 0 ? '#94A3B8' : '#8B5CF6',
+                            color: resendCooldown > 0 ? '#94A3B8' : (isLight ? '#059669' : '#10B981'),
                             cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
                             fontWeight: 600
                           }}
@@ -807,7 +811,7 @@ export default function Login() {
                           width: '100%',
                           height: '46px',
                           borderRadius: '12px',
-                          background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                          background: isLight ? '#059669' : '#10B981',
                           color: '#FFFFFF',
                           fontSize: '14px',
                           fontWeight: 700,
@@ -817,7 +821,7 @@ export default function Login() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '8px',
-                          boxShadow: '0 8px 20px -4px rgba(139, 92, 246, 0.5)'
+                          boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)'
                         }}
                       >
                         {loading ? <Loader2 className="animate-spin" style={{ width: '16px', height: '16px' }} /> : 'Verify & Sign In'}
@@ -912,11 +916,11 @@ export default function Login() {
             </div>
           </div>
 
-          {/* ══════════════ RIGHT COLUMN: Purple Portal Graphic (Image 1 Aesthetic) ══════════════ */}
+          {/* ══════════════ RIGHT COLUMN: Portal Graphic ══════════════ */}
           <div 
             className="hidden lg:flex lg:col-span-6 relative p-10 flex-col justify-between overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 60%, #6D28D9 100%)',
+              background: 'linear-gradient(135deg, #059669 0%, #047857 60%, #064E3B 100%)',
               color: '#FFFFFF'
             }}
           >
@@ -974,7 +978,7 @@ export default function Login() {
               </p>
             </div>
 
-            {/* Stylized Clean Vector Art (Inspired by Image 1) */}
+            {/* Stylized Clean Vector Art */}
             <div className="relative z-10 flex items-center justify-center my-6">
               <svg 
                 viewBox="0 0 400 320" 
@@ -987,43 +991,43 @@ export default function Login() {
                 <rect x="145" y="115" width="50" height="10" rx="5" fill="#E2E8F0" />
                 
                 {/* Checklist items */}
-                <circle cx="150" cy="150" r="10" stroke="#8B5CF6" strokeWidth="3" fill="none" />
+                <circle cx="150" cy="150" r="10" stroke="#059669" strokeWidth="3" fill="none" />
                 <rect x="170" y="146" width="85" height="8" rx="4" fill="#CBD5E1" />
                 
-                <circle cx="150" cy="185" r="10" stroke="#8B5CF6" strokeWidth="3" fill="none" />
+                <circle cx="150" cy="185" r="10" stroke="#059669" strokeWidth="3" fill="none" />
                 <rect x="170" y="181" width="75" height="8" rx="4" fill="#CBD5E1" />
                 
-                <circle cx="150" cy="220" r="10" stroke="#8B5CF6" strokeWidth="3" fill="none" />
+                <circle cx="150" cy="220" r="10" stroke="#059669" strokeWidth="3" fill="none" />
                 <rect x="170" y="216" width="90" height="8" rx="4" fill="#CBD5E1" />
 
                 <rect x="145" y="255" width="110" height="8" rx="4" fill="#E2E8F0" />
 
                 {/* Decorative plant in pot */}
-                <path d="M280 270 L310 270 L305 300 L285 300 Z" fill="#1E1B4B" />
-                <path d="M295 270 Q320 220 300 190 Q290 230 295 270" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2" />
-                <path d="M295 270 Q270 230 280 200 Q290 240 295 270" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2" />
+                <path d="M280 270 L310 270 L305 300 L285 300 Z" fill="#064E3B" />
+                <path d="M295 270 Q320 220 300 190 Q290 230 295 270" fill="#FFFFFF" stroke="#064E3B" strokeWidth="2" />
+                <path d="M295 270 Q270 230 280 200 Q290 240 295 270" fill="#FFFFFF" stroke="#064E3B" strokeWidth="2" />
 
                 {/* Character 1: Sitting with laptop on top of board */}
-                <circle cx="280" cy="70" r="14" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2.5" />
-                <path d="M272 64 Q280 58 290 66" stroke="#1E1B4B" strokeWidth="2.5" strokeLinecap="round" />
+                <circle cx="280" cy="70" r="14" fill="#FFFFFF" stroke="#064E3B" strokeWidth="2.5" />
+                <path d="M272 64 Q280 58 290 66" stroke="#064E3B" strokeWidth="2.5" strokeLinecap="round" />
                 {/* Body */}
-                <path d="M266 84 C260 105 260 130 285 130 C295 130 305 120 305 100 C305 84 285 84 266 84 Z" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2.5" />
+                <path d="M266 84 C260 105 260 130 285 130 C295 130 305 120 305 100 C305 84 285 84 266 84 Z" fill="#FFFFFF" stroke="#064E3B" strokeWidth="2.5" />
                 {/* Laptop */}
-                <path d="M290 115 L320 115 L315 95 Z" fill="#1E1B4B" />
+                <path d="M290 115 L320 115 L315 95 Z" fill="#064E3B" />
                 {/* Legs */}
-                <path d="M285 130 L320 150 L335 140" stroke="#1E1B4B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M295 130 L310 170 L325 175" stroke="#1E1B4B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M285 130 L320 150 L335 140" stroke="#064E3B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M295 130 L310 170 L325 175" stroke="#064E3B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
 
                 {/* Character 2: Standing with mobile */}
-                <circle cx="85" cy="130" r="14" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2.5" />
-                <path d="M78 124 Q85 118 95 126" stroke="#1E1B4B" strokeWidth="2.5" strokeLinecap="round" />
+                <circle cx="85" cy="130" r="14" fill="#FFFFFF" stroke="#064E3B" strokeWidth="2.5" />
+                <path d="M78 124 Q85 118 95 126" stroke="#064E3B" strokeWidth="2.5" strokeLinecap="round" />
                 {/* Body */}
-                <path d="M75 144 L95 144 L100 200 L70 200 Z" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2.5" />
+                <path d="M75 144 L95 144 L100 200 L70 200 Z" fill="#FFFFFF" stroke="#064E3B" strokeWidth="2.5" />
                 {/* Mobile */}
-                <rect x="62" y="160" width="10" height="18" rx="2" fill="#1E1B4B" />
+                <rect x="62" y="160" width="10" height="18" rx="2" fill="#064E3B" />
                 {/* Legs & Shoes */}
-                <path d="M78 200 L74 270 L65 275" stroke="#1E1B4B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M92 200 L98 270 L110 275" stroke="#1E1B4B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M78 200 L74 270 L65 275" stroke="#064E3B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M92 200 L98 270 L110 275" stroke="#064E3B" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
 
@@ -1056,7 +1060,7 @@ export default function Login() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(139, 92, 246, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(5, 150, 105, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isLight ? '#059669' : '#10B981' }}>
                   <KeyRound style={{ width: '16px', height: '16px' }} />
                 </div>
                 <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: isLight ? '#090C0B' : '#FFFFFF' }}>
@@ -1126,7 +1130,7 @@ export default function Login() {
                     width: '100%',
                     height: '42px',
                     borderRadius: '10px',
-                    background: '#8B5CF6',
+                    background: isLight ? '#059669' : '#10B981',
                     color: '#FFFFFF',
                     fontWeight: 700,
                     fontSize: '13px',
@@ -1186,7 +1190,7 @@ export default function Login() {
                     width: '100%',
                     height: '42px',
                     borderRadius: '10px',
-                    background: '#8B5CF6',
+                    background: isLight ? '#059669' : '#10B981',
                     color: '#FFFFFF',
                     fontWeight: 700,
                     fontSize: '13px',

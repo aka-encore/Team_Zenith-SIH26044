@@ -18,7 +18,20 @@ export function DashboardLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Responsive default: start closed on mobile/tablet (<1024px), open on desktop (>=1024px)
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return false;
+  });
+
+  // Automatically close sidebar on mobile navigation
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
 
   const rawRole = (user?.role || 'student').toLowerCase();
   const isFaculty = ['faculty', 'institution', 'academician'].includes(rawRole);
@@ -215,7 +228,7 @@ export function DashboardLayout({ children }) {
         />
       )}
 
-      {/* ── UNIFIED INSTITUTIONAL SIDEBAR (Deep Green in Light, Pure Black in Dark) ── */}
+      {/* ── UNIFIED INSTITUTIONAL SIDEBAR (Deep Green in Light, Pure Black/Dark in Dark) ── */}
       <aside
         style={{
           width: sidebarOpen ? '256px' : '0',
@@ -224,21 +237,25 @@ export function DashboardLayout({ children }) {
           display: 'flex',
           flexDirection: 'column',
           height: '100vh',
-          position: 'sticky',
+          position: typeof window !== 'undefined' && window.innerWidth < 1024 ? 'fixed' : 'sticky',
           top: 0,
+          left: 0,
+          bottom: 0,
           overflow: 'hidden',
           borderRight: isLight ? '1px solid rgba(255,255,255,0.08)' : '1px solid var(--fac-border)',
-          transition: 'width 0.25s ease, min-width 0.25s ease, background-color 0.2s ease',
+          transition: 'width 0.25s ease, min-width 0.25s ease, background-color 0.2s ease, transform 0.25s ease',
           zIndex: 50,
           flexShrink: 0,
+          boxShadow: sidebarOpen && typeof window !== 'undefined' && window.innerWidth < 1024 ? '0 10px 30px rgba(0,0,0,0.5)' : 'none'
         }}
+        className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} transition-transform lg:transition-none`}
       >
         {sidebarOpen && (
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '256px' }}>
 
             {/* Logo Area */}
             <div style={{
-              padding: '22px 20px 18px',
+              padding: '20px 18px 16px',
               borderBottom: isLight ? '1px solid rgba(255,255,255,0.08)' : '1px solid var(--fac-border)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -247,19 +264,19 @@ export function DashboardLayout({ children }) {
                     width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
                     background: isLight
                       ? 'linear-gradient(135deg, #D6A84F 0%, #E3BC6B 100%)'
-                      : 'linear-gradient(135deg, rgba(214, 168, 79, 0.2) 0%, rgba(22, 163, 106, 0.2) 100%)',
-                    border: isLight ? 'none' : '1px solid #202A26',
+                      : 'linear-gradient(135deg, rgba(214, 168, 79, 0.25) 0%, rgba(16, 185, 129, 0.25) 100%)',
+                    border: isLight ? 'none' : '1px solid #1E2B25',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <Sparkles style={{ width: '18px', height: '18px', color: isLight ? '#1A2E0A' : '#D6A84F' }} />
+                    <Sparkles style={{ width: '18px', height: '18px', color: isLight ? '#1A2E0A' : '#F59E0B' }} />
                   </div>
                   <div>
                     <div style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-                      SkillNexus <span style={{ color: '#D6A84F' }}>AI</span>
+                      SkillNexus <span style={{ color: '#F59E0B' }}>AI</span>
                     </div>
                     <div style={{
                       fontSize: '9px', fontWeight: 800,
-                      color: isLight ? '#D6A84F' : '#19B874',
+                      color: isLight ? '#D6A84F' : '#34D399',
                       letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: '2px'
                     }}>
                       {roleMeta.title}
@@ -270,12 +287,14 @@ export function DashboardLayout({ children }) {
                   onClick={() => setSidebarOpen(false)}
                   className="lg:hidden"
                   style={{
-                    padding: '6px', borderRadius: '6px', border: 'none',
-                    background: 'rgba(255,255,255,0.1)', color: '#FFFFFF', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center',
+                    padding: '7px', borderRadius: '8px', border: 'none',
+                    background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
                   }}
+                  title="Close sidebar"
+                  aria-label="Close sidebar"
                 >
-                  <X style={{ width: '14px', height: '14px' }} />
+                  <X style={{ width: '16px', height: '16px' }} />
                 </button>
               </div>
             </div>
@@ -283,12 +302,12 @@ export function DashboardLayout({ children }) {
             {/* Navigation Links */}
             <nav style={{ flex: 1, padding: '14px 12px', overflowY: 'auto', scrollbarWidth: 'none' }}>
               {navItems.map((item, idx) => {
-                const activeBg = isLight ? '#D6A84F' : 'var(--fac-nav-active-bg)';
-                const activeColor = isLight ? '#063F3A' : 'var(--fac-nav-active-color)';
-                const activeBorder = isLight ? '1px solid #D6A84F' : '1px solid var(--fac-nav-active-border)';
-                const activeIconColor = isLight ? '#063F3A' : 'var(--fac-nav-active-icon)';
-                const inactiveColor = isLight ? 'rgba(255, 255, 255, 0.85)' : '#D1D5DB';
-                const inactiveIconColor = isLight ? 'rgba(255, 255, 255, 0.7)' : '#9CA3AF';
+                const activeBg = isLight ? '#D6A84F' : 'rgba(16, 185, 129, 0.18)';
+                const activeColor = isLight ? '#063F3A' : '#34D399';
+                const activeBorder = isLight ? '1px solid #D6A84F' : '1px solid rgba(16, 185, 129, 0.4)';
+                const activeIconColor = isLight ? '#063F3A' : '#34D399';
+                const inactiveColor = isLight ? 'rgba(255, 255, 255, 0.85)' : '#CBD5E1';
+                const inactiveIconColor = isLight ? 'rgba(255, 255, 255, 0.7)' : '#94A3B8';
 
                 if (item.isSection) {
                   return (
@@ -332,11 +351,11 @@ export function DashboardLayout({ children }) {
                                 background: isSubActive ? activeBg : 'transparent',
                                 border: isSubActive ? activeBorder : '1px solid transparent',
                                 color: isSubActive ? activeColor : inactiveColor,
-                                transition: 'all 240ms cubic-bezier(0.4, 0, 0.2, 1)',
+                                transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
                               }}
                               onMouseEnter={e => {
                                 if (!isSubActive) {
-                                  e.currentTarget.style.background = isLight ? 'rgba(255,255,255,0.08)' : 'var(--fac-bg-card-hover)';
+                                  e.currentTarget.style.background = isLight ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.06)';
                                   e.currentTarget.style.color = '#FFFFFF';
                                   e.currentTarget.style.transform = 'translateX(4px)';
                                 }
@@ -388,11 +407,11 @@ export function DashboardLayout({ children }) {
                       background: isActive ? activeBg : 'transparent',
                       border: isActive ? activeBorder : '1px solid transparent',
                       color: isActive ? activeColor : inactiveColor,
-                      transition: 'all 240ms cubic-bezier(0.4, 0, 0.2, 1)',
+                      transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
                     }}
                     onMouseEnter={e => {
                       if (!isActive) {
-                        e.currentTarget.style.background = isLight ? 'rgba(255,255,255,0.08)' : 'var(--fac-bg-card-hover)';
+                        e.currentTarget.style.background = isLight ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.06)';
                         e.currentTarget.style.color = '#FFFFFF';
                         e.currentTarget.style.transform = 'translateX(4px)';
                       }
@@ -476,7 +495,7 @@ export function DashboardLayout({ children }) {
                   padding: '8px', borderRadius: '8px',
                   border: '1px solid rgba(214, 168, 79, 0.4)',
                   background: isLight ? 'rgba(214, 168, 79, 0.1)' : 'rgba(214, 168, 79, 0.04)',
-                  color: '#D6A84F',
+                  color: isLight ? '#D6A84F' : '#F59E0B',
                   cursor: 'pointer', fontSize: '11.5px', fontWeight: 700,
                   transition: 'all 0.14s ease',
                 }}
@@ -505,12 +524,31 @@ export function DashboardLayout({ children }) {
           height: '56px',
           background: 'var(--fac-bg-header)',
           borderBottom: '1px solid var(--fac-border)',
-          display: 'flex', alignItems: 'center', padding: '0 28px',
-          gap: '20px', position: 'sticky', top: 0, zIndex: 30,
+          display: 'flex', alignItems: 'center', padding: '0 16px',
+          gap: '12px', position: 'sticky', top: 0, zIndex: 30,
           transition: 'background-color 0.2s ease, border-color 0.2s ease'
         }}>
 
-          {/* Left: Workspace Breadcrumb Title (Cleanly aligned without hamburger) */}
+          {/* Left: Hamburger Toggle Button */}
+          <button
+            onClick={() => setSidebarOpen(prev => !prev)}
+            style={{
+              width: '36px', height: '36px', borderRadius: '8px',
+              border: isLight ? '1px solid #DDE2DD' : '1px solid var(--fac-border)',
+              background: isLight ? '#FFFFFF' : 'var(--fac-bg-card)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: isLight ? '#063F3A' : 'var(--fac-text-primary)',
+              cursor: 'pointer', flexShrink: 0,
+              transition: 'all 0.15s ease',
+            }}
+            className="hover:scale-105 active:scale-95 shadow-xs"
+            title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+            aria-label="Toggle navigation sidebar"
+          >
+            <Menu style={{ width: '18px', height: '18px' }} />
+          </button>
+
+          {/* Workspace Title */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <span style={{
               fontSize: '12px', fontWeight: 800,
@@ -522,7 +560,7 @@ export function DashboardLayout({ children }) {
           </div>
 
           {/* Center: Search Bar with Ctrl + K */}
-          <div style={{ flex: 1, maxWidth: '420px', position: 'relative' }}>
+          <div style={{ flex: 1, maxWidth: '420px', position: 'relative' }} className="hidden md:block">
             <Search style={{
               position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
               width: '13px', height: '13px', color: 'var(--fac-text-muted)', pointerEvents: 'none',
@@ -546,7 +584,7 @@ export function DashboardLayout({ children }) {
           </div>
 
           {/* Right Controls */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', flexShrink: 0 }}>
 
             {/* Notification Bell */}
             <Link
@@ -590,12 +628,12 @@ export function DashboardLayout({ children }) {
 
             {/* Role Metadata Pill */}
             <div style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
+              alignItems: 'center', gap: '6px',
               padding: '5px 10px', borderRadius: '8px',
               border: '1px solid var(--fac-border)',
               background: 'var(--fac-bg-card)',
               userSelect: 'none',
-            }}>
+            }} className="hidden sm:flex">
               <span style={{ fontSize: '10px', color: 'var(--fac-text-muted)', fontWeight: 600 }}>{roleMeta.badgeLabel}</span>
               <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--fac-text-primary)' }}>{roleMeta.badgeText}</span>
               <BadgeIcon style={{ width: '11px', height: '11px', color: 'var(--fac-emerald)', marginLeft: '2px' }} />
@@ -627,15 +665,33 @@ export function DashboardLayout({ children }) {
         </header>
 
         {/* Main Dashboard Workspace */}
-        <main style={{
-          flex: 1, overflowY: 'auto', padding: '24px 28px 48px',
-          background: 'var(--fac-bg-page)',
-          transition: 'background-color 0.2s ease'
-        }}>
-          <div style={{ maxWidth: '1360px', margin: '0 auto' }}>
-            {children}
-          </div>
-        </main>
+        {(() => {
+          const isImmersivePage = location.pathname.startsWith('/company-prep');
+          return (
+            <main style={{
+              flex: 1, 
+              overflowY: isImmersivePage ? 'hidden' : 'auto', 
+              padding: isImmersivePage ? '0px' : '24px 28px 48px',
+              background: 'var(--fac-bg-page)',
+              transition: 'background-color 0.2s ease',
+              display: isImmersivePage ? 'flex' : 'block',
+              flexDirection: 'column',
+              height: isImmersivePage ? 'calc(100vh - 54px)' : 'auto'
+            }}>
+              <div style={{ 
+                maxWidth: isImmersivePage ? '100%' : '1360px', 
+                width: '100%',
+                height: isImmersivePage ? '100%' : 'auto',
+                margin: isImmersivePage ? '0' : '0 auto',
+                flex: isImmersivePage ? 1 : 'none',
+                display: isImmersivePage ? 'flex' : 'block',
+                flexDirection: 'column'
+              }}>
+                {children}
+              </div>
+            </main>
+          );
+        })()}
       </div>
     </div>
   );

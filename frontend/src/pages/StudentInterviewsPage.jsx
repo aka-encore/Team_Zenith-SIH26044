@@ -229,7 +229,7 @@ export default function StudentInterviewsPage() {
 
                   <div className="text-xs text-slate-500 font-mono space-y-1 pt-1">
                     <div>Location: {drive.location || 'Pan-India'}</div>
-                    <div>Required Skills: {(drive.requiredSkills || []).join(', ')}</div>
+                    <div>Required Skills: {(drive.requiredSkills || []).map(sk => typeof sk === 'string' ? sk : sk?.name || sk?.skill || '').filter(Boolean).join(', ') || 'N/A'}</div>
                   </div>
                 </div>
 

@@ -210,11 +210,12 @@ export const getDashboardStats = async (req, res) => {
     applications.forEach(app => {
       const student = app.studentId;
       const skills = (student?.skillsList && student.skillsList.length > 0)
-        ? student.skillsList.map(s => s.name)
+        ? student.skillsList.map(s => (typeof s === 'string' ? s : (s?.name || '')))
         : (student?.skills || []);
       skills.forEach(sk => {
-        if (sk) {
-          const norm = sk.trim();
+        const rawName = typeof sk === 'string' ? sk : (sk?.name || '');
+        if (rawName && rawName.trim()) {
+          const norm = rawName.trim();
           skillMap[norm] = (skillMap[norm] || 0) + 1;
         }
       });

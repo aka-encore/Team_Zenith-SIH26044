@@ -161,13 +161,13 @@ export function UserProfileModal({ isOpen, onClose }) {
         {/* MODAL HEADER */}
         <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-950/40">
           <div className="flex items-center space-x-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white font-extrabold flex items-center justify-center text-lg shadow-md shadow-indigo-600/20">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white font-extrabold flex items-center justify-center text-lg shadow-md shadow-emerald-600/20">
               {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
             </div>
             <div className="text-left">
               <div className="flex items-center space-x-2">
                 <h3 className="text-lg font-extrabold text-slate-900 dark:text-white leading-tight truncate max-w-xs">{user?.name || user?.email}</h3>
-                <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-[10px] font-extrabold uppercase border border-indigo-200 dark:border-indigo-500/20">
+                <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-extrabold uppercase border border-emerald-200 dark:border-emerald-500/20">
                   <RoleIcon className="h-3 w-3" />
                   <span>{user?.role || 'Student'}</span>
                 </span>
