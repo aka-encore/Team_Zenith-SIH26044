@@ -244,7 +244,29 @@ npm run dev
 
 ---
 
-## 15. Database Setup
+## 15. Demo Login Credentials
+
+For quick evaluation, testing, and hackathon demonstrations across all 4 user roles, use the pre-configured demo credentials below:
+
+| Role | Email | Password | Accessible Portal | Key Workflows to Test |
+| :--- | :--- | :--- | :--- | :--- |
+| 🎓 **Student** | `student@test.com` | `password123` | `/student` | Skills assessment, skill DNA radar, company prep, job discovery & applications |
+| 🏫 **Faculty / Institution** | `faculty@test.com` | `password123` | `/faculty` | Student directory, college-wide skill analytics, skill gap matrix, placement tracking |
+| 🏢 **Company / Recruiter** | `company@test.com` | `password123` | `/company` | AI candidate matching, student search, resume screening, interview scheduling |
+| ⚡ **System Administrator** | `admin@test.com` | `password123` | `/admin` | User & company governance, verification approvals, system metrics & audit logs |
+
+### Seeding Demo Accounts
+To automatically seed or reset these accounts in your local MongoDB instance:
+```bash
+cd backend
+npm run seed
+```
+
+> **Note**: You can also register new accounts dynamically via the `/register` page using standard password registration or 6-digit email OTP verification.
+
+---
+
+## 16. Database Setup
 
 1. Start your local MongoDB server:
    ```bash
@@ -255,7 +277,7 @@ npm run dev
 
 ---
 
-## 16. Authentication Flow
+## 17. Authentication Flow
 
 1. **Email / Password Registration**:
    * Users register with role selection (`student`, `company`, `faculty`).
@@ -271,7 +293,7 @@ npm run dev
 
 ---
 
-## 17. Main API Modules
+## 18. Main API Modules
 
 | Module | Route Prefix | Primary Operations |
 | :--- | :--- | :--- |
@@ -286,7 +308,7 @@ npm run dev
 
 ---
 
-## 18. Security Features
+## 19. Security Features
 
 * **JWT Verification**: Validates token signature and user status on every protected request.
 * **Credential Isolation**: Password hashes and OTPs are excluded from default queries (`select: false`).
