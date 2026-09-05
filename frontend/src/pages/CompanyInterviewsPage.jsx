@@ -37,6 +37,8 @@ export default function CompanyInterviewsPage() {
   const [formTime, setFormTime] = useState('11:00');
   const [formMode, setFormMode] = useState('video');
   const [formRound, setFormRound] = useState('Technical Evaluation Round 1');
+  const [formInterviewType, setFormInterviewType] = useState('Technical Interview');
+  const [formInterviewer, setFormInterviewer] = useState('Technical Hiring Panel');
   const [formMeetingLink, setFormMeetingLink] = useState('https://meet.google.com');
   const [formNotes, setFormNotes] = useState('');
   const [formStatus, setFormStatus] = useState('scheduled');
@@ -91,6 +93,8 @@ export default function CompanyInterviewsPage() {
     setFormTime('11:00');
     setFormMode('video');
     setFormRound('Technical Evaluation Round 1');
+    setFormInterviewType('Technical Interview');
+    setFormInterviewer('Technical Hiring Panel');
     setFormMeetingLink('https://meet.google.com/new');
     setFormNotes('');
     setFormStatus('scheduled');
@@ -115,6 +119,8 @@ export default function CompanyInterviewsPage() {
 
     setFormMode(interview.mode || 'video');
     setFormRound(interview.round || 'Technical Evaluation Round 1');
+    setFormInterviewType(interview.interviewType || 'Technical Interview');
+    setFormInterviewer(interview.interviewer || 'Technical Hiring Panel');
     setFormMeetingLink(interview.meetingLink || 'https://meet.google.com');
     setFormNotes(interview.notes || '');
     setFormStatus(interview.status || 'scheduled');
@@ -151,6 +157,8 @@ export default function CompanyInterviewsPage() {
           time: formTime,
           mode: formMode,
           round: formRound,
+          interviewType: formInterviewType,
+          interviewer: formInterviewer,
           meetingLink: formMeetingLink,
           notes: formNotes,
           status: formStatus
@@ -410,8 +418,13 @@ export default function CompanyInterviewsPage() {
                     {interview.opportunity?.title}
                   </span>
                   <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 block pt-0.5">
-                    {interview.round}
+                    {interview.interviewType || interview.round}
                   </span>
+                  {interview.interviewer && (
+                    <span className="text-[10px] text-slate-400 font-medium block">
+                      Panel: {interview.interviewer}
+                    </span>
+                  )}
                 </div>
 
                 {/* Date, Time & Mode Details */}
@@ -602,6 +615,35 @@ export default function CompanyInterviewsPage() {
                     <option value="HR & Culture Fit Round">HR & Culture Fit Round</option>
                     <option value="Executive Partner Discussion">Executive Partner Discussion</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Interview Type & Interviewer Panel */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                    Interview Type
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Technical Interview"
+                    value={formInterviewType}
+                    onChange={(e) => setFormInterviewType(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl outline-none focus:border-indigo-500 font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                    Interviewer / Panel
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Rahul Sharma - Staff Architect"
+                    value={formInterviewer}
+                    onChange={(e) => setFormInterviewer(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl outline-none focus:border-indigo-500 font-bold"
+                  />
                 </div>
               </div>
 

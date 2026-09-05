@@ -21,6 +21,11 @@ const OtpSchema = new mongoose.Schema({
     default: 'login',
   },
 
+  role: {
+    type: String,
+    default: null,
+  },
+
   userData: {
     type: mongoose.Schema.Types.Mixed,
     default: null, // Temporary registration data if purpose is 'register'

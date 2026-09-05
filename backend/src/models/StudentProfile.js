@@ -98,6 +98,52 @@ const ProjectSchema = new mongoose.Schema({
 });
 
 
+const InternshipSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  company: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  location: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  duration: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  startDate: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  endDate: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  description: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  certificateUrl: {
+    type: String,
+    default: '',
+    trim: true
+  }
+}, {
+  timestamps: true
+});
+
+
 const StudentProfileSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -194,6 +240,12 @@ const StudentProfileSchema = new mongoose.Schema({
     default: []
   },
 
+  // Internships & Work Experience
+  internships: {
+    type: [InternshipSchema],
+    default: []
+  },
+
   // Resume PDF Storage
   resumeUrl: {
     type: String,
@@ -236,6 +288,11 @@ const StudentProfileSchema = new mongoose.Schema({
   },
 
   achievements: {
+    type: [String],
+    default: []
+  },
+
+  careerInterests: {
     type: [String],
     default: []
   }

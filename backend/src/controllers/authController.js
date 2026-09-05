@@ -76,15 +76,17 @@ export const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Name is required' });
     }
 
-    if (await User.findOne({ email: email.toLowerCase() })) {
-      return res.status(400).json({ success: false, message: 'User already exists with this email address' });
+    const targetRole = role === 'institution' || role === 'academician' ? 'faculty' : role;
+
+    if (await User.findOne({ email: email.toLowerCase(), role: targetRole })) {
+      return res.status(400).json({ success: false, message: `An account already exists with this email for the ${targetRole} portal.` });
     }
 
     const user = await User.create({
       name: resolvedName,
       email: email.toLowerCase(),
       passwordHash: password,
-      role: role === 'institution' || role === 'academician' ? 'faculty' : role,
+      role: targetRole,
       status: role === 'company' ? 'pending' : 'active'
     });
 
@@ -154,16 +156,24 @@ export const login = async (req, res) => {
       });
     }
 
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Please provide email and password' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+    const query = { email: email.toLowerCase() };
+    if (role) {
+      query.role = role === 'institution' || role === 'academician' ? 'faculty' : role;
+    }
+
+    let user = await User.findOne(query).select('+passwordHash');
+    if (!user && !role) {
+      user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+    }
 
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+      return res.status(401).json({ success: false, message: role ? `No ${role} account found with this email` : 'Invalid email or password' });
     }
 
     if (user.status === 'inactive') {
@@ -199,16 +209,27 @@ export const login = async (req, res) => {
 // POST /api/auth/send-login-otp
 export const sendLoginOtp = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, role, password } = req.body;
 
     if (!email) {
       return res.status(400).json({ success: false, message: 'Please provide email address' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+    const query = { email: email.toLowerCase() };
+    if (role) {
+      query.role = role === 'institution' || role === 'academician' ? 'faculty' : role;
+    }
+
+    let user = await User.findOne(query).select('+passwordHash');
+    if (!user && !role) {
+      user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+    }
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'No account found with this email address' });
+      return res.status(404).json({
+        success: false,
+        message: role ? `No ${role} account found with this email. Please register first.` : 'No account found with this email address.'
+      });
     }
 
     if (user.status === 'inactive') {
@@ -225,15 +246,17 @@ export const sendLoginOtp = async (req, res) => {
     }
 
     const otp = generateOtp();
-    await Otp.deleteMany({ email: email.toLowerCase(), purpose: 'login' });
-    await Otp.create({ email: email.toLowerCase(), otp, purpose: 'login' });
+    await Otp.deleteMany({ email: email.toLowerCase(), purpose: 'login', role: user.role });
+    await Otp.create({ email: email.toLowerCase(), otp, purpose: 'login', role: user.role });
 
-    await sendOtpEmail(email.toLowerCase(), otp, 'login');
+    const emailResult = await sendOtpEmail(email.toLowerCase(), otp, 'login');
 
     res.status(200).json({
       success: true,
-      message: `Verification OTP sent to ${email}`,
+      message: `A 6-digit verification code has been dispatched to ${email}.`,
       email: email.toLowerCase(),
+      role: user.role,
+      emailDelivered: !!emailResult?.emailSent
     });
   } catch (error) {
     console.error('sendLoginOtp error:', error);
@@ -245,23 +268,37 @@ export const sendLoginOtp = async (req, res) => {
 // POST /api/auth/verify-login-otp
 export const verifyLoginOtp = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const { email, otp, role } = req.body;
 
     if (!email || !otp) {
       return res.status(400).json({ success: false, message: 'Please provide email and 6-digit OTP' });
     }
 
-    const validOtp = await Otp.findOne({
+    const targetRole = role === 'institution' || role === 'academician' ? 'faculty' : role;
+    const otpQuery = {
       email: email.toLowerCase(),
       otp: otp.toString().trim(),
       purpose: 'login'
-    });
+    };
+    if (targetRole) {
+      otpQuery.role = targetRole;
+    }
+
+    let validOtp = await Otp.findOne(otpQuery);
+    if (!validOtp && targetRole) {
+      validOtp = await Otp.findOne({ email: email.toLowerCase(), otp: otp.toString().trim(), purpose: 'login' });
+    }
 
     if (!validOtp) {
       return res.status(400).json({ success: false, message: 'Invalid or expired OTP verification code' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const userQuery = { email: email.toLowerCase() };
+    if (validOtp.role || targetRole) {
+      userQuery.role = validOtp.role || targetRole;
+    }
+
+    const user = await User.findOne(userQuery);
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User account not found' });
@@ -303,33 +340,37 @@ export const sendRegisterOtp = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid role for public registration.' });
     }
 
-    if (await User.findOne({ email: email.toLowerCase() })) {
-      return res.status(400).json({ success: false, message: 'User already exists with this email address' });
+    const targetRole = role === 'institution' || role === 'academician' ? 'faculty' : role;
+
+    if (await User.findOne({ email: email.toLowerCase(), role: targetRole })) {
+      return res.status(400).json({ success: false, message: `An account already exists with this email for the ${targetRole} portal.` });
     }
 
     const otp = generateOtp();
-    await Otp.deleteMany({ email: email.toLowerCase(), purpose: 'register' });
+    await Otp.deleteMany({ email: email.toLowerCase(), purpose: 'register', role: targetRole });
     await Otp.create({
       email: email.toLowerCase(),
       otp,
       purpose: 'register',
+      role: targetRole,
       userData: { 
         name: (name || companyName || hrName || 'User').trim(), 
         email: email.toLowerCase(), 
         password, 
-        role: role === 'institution' || role === 'academician' ? 'faculty' : role,
+        role: targetRole,
         rollNumber, college, department, yearOfStudy, phone,
         companyName, hrName, industry, website, address,
         employeeId, designation
       }
     });
 
-    await sendOtpEmail(email.toLowerCase(), otp, 'register');
+    const emailResult = await sendOtpEmail(email.toLowerCase(), otp, 'register');
 
     res.status(200).json({
       success: true,
-      message: `6-digit verification code sent to ${email}`,
+      message: `A 6-digit verification code has been dispatched to ${email}.`,
       email: email.toLowerCase(),
+      emailDelivered: !!emailResult?.emailSent
     });
   } catch (error) {
     console.error('sendRegisterOtp error:', error);
@@ -430,13 +471,21 @@ export const verifyRegisterOtp = async (req, res) => {
 // POST /api/auth/send-forgot-password-otp
 export const sendForgotPasswordOtp = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, role } = req.body;
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       return res.status(400).json({ success: false, message: 'Please enter a valid registered email address.' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const query = { email: email.toLowerCase() };
+    if (role) {
+      query.role = role === 'institution' || role === 'academician' ? 'faculty' : role;
+    }
+
+    let user = await User.findOne(query);
+    if (!user && !role) {
+      user = await User.findOne({ email: email.toLowerCase() });
+    }
 
     if (!user) {
       // Security: Do not reveal whether the email exists
@@ -449,14 +498,15 @@ export const sendForgotPasswordOtp = async (req, res) => {
 
     const otp = generateOtp();
     await Otp.deleteMany({ email: email.toLowerCase(), purpose: 'forgot_password' });
-    await Otp.create({ email: email.toLowerCase(), otp, purpose: 'forgot_password' });
+    await Otp.create({ email: email.toLowerCase(), otp, purpose: 'forgot_password', role: user.role });
 
-    await sendOtpEmail(email.toLowerCase(), otp, 'forgot_password');
+    const emailResult = await sendOtpEmail(email.toLowerCase(), otp, 'forgot_password');
 
     res.status(200).json({
       success: true,
       message: 'If an account exists with this email address, a 6-digit verification code has been dispatched.',
       email: email.toLowerCase(),
+      emailDelivered: !!emailResult?.emailSent
     });
   } catch (error) {
     console.error('sendForgotPasswordOtp error:', error);
@@ -468,7 +518,7 @@ export const sendForgotPasswordOtp = async (req, res) => {
 // POST /api/auth/reset-password-with-otp
 export const resetPasswordWithOtp = async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
+    const { email, otp, newPassword, role } = req.body;
 
     if (!email || !otp || !newPassword) {
       return res.status(400).json({ success: false, message: 'Please provide email, verification code, and new password.' });
@@ -488,7 +538,16 @@ export const resetPasswordWithOtp = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid or expired verification code. Please check and retry.' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const targetRole = (role && (role === 'institution' || role === 'academician' ? 'faculty' : role)) || validOtp.role;
+    const userQuery = { email: email.toLowerCase() };
+    if (targetRole) {
+      userQuery.role = targetRole;
+    }
+
+    let user = await User.findOne(userQuery);
+    if (!user) {
+      user = await User.findOne({ email: email.toLowerCase() });
+    }
 
     if (!user) {
       return res.status(400).json({ success: false, message: 'Invalid request or user not found.' });

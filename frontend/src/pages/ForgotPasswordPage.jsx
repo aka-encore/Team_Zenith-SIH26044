@@ -16,6 +16,7 @@ export default function ForgotPasswordPage() {
   const [step, setStep] = useState(1);
 
   // Form State
+  const [selectedRole, setSelectedRole] = useState('student');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -74,7 +75,7 @@ export default function ForgotPasswordPage() {
       const res = await fetch('/api/auth/send-forgot-password-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase() })
+        body: JSON.stringify({ email: email.trim().toLowerCase(), role: selectedRole })
       });
 
       const data = await res.json();
@@ -106,7 +107,7 @@ export default function ForgotPasswordPage() {
       const res = await fetch('/api/auth/send-forgot-password-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase() })
+        body: JSON.stringify({ email: email.trim().toLowerCase(), role: selectedRole })
       });
 
       const data = await res.json();
@@ -172,7 +173,8 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
           otp: otp.trim(),
-          newPassword
+          newPassword,
+          role: selectedRole
         })
       });
 
@@ -415,27 +417,78 @@ export default function ForgotPasswordPage() {
             {/* ══════════════ STEP 1: ENTER EMAIL ══════════════ */}
             {step === 1 && (
               <form onSubmit={handleSendOtp} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--fac-text-primary)' }}>
+                    Select Account Role
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'student', label: 'Student' },
+                      { id: 'company', label: 'Company' },
+                      { id: 'faculty', label: 'Faculty' }
+                    ].map(r => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setSelectedRole(r.id)}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          border: selectedRole === r.id
+                            ? (isLight ? '1px solid #063F3A' : '1px solid #19B874')
+                            : '1px solid var(--fac-border)',
+                          background: selectedRole === r.id
+                            ? (isLight ? '#063F3A' : '#19B874')
+                            : 'var(--fac-bg-card)',
+                          color: selectedRole === r.id
+                            ? (isLight ? '#FFFFFF' : '#000000')
+                            : 'var(--fac-text-secondary)'
+                        }}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="space-y-1">
                   <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--fac-text-primary)' }}>
                     Registered Email Address
                   </label>
-                  <input
-                    type="email"
-                    placeholder="Enter your registered email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (fieldErrors.email) setFieldErrors({});
-                    }}
-                    className="fac-theme-input"
-                    style={{
-                      height: '40px',
-                      fontSize: '13.5px',
-                      borderColor: fieldErrors.email ? 'var(--fac-error)' : undefined
-                    }}
-                    disabled={loading}
-                    autoFocus
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <Mail style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '14px',
+                      height: '14px',
+                      color: 'var(--fac-text-muted)',
+                      pointerEvents: 'none'
+                    }} />
+                    <input
+                      type="email"
+                      placeholder="Enter your registered email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (fieldErrors.email) setFieldErrors({});
+                      }}
+                      className="fac-theme-input"
+                      style={{
+                        paddingLeft: '34px',
+                        height: '40px',
+                        fontSize: '13.5px',
+                        borderColor: fieldErrors.email ? 'var(--fac-error)' : undefined
+                      }}
+                      disabled={loading}
+                      autoFocus
+                    />
+                  </div>
                   {fieldErrors.email && (
                     <span style={{ fontSize: '11px', color: 'var(--fac-error)' }}>
                       {fieldErrors.email}

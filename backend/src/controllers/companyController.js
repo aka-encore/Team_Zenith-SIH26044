@@ -3,7 +3,8 @@ import User from '../models/User.js';
 import Opportunity from '../models/Opportunity.js';
 import Application from '../models/Application.js';
 import StudentProfile from '../models/StudentProfile.js';
-import { matchSkills } from '../utils/matchingEngine.js';
+import AssessmentResult from '../models/AssessmentResult.js';
+import { matchSkills, calculateDetailedCompatibility } from '../utils/matchingEngine.js';
 
 export const getProfile = async (req, res) => {
   try {
@@ -35,7 +36,8 @@ export const updateProfile = async (req, res) => {
   try {
     const { 
       companyName, logoUrl, industry, description, website, location, 
-      hrName, contactPhone, contactEmail, hrEmail, companySize, foundedYear 
+      hrName, contactPhone, contactEmail, hrEmail, companySize, foundedYear,
+      technologiesUsed, hiringAreas
     } = req.body;
     
     let profile = await Company.findOne({ userId: req.user.id });
@@ -59,6 +61,16 @@ export const updateProfile = async (req, res) => {
     }
     if (companySize !== undefined) profile.companySize = (companySize || '').trim();
     if (foundedYear !== undefined) profile.foundedYear = foundedYear ? foundedYear.toString().trim() : '';
+    if (technologiesUsed !== undefined) {
+      profile.technologiesUsed = Array.isArray(technologiesUsed) 
+        ? technologiesUsed.map(t => typeof t === 'string' ? t.trim() : t).filter(Boolean)
+        : (typeof technologiesUsed === 'string' ? technologiesUsed.split(',').map(t => t.trim()).filter(Boolean) : []);
+    }
+    if (hiringAreas !== undefined) {
+      profile.hiringAreas = Array.isArray(hiringAreas)
+        ? hiringAreas.map(a => typeof a === 'string' ? a.trim() : a).filter(Boolean)
+        : (typeof hiringAreas === 'string' ? hiringAreas.split(',').map(a => a.trim()).filter(Boolean) : []);
+    }
 
     await profile.save();
     const updatedProfile = await Company.findOne({ userId: req.user.id }).populate('userId', 'name email role');
@@ -119,7 +131,7 @@ export const getDashboardStats = async (req, res) => {
     const activeJobs = opportunities.filter(o => o.type === 'job' && o.status === 'open').length;
     const activeInternships = opportunities.filter(o => o.type === 'internship' && o.status === 'open').length;
     const totalApplicants = applications.length;
-    const shortlistedCount = applications.filter(a => ['shortlisted', 'accepted'].includes((a.status || '').toLowerCase())).length;
+    const shortlistedCount = applications.filter(a => (a.status || '').toLowerCase() === 'shortlisted').length;
 
     // 4. Map application counts per opportunity
     const appCountByOpp = {};
@@ -303,22 +315,34 @@ export const verifyCompanyAdmin = async (req, res) => {
 
 export const searchStudents = async (req, res) => {
   try {
-    const { skill, department, year, minCgpa, skillLevel, search } = req.query;
+    const { 
+      skill, skills, department, branch, year, minCgpa, 
+      skillLevel, skillProficiency, location, careerInterests, 
+      certifications, experience, sortBy, search, opportunityId 
+    } = req.query;
 
     const query = {};
 
-    // 1. Skill filter
-    if (skill && skill.trim()) {
-      const regex = new RegExp(skill.trim(), 'i');
-      query.$or = [
-        { skills: regex },
-        { 'skillsList.name': regex }
-      ];
+    // 1. Skills filter (handles skill or skills query, comma-separated or single)
+    const skillParam = skill || skills;
+    if (skillParam && skillParam.trim()) {
+      const skillTokens = skillParam.split(',').map(s => s.trim()).filter(Boolean);
+      if (skillTokens.length > 0) {
+        const regexes = skillTokens.map(s => new RegExp(s, 'i'));
+        query.$and = query.$and || [];
+        query.$and.push({
+          $or: [
+            { skills: { $in: regexes } },
+            { 'skillsList.name': { $in: regexes } }
+          ]
+        });
+      }
     }
 
     // 2. Department / Branch filter
-    if (department && department.trim() && department !== 'all') {
-      const deptRegex = new RegExp(department.trim(), 'i');
+    const deptParam = department || branch;
+    if (deptParam && deptParam.trim() && deptParam !== 'all') {
+      const deptRegex = new RegExp(deptParam.trim(), 'i');
       query.$and = query.$and || [];
       query.$and.push({
         $or: [
@@ -335,6 +359,7 @@ export const searchStudents = async (req, res) => {
       query.$and = query.$and || [];
       query.$and.push({
         $or: [
+          { 'academicInformation.year': yearRegex },
           { 'academicInformation.yearOfStudy': yearRegex },
           { 'academicInformation.expectedGraduationYear': year.trim() },
           { 'education.graduationYear': year.trim() }
@@ -348,86 +373,191 @@ export const searchStudents = async (req, res) => {
       query['academicInformation.cgpa'] = { $gte: cgpaVal };
     }
 
-    // 5. Skill level filter
-    if (skillLevel && skillLevel.trim() && skillLevel !== 'all') {
-      query['skillsList.proficiencyLevel'] = new RegExp(`^${skillLevel.trim()}$`, 'i');
+    // 5. Skill proficiency level filter
+    const profParam = skillLevel || skillProficiency;
+    if (profParam && profParam.trim() && profParam !== 'all') {
+      const profRegex = new RegExp(profParam.trim(), 'i');
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [
+          { 'skillsList.proficiency': profRegex },
+          { 'skillsList.proficiencyLevel': profRegex }
+        ]
+      });
     }
 
-    // 6. Query from database with populated user information
+    // 6. Location filter
+    if (location && location.trim() && location !== 'all') {
+      const locRegex = new RegExp(location.trim(), 'i');
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [
+          { 'academicInformation.college': locRegex },
+          { bio: locRegex }
+        ]
+      });
+    }
+
+    // 7. Career interests filter
+    if (careerInterests && careerInterests.trim() && careerInterests !== 'all') {
+      const interestRegex = new RegExp(careerInterests.trim(), 'i');
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [
+          { careerInterests: interestRegex },
+          { bio: interestRegex }
+        ]
+      });
+    }
+
+    // 8. Certifications filter
+    if (certifications && certifications.trim() && certifications !== 'all') {
+      const certRegex = new RegExp(certifications.trim(), 'i');
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [
+          { 'certifications.title': certRegex },
+          { 'certifications.issuer': certRegex }
+        ]
+      });
+    }
+
+    // 9. Fetch student profiles with populated user details
     let studentProfiles = await StudentProfile.find(query)
-      .populate('userId', 'name email avatarUrl status')
+      .populate('userId', 'name email phone avatarUrl status createdAt')
       .sort({ overallScore: -1, 'academicInformation.cgpa': -1, createdAt: -1 });
 
     studentProfiles = studentProfiles.filter(sp => sp.userId && sp.userId.status !== 'inactive');
 
-    // If search term provided, filter against name, college, branch, or skills
+    // Experience filter (min projects/certifications)
+    if (experience && experience.trim() && experience !== 'all') {
+      const minExpCount = experience === 'high' ? 3 : 1;
+      studentProfiles = studentProfiles.filter(sp => 
+        (sp.projects?.length || 0) + (sp.certifications?.length || 0) >= minExpCount
+      );
+    }
+
+    // Free text search across Name, College, Branch, Skills, Bio
     if (search && search.trim()) {
       const s = search.trim().toLowerCase();
       studentProfiles = studentProfiles.filter(sp => {
         const name = (sp.userId?.name || '').toLowerCase();
+        const email = (sp.userId?.email || '').toLowerCase();
         const college = (sp.academicInformation?.college || '').toLowerCase();
-        const branch = (sp.academicInformation?.branch || '').toLowerCase();
+        const branch = (sp.academicInformation?.branch || sp.academicInformation?.department || '').toLowerCase();
         const skills = (sp.skillsList?.map(sk => sk.name.toLowerCase()) || []).concat(sp.skills?.map(sk => sk.toLowerCase()) || []);
-        return name.includes(s) || college.includes(s) || branch.includes(s) || skills.some(sk => sk.includes(s));
+        const bio = (sp.bio || '').toLowerCase();
+        return name.includes(s) || email.includes(s) || college.includes(s) || branch.includes(s) || skills.some(sk => sk.includes(s)) || bio.includes(s);
       });
     }
 
     const company = await Company.findOne({ userId: req.user.id });
-    const opportunities = company ? await Opportunity.find({ companyId: company._id, status: 'open' }).select('_id title type requiredSkills') : [];
+    const opportunities = company ? await Opportunity.find({ companyId: company._id, status: 'open' }).select('_id title type requiredSkills minCgpa eligibleBranches') : [];
 
-    // Check if target opportunity or skills specified for skill matching
+    // Target opportunity for matching
     let targetOpportunity = null;
-    if (req.query.opportunityId && req.query.opportunityId !== 'all') {
-      targetOpportunity = await Opportunity.findById(req.query.opportunityId);
+    const targetOppId = opportunityId || req.query.opportunityId;
+    if (targetOppId && targetOppId !== 'all') {
+      targetOpportunity = await Opportunity.findById(targetOppId);
+    }
+
+    // Fetch existing applications for this target opportunity
+    const appStatusMap = new Map();
+    if (targetOpportunity) {
+      const existingApps = await Application.find({ opportunityId: targetOpportunity._id });
+      existingApps.forEach(app => {
+        appStatusMap.set(app.studentId.toString(), app.status || 'applied');
+      });
     }
 
     // Format safe response for corporate recruiter view with matching engine calculation
     const formatted = studentProfiles.map(sp => {
       const u = sp.userId;
+      const acad = sp.academicInformation || {};
+      const degree = acad.degree || acad.course || 'B.Tech';
+      const branchName = acad.branch || acad.department || 'Engineering';
+      const college = acad.college || 'Zenith University Partner';
+      const yearStr = acad.year || acad.yearOfStudy || acad.expectedGraduationYear || '3rd Year';
+      const cgpa = acad.cgpa !== null && acad.cgpa !== undefined ? Number(acad.cgpa) : null;
+
       const skills = (sp.skillsList && sp.skillsList.length > 0)
         ? sp.skillsList.map(s => ({
             name: s.name,
-            proficiencyLevel: s.proficiencyLevel || 'Intermediate',
+            proficiency: s.proficiency || s.proficiencyLevel || 'Intermediate',
             verified: s.verified || false
           }))
         : (sp.skills || []).map(s => ({
             name: s,
-            proficiencyLevel: 'Intermediate',
+            proficiency: 'Intermediate',
             verified: false
           }));
 
-      let matchData = null;
+      let compatibility = null;
       if (targetOpportunity) {
-        matchData = matchSkills(sp, targetOpportunity);
-      } else if (skill && skill.trim()) {
-        matchData = matchSkills(sp, [skill.trim()]);
+        compatibility = calculateDetailedCompatibility(sp, targetOpportunity);
+      } else if (skillParam && skillParam.trim()) {
+        const matchSimple = matchSkills(sp, [skillParam.trim()]);
+        compatibility = {
+          compatibilityScore: matchSimple.matchPercentage,
+          compatibilityPercentage: matchSimple.matchPercentage,
+          matchedSkills: matchSimple.matchedSkills,
+          missingSkills: matchSimple.missingSkills,
+          isEligible: true,
+          eligibilityReasons: [],
+          breakdown: { skillScore: matchSimple.matchPercentage, eligibilityScore: 100, careerInterestScore: 70 }
+        };
       }
+
+      const currentAppStatus = appStatusMap.get(sp._id.toString()) || 'none';
+      const experienceScore = (sp.projects?.length || 0) * 2 + (sp.certifications?.length || 0);
 
       return {
         _id: sp._id,
         studentId: sp._id,
-        name: u?.name || 'Student Candidate',
+        name: u?.name || 'Candidate',
         email: u?.email || '',
+        phone: sp.phone || u?.phone || '',
         avatarUrl: u?.avatarUrl || null,
-        college: sp.academicInformation?.college || sp.education?.[0]?.institutionName || 'Zenith Institute of Technology & Engineering',
-        department: sp.academicInformation?.branch || sp.academicInformation?.department || sp.education?.[0]?.fieldOfStudy || 'Computer Science & Engineering',
-        year: sp.academicInformation?.yearOfStudy || sp.academicInformation?.expectedGraduationYear || sp.education?.[0]?.graduationYear || '3rd Year',
-        cgpa: sp.academicInformation?.cgpa ?? sp.education?.[0]?.grade ?? 8.5,
+        college,
+        degree,
+        branch: branchName,
+        department: branchName,
+        year: yearStr,
+        cgpa,
+        education: [degree, branchName, college].filter(Boolean).join(' • '),
         skills,
+        keySkills: skills.map(s => s.name),
         bio: sp.bio || '',
         overallScore: sp.overallScore || 85,
         projects: sp.projects || [],
         certifications: sp.certifications || [],
+        achievements: sp.achievements || [],
+        careerInterests: sp.careerInterests || [],
+        socialLinks: sp.socialLinks || {},
         resumeUrl: sp.resumeUrl || '',
-        matchPercentage: matchData ? matchData.matchPercentage : null,
-        matchedSkills: matchData ? matchData.matchedSkills : [],
-        missingSkills: matchData ? matchData.missingSkills : []
+        resumeName: sp.resumeName || '',
+        applicationStatus: currentAppStatus,
+        experienceScore,
+        compatibilityScore: compatibility ? compatibility.compatibilityScore : null,
+        compatibilityPercentage: compatibility ? compatibility.compatibilityPercentage : null,
+        matchedSkills: compatibility ? compatibility.matchedSkills : [],
+        missingSkills: compatibility ? compatibility.missingSkills : [],
+        matchedSkillsDetails: compatibility ? compatibility.matchedSkillsDetails || [] : [],
+        missingSkillsDetails: compatibility ? compatibility.missingSkillsDetails || [] : [],
+        isEligible: compatibility ? (compatibility.breakdown?.isEligible ?? true) : true,
+        eligibilityReasons: compatibility ? (compatibility.breakdown?.eligibilityReasons || []) : [],
+        breakdown: compatibility ? compatibility.breakdown : null
       };
     });
 
-    // If matching against target opportunity, sort candidates by matchPercentage descending
-    if (targetOpportunity) {
-      formatted.sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));
+    // Sort candidates
+    const activeSort = sortBy || 'best_match';
+    if (activeSort === 'best_match') {
+      formatted.sort((a, b) => (b.compatibilityScore ?? b.overallScore ?? 0) - (a.compatibilityScore ?? a.overallScore ?? 0));
+    } else if (activeSort === 'cgpa') {
+      formatted.sort((a, b) => (b.cgpa ?? 0) - (a.cgpa ?? 0));
+    } else if (activeSort === 'experience') {
+      formatted.sort((a, b) => (b.experienceScore || 0) - (a.experienceScore || 0));
     }
 
     res.status(200).json({
@@ -438,13 +568,20 @@ export const searchStudents = async (req, res) => {
         _id: targetOpportunity._id,
         title: targetOpportunity.title,
         type: targetOpportunity.type,
-        requiredSkills: targetOpportunity.requiredSkills || []
+        requiredSkills: targetOpportunity.requiredSkills || [],
+        minCgpa: targetOpportunity.minCgpa,
+        eligibleBranches: targetOpportunity.eligibleBranches || []
       } : null,
-      opportunities: opportunities.map(o => ({ _id: o._id, title: o.title, type: o.type, requiredSkills: o.requiredSkills }))
+      opportunities: opportunities.map(o => ({ 
+        _id: o._id, 
+        title: o.title, 
+        type: o.type, 
+        requiredSkills: o.requiredSkills || [] 
+      }))
     });
   } catch (error) {
     console.error('Search Students Error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error retrieving students catalog' });
+    res.status(500).json({ success: false, message: 'Server error retrieving students catalog: ' + error.message });
   }
 };
 
@@ -477,8 +614,16 @@ export const shortlistStudent = async (req, res) => {
     }
 
     let application = await Application.findOne({ studentId: student._id, opportunityId: targetOppId });
+    const targetOpp = await Opportunity.findById(targetOppId);
+    const match = targetOpp ? calculateDetailedCompatibility(student, targetOpp) : null;
+
     if (application) {
       application.status = 'shortlisted';
+      if (match) {
+        application.compatibilityScore = match.compatibilityScore;
+        application.matchedSkills = match.matchedSkills;
+        application.missingSkills = match.missingSkills;
+      }
       await application.save();
     } else {
       application = await Application.create({
@@ -486,7 +631,10 @@ export const shortlistStudent = async (req, res) => {
         studentId: student._id,
         status: 'shortlisted',
         resumeUrl: student.resumeUrl || 'https://skillnexus.ai/resumes/default.pdf',
-        coverLetter: notes || 'Recruiter direct shortlist from Student Talent Discovery'
+        coverLetter: notes || 'Recruiter direct shortlist from Student Talent Discovery',
+        compatibilityScore: match ? match.compatibilityScore : null,
+        matchedSkills: match ? match.matchedSkills : [],
+        missingSkills: match ? match.missingSkills : []
       });
     }
 
@@ -498,6 +646,352 @@ export const shortlistStudent = async (req, res) => {
   } catch (error) {
     console.error('Shortlist Student Error:', error.message);
     res.status(500).json({ success: false, message: 'Server error shortlisting candidate' });
+  }
+};
+
+export const rejectCandidate = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { opportunityId, reason } = req.body;
+
+    const company = await Company.findOne({ userId: req.user.id });
+    if (!company) {
+      return res.status(404).json({ success: false, message: 'Company profile not found' });
+    }
+
+    const student = await StudentProfile.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    let targetOppId = opportunityId;
+    if (!targetOppId) {
+      const defaultOpp = await Opportunity.findOne({ companyId: company._id, status: 'open' });
+      if (defaultOpp) {
+        targetOppId = defaultOpp._id;
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: 'Please specify the opportunity for this rejection.'
+        });
+      }
+    }
+
+    const targetOpp = await Opportunity.findOne({ _id: targetOppId, companyId: company._id });
+    if (!targetOpp) {
+      return res.status(403).json({ success: false, message: 'Not authorized to reject candidates for this opportunity.' });
+    }
+
+    let application = await Application.findOne({ studentId: student._id, opportunityId: targetOppId });
+    if (application) {
+      application.status = 'rejected';
+      if (reason) {
+        application.coverLetter = (application.coverLetter ? application.coverLetter + ' | Rejection Note: ' : 'Rejection Note: ') + reason;
+      }
+      await application.save();
+    } else {
+      application = await Application.create({
+        opportunityId: targetOppId,
+        studentId: student._id,
+        status: 'rejected',
+        resumeUrl: student.resumeUrl || 'https://skillnexus.ai/resumes/default.pdf',
+        coverLetter: reason ? `Candidate marked as rejected: ${reason}` : 'Recruiter direct rejection from Talent Pool'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Candidate marked as rejected for this opportunity.',
+      application
+    });
+  } catch (error) {
+    console.error('Reject Candidate Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error rejecting candidate: ' + error.message });
+  }
+};
+
+export const getRecommendedCandidates = async (req, res) => {
+  try {
+    const company = await Company.findOne({ userId: req.user.id });
+    if (!company) {
+      return res.status(404).json({ success: false, message: 'Company profile not found' });
+    }
+
+    // 1. Fetch all active open opportunities for this company
+    const opportunities = await Opportunity.find({ companyId: company._id, status: 'open' }).sort({ createdAt: -1 });
+
+    if (!opportunities || opportunities.length === 0) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        candidates: [],
+        opportunities: [],
+        activeOpportunity: null,
+        message: 'No active job or internship openings found. Post an opening to activate candidate recommendations.'
+      });
+    }
+
+    // 2. Determine target opportunity for recommendations
+    let targetOpportunity = null;
+    const requestedOppId = req.query.opportunityId;
+    if (requestedOppId && requestedOppId !== 'all') {
+      targetOpportunity = opportunities.find(o => o._id.toString() === requestedOppId);
+      if (!targetOpportunity) {
+        targetOpportunity = await Opportunity.findOne({ _id: requestedOppId, companyId: company._id });
+      }
+    }
+    if (!targetOpportunity) {
+      targetOpportunity = opportunities[0];
+    }
+
+    // 3. Fetch all applications for this opportunity to know student statuses (applied, shortlisted, rejected, etc.)
+    const existingApplications = await Application.find({ opportunityId: targetOpportunity._id });
+    const appMap = new Map();
+    existingApplications.forEach(app => {
+      appMap.set(app.studentId.toString(), {
+        applicationId: app._id,
+        status: app.status || 'applied'
+      });
+    });
+
+    // 4. Fetch all active student profiles populated with user details
+    const studentProfiles = await StudentProfile.find({})
+      .populate('userId', 'name email avatarUrl status')
+      .sort({ createdAt: -1 });
+
+    const activeStudents = studentProfiles.filter(sp => sp.userId && sp.userId.status !== 'inactive');
+    const includeRejected = req.query.includeRejected === 'true';
+
+    // 5. Compute compatibility scores for each candidate
+    const candidateList = [];
+
+    activeStudents.forEach(sp => {
+      const appInfo = appMap.get(sp._id.toString());
+      const currentStatus = appInfo?.status || 'none';
+
+      // By default, filter out rejected candidates
+      if (currentStatus === 'rejected' && !includeRejected) {
+        return;
+      }
+
+      const compatibility = calculateDetailedCompatibility(sp, targetOpportunity);
+
+      const acad = sp.academicInformation || {};
+      const degree = acad.degree || acad.course || '';
+      const branch = acad.branch || acad.department || '';
+      const college = acad.college || 'Zenith University Partner';
+      const year = acad.year || acad.yearOfStudy || acad.expectedGraduationYear || 'Pre-final';
+      const cgpa = acad.cgpa !== null && acad.cgpa !== undefined ? Number(acad.cgpa) : null;
+
+      const eduParts = [degree, branch, college].filter(Boolean);
+      const formattedEducation = eduParts.length > 0 ? eduParts.join(' • ') : 'Engineering Undergraduate';
+
+      const keySkills = (sp.skillsList && sp.skillsList.length > 0)
+        ? sp.skillsList.map(s => s.name)
+        : (sp.skills || []);
+
+      candidateList.push({
+        _id: sp._id,
+        studentId: sp._id,
+        name: sp.userId?.name || 'Candidate',
+        email: sp.userId?.email || '',
+        avatarUrl: sp.userId?.avatarUrl || null,
+        college,
+        degree,
+        branch,
+        year,
+        cgpa,
+        education: formattedEducation,
+        keySkills,
+        skillsList: (sp.skillsList && sp.skillsList.length > 0)
+          ? sp.skillsList.map(s => ({ name: s.name, proficiency: s.proficiency || 'Intermediate' }))
+          : keySkills.map(s => ({ name: s, proficiency: 'Intermediate' })),
+        matchedSkills: compatibility.matchedSkills,
+        missingSkills: compatibility.missingSkills,
+        matchedSkillsDetails: compatibility.matchedSkillsDetails || [],
+        missingSkillsDetails: compatibility.missingSkillsDetails || [],
+        compatibilityScore: compatibility.compatibilityScore,
+        compatibilityPercentage: compatibility.compatibilityPercentage,
+        skillMatchPercentage: compatibility.skillMatchPercentage,
+        isEligible: compatibility.breakdown?.isEligible ?? true,
+        eligibilityReasons: compatibility.breakdown?.eligibilityReasons || [],
+        hasAllRequiredSkills: compatibility.hasAllRequiredSkills ?? true,
+        breakdown: compatibility.breakdown,
+        careerInterests: sp.careerInterests || [],
+        projects: sp.projects || [],
+        certifications: sp.certifications || [],
+        resumeUrl: sp.resumeUrl || '',
+        bio: sp.bio || '',
+        applicationStatus: currentStatus,
+        applicationId: appInfo?.applicationId || null
+      });
+    });
+
+    // Sort descending by compatibility score
+    candidateList.sort((a, b) => b.compatibilityScore - a.compatibilityScore);
+
+    res.status(200).json({
+      success: true,
+      count: candidateList.length,
+      candidates: candidateList,
+      opportunities: opportunities.map(o => ({
+        _id: o._id,
+        title: o.title,
+        type: o.type,
+        status: o.status,
+        requiredSkills: o.requiredSkills || [],
+        location: o.location,
+        minCgpa: o.minCgpa,
+        eligibleBranches: o.eligibleBranches
+      })),
+      activeOpportunity: {
+        _id: targetOpportunity._id,
+        title: targetOpportunity.title,
+        type: targetOpportunity.type,
+        status: targetOpportunity.status,
+        requiredSkills: targetOpportunity.requiredSkills || [],
+        location: targetOpportunity.location,
+        stipend: targetOpportunity.stipend,
+        duration: targetOpportunity.duration,
+        minCgpa: targetOpportunity.minCgpa,
+        eligibleBranches: targetOpportunity.eligibleBranches
+      }
+    });
+  } catch (error) {
+    console.error('Get Recommended Candidates Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error retrieving recommended candidates: ' + error.message });
+  }
+};
+
+export const getCandidateProfile = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { opportunityId } = req.query;
+
+    let student = await StudentProfile.findById(studentId)
+      .populate('userId', 'name email phone avatarUrl status createdAt');
+
+    if (!student) {
+      student = await StudentProfile.findOne({ userId: studentId })
+        .populate('userId', 'name email phone avatarUrl status createdAt');
+    }
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Candidate student profile not found' });
+    }
+
+    // Real assessment records from AssessmentResult collection
+    const assessments = await AssessmentResult.find({ userId: student.userId?._id })
+      .sort({ createdAt: -1 });
+
+    // Target opportunity for matching
+    let targetOpportunity = null;
+    let compatibility = null;
+    if (opportunityId && opportunityId !== 'all') {
+      targetOpportunity = await Opportunity.findById(opportunityId);
+    } else {
+      const company = await Company.findOne({ userId: req.user.id });
+      if (company) {
+        targetOpportunity = await Opportunity.findOne({ companyId: company._id, status: 'open' });
+      }
+    }
+
+    if (targetOpportunity) {
+      compatibility = calculateDetailedCompatibility(student, targetOpportunity);
+    }
+
+    // Application status
+    let applicationStatus = 'none';
+    let application = null;
+    if (targetOpportunity) {
+      application = await Application.findOne({ studentId: student._id, opportunityId: targetOpportunity._id });
+      if (application) {
+        applicationStatus = application.status;
+      }
+    }
+
+    const acad = student.academicInformation || {};
+    const degree = acad.degree || acad.course || 'B.Tech';
+    const branch = acad.branch || acad.department || 'Engineering';
+    const college = acad.college || 'Zenith Partner University';
+    const year = acad.year || acad.yearOfStudy || acad.expectedGraduationYear || 'Pre-final';
+    const cgpa = acad.cgpa !== null && acad.cgpa !== undefined ? Number(acad.cgpa) : null;
+
+    res.status(200).json({
+      success: true,
+      candidate: {
+        _id: student._id,
+        studentId: student._id,
+        name: student.userId?.name || 'Candidate',
+        email: student.userId?.email || '',
+        phone: student.phone || student.userId?.phone || '',
+        avatarUrl: student.userId?.avatarUrl || null,
+        bio: student.bio || '',
+        academicInformation: {
+          degree,
+          branch,
+          department: branch,
+          college,
+          year,
+          cgpa
+        },
+        education: [degree, branch, college].filter(Boolean).join(' • '),
+        skillsList: (student.skillsList && student.skillsList.length > 0)
+          ? student.skillsList.map(s => ({
+              name: s.name,
+              category: s.category || 'Technical',
+              proficiency: s.proficiency || s.proficiencyLevel || 'Intermediate'
+            }))
+          : (student.skills || []).map(s => ({
+              name: s,
+              category: 'Technical',
+              proficiency: 'Intermediate'
+            })),
+        skills: student.skills || [],
+        softSkills: student.softSkills || [],
+        assessments: assessments.map(a => ({
+          _id: a._id,
+          skill: a.skill,
+          category: a.category || 'Technical Assessment',
+          score: a.score,
+          percentage: a.percentage ?? a.scorePercentage ?? 0,
+          skillLevel: a.skillLevel || 'Intermediate',
+          proficiencyEarned: a.proficiencyEarned || 'Intermediate',
+          passed: a.passed,
+          createdAt: a.createdAt
+        })),
+        projects: student.projects || [],
+        certifications: student.certifications || [],
+        internships: student.internships || [],
+        achievements: student.achievements || [],
+        socialLinks: student.socialLinks || {},
+        resumeUrl: student.resumeUrl || '',
+        resumeName: student.resumeName || 'Resume.pdf',
+        compatibilityScore: compatibility ? compatibility.compatibilityScore : null,
+        compatibilityPercentage: compatibility ? compatibility.compatibilityPercentage : null,
+        matchedSkills: compatibility ? compatibility.matchedSkills : [],
+        missingSkills: compatibility ? compatibility.missingSkills : [],
+        matchedSkillsDetails: compatibility ? compatibility.matchedSkillsDetails : [],
+        missingSkillsDetails: compatibility ? compatibility.missingSkillsDetails : [],
+        isEligible: compatibility ? (compatibility.breakdown?.isEligible ?? true) : true,
+        eligibilityReasons: compatibility ? (compatibility.breakdown?.eligibilityReasons || []) : [],
+        breakdown: compatibility ? compatibility.breakdown : null,
+        targetOpportunity: targetOpportunity ? {
+          _id: targetOpportunity._id,
+          title: targetOpportunity.title,
+          type: targetOpportunity.type,
+          location: targetOpportunity.location,
+          requiredSkills: targetOpportunity.requiredSkills || [],
+          minCgpa: targetOpportunity.minCgpa,
+          eligibleBranches: targetOpportunity.eligibleBranches || []
+        } : null,
+        applicationStatus,
+        applicationId: application?._id || null
+      }
+    });
+  } catch (error) {
+    console.error('Get Candidate Profile Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error retrieving candidate profile: ' + error.message });
   }
 };
 
@@ -580,7 +1074,7 @@ export const getShortlistedStudents = async (req, res) => {
 export const scheduleInterview = async (req, res) => {
   try {
     const { id } = req.params;
-    const { date, time, mode, round, meetingLink, notes, status } = req.body;
+    const { date, time, mode, round, interviewType, interviewer, meetingLink, notes, status } = req.body;
 
     const userId = req.user?.id || req.user?._id;
     const company = await Company.findOne({ userId });
@@ -606,6 +1100,8 @@ export const scheduleInterview = async (req, res) => {
       time: time || (application.interviewDetails?.time || '10:00 AM'),
       mode: mode || application.interviewDetails?.mode || 'video',
       round: round || application.interviewDetails?.round || 'Technical Evaluation Round 1',
+      interviewType: interviewType || round || (application.interviewDetails?.interviewType || 'Technical Interview'),
+      interviewer: interviewer || (application.interviewDetails?.interviewer || 'Technical Hiring Panel'),
       meetingLink: meetingLink || application.interviewDetails?.meetingLink || 'https://meet.google.com',
       notes: notes !== undefined ? notes : (application.interviewDetails?.notes || ''),
       status: interviewStatus
@@ -686,6 +1182,8 @@ export const getCompanyInterviews = async (req, res) => {
         time: scheduledDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
         mode: interview.mode || 'video',
         round: interview.round || 'Technical Evaluation Round 1',
+        interviewType: interview.interviewType || interview.round || 'Technical Interview',
+        interviewer: interview.interviewer || 'Technical Hiring Panel',
         meetingLink: interview.meetingLink || 'https://meet.google.com',
         notes: interview.notes || '',
         status: interview.status || (app.status === 'accepted' ? 'completed' : app.status === 'interview' ? 'scheduled' : 'scheduled')
@@ -890,7 +1388,10 @@ export const getCompanyNotifications = async (req, res) => {
       }
     });
 
-    // 2. Notifications for Opportunity Activity
+    // 2. Notifications for Opportunity Activity & Relevant Candidate Matches
+    const studentProfiles = await StudentProfile.find({}).populate('userId', 'status');
+    const activeStudents = studentProfiles.filter(s => s.userId && s.userId.status !== 'inactive');
+
     opportunities.forEach(opp => {
       const oppNotifId = `opp_created_${opp._id}`;
       notifications.push({
@@ -903,6 +1404,28 @@ export const getCompanyNotifications = async (req, res) => {
         link: '/company/opportunities',
         meta: { oppTitle: opp.title, oppType: opp.type }
       });
+
+      // Relevant Candidates Notification
+      if (opp.status === 'open' && activeStudents.length > 0) {
+        const matchingCount = activeStudents.filter(sp => {
+          const compat = calculateDetailedCompatibility(sp, opp);
+          return compat.compatibilityPercentage >= 70;
+        }).length;
+
+        if (matchingCount > 0) {
+          const candNotifId = `relevant_candidates_${opp._id}`;
+          notifications.push({
+            id: candNotifId,
+            type: 'talent_match',
+            title: 'New Relevant Candidates Identified ✨',
+            message: `${matchingCount} qualified candidate${matchingCount > 1 ? 's match' : ' matches'} your requirements for "${opp.title}". Review recommendations.`,
+            timestamp: opp.updatedAt || opp.createdAt,
+            read: readIds.has(candNotifId),
+            link: '/company/recommended-candidates',
+            meta: { oppTitle: opp.title, count: matchingCount }
+          });
+        }
+      }
     });
 
     // Sort notifications chronologically (newest first)
@@ -972,4 +1495,182 @@ export const markAllNotificationsAsRead = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error updating notifications status' });
   }
 };
+
+export const getSkillInsights = async (req, res) => {
+  try {
+    const company = await Company.findOne({ userId: req.user.id });
+    if (!company) {
+      return res.status(404).json({ success: false, message: 'Company profile not found' });
+    }
+
+    const opportunities = await Opportunity.find({ companyId: company._id }).sort({ createdAt: -1 });
+    const oppIds = opportunities.map(o => o._id);
+
+    const applications = await Application.find({ opportunityId: { $in: oppIds } })
+      .populate('opportunityId', 'title type requiredSkills')
+      .populate({
+        path: 'studentId',
+        select: 'skills skillsList academicInformation'
+      });
+
+    const allStudents = await StudentProfile.find({})
+      .populate('userId', 'status')
+      .select('skills skillsList academicInformation');
+    const activeStudents = allStudents.filter(s => s.userId && s.userId.status !== 'inactive');
+
+    // If company has no opportunities posted yet
+    if (opportunities.length === 0) {
+      return res.status(200).json({
+        success: true,
+        hasData: false,
+        totalOpportunities: 0,
+        activeOpportunities: 0,
+        totalCandidatesEvaluated: activeStudents.length,
+        averageCandidateCompatibility: 0,
+        mostDemandedSkills: [],
+        commonSkillGaps: [],
+        skillAvailability: [],
+        recruitmentOutcomes: {
+          applied: 0,
+          screening: 0,
+          shortlisted: 0,
+          interview: 0,
+          selected: 0,
+          rejected: 0,
+          total: 0
+        },
+        message: 'No opportunities posted yet. Post job or internship openings to generate skill insights.'
+      });
+    }
+
+    // 1. Calculate Most Demanded Skills
+    const skillDemandCount = {};
+    opportunities.forEach(opp => {
+      (opp.requiredSkills || []).forEach(sk => {
+        const clean = (typeof sk === 'string' ? sk : sk?.name || '').trim();
+        if (clean) {
+          skillDemandCount[clean] = (skillDemandCount[clean] || 0) + 1;
+        }
+      });
+    });
+
+    const mostDemandedSkills = Object.entries(skillDemandCount)
+      .map(([name, count]) => ({
+        skill: name,
+        openingsCount: count,
+        demandPercentage: Math.round((count / opportunities.length) * 100)
+      }))
+      .sort((a, b) => b.openingsCount - a.openingsCount);
+
+    // 2. Calculate Skill Availability in Student Pool
+    const demandedSkillsList = mostDemandedSkills.map(s => s.skill.toLowerCase());
+    const totalStudentCount = activeStudents.length;
+
+    const skillSupplyCount = {};
+    activeStudents.forEach(sp => {
+      const studentSkills = new Set(
+        (sp.skillsList || []).map(s => (s.name || '').toLowerCase().trim())
+          .concat((sp.skills || []).map(s => (typeof s === 'string' ? s : s?.name || '').toLowerCase().trim()))
+          .filter(Boolean)
+      );
+
+      demandedSkillsList.forEach(demandedLower => {
+        if (studentSkills.has(demandedLower)) {
+          skillSupplyCount[demandedLower] = (skillSupplyCount[demandedLower] || 0) + 1;
+        }
+      });
+    });
+
+    const skillAvailability = mostDemandedSkills.map(item => {
+      const lower = item.skill.toLowerCase();
+      const studentsWithSkill = skillSupplyCount[lower] || 0;
+      const availabilityPercentage = totalStudentCount > 0 
+        ? Math.round((studentsWithSkill / totalStudentCount) * 100) 
+        : 0;
+
+      return {
+        skill: item.skill,
+        studentsCount: studentsWithSkill,
+        totalStudents: totalStudentCount,
+        availabilityPercentage,
+        supplyStatus: availabilityPercentage >= 60 ? 'High' : availabilityPercentage >= 30 ? 'Moderate' : 'Low'
+      };
+    });
+
+    // 3. Calculate Common Candidate Skill Gaps
+    const gapMap = {};
+    let totalEvaluations = 0;
+    let totalCompatibilitySum = 0;
+
+    const openOpportunities = opportunities.filter(o => o.status === 'open');
+    const oppsToEvaluate = openOpportunities.length > 0 ? openOpportunities : opportunities;
+
+    oppsToEvaluate.forEach(opp => {
+      activeStudents.forEach(st => {
+        const compat = calculateDetailedCompatibility(st, opp);
+        totalCompatibilitySum += compat.compatibilityPercentage;
+        totalEvaluations++;
+
+        (compat.missingSkills || []).forEach(gapSkill => {
+          gapMap[gapSkill] = (gapMap[gapSkill] || 0) + 1;
+        });
+      });
+    });
+
+    const commonSkillGaps = Object.entries(gapMap)
+      .map(([skill, count]) => ({
+        skill,
+        missingCandidateCount: count,
+        gapPercentage: totalEvaluations > 0 ? Math.round((count / totalEvaluations) * 100) : 0,
+        severity: (count / (totalEvaluations || 1)) > 0.5 ? 'High Gap' : 'Moderate Gap'
+      }))
+      .sort((a, b) => b.missingCandidateCount - a.missingCandidateCount)
+      .slice(0, 10);
+
+    // 4. Average Candidate Compatibility
+    const averageCandidateCompatibility = totalEvaluations > 0
+      ? Math.round(totalCompatibilitySum / totalEvaluations)
+      : 0;
+
+    // 5. Recruitment Outcomes
+    const outcomeCounts = {
+      applied: 0,
+      screening: 0,
+      shortlisted: 0,
+      interview: 0,
+      selected: 0,
+      rejected: 0,
+      total: applications.length
+    };
+
+    applications.forEach(app => {
+      const st = (app.status || 'applied').toLowerCase();
+      if (st === 'reviewed') outcomeCounts.screening++;
+      else if (st === 'accepted') outcomeCounts.selected++;
+      else if (st === 'interviewing') outcomeCounts.interview++;
+      else if (outcomeCounts[st] !== undefined) {
+        outcomeCounts[st]++;
+      } else {
+        outcomeCounts.applied++;
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      hasData: true,
+      totalOpportunities: opportunities.length,
+      activeOpportunities: openOpportunities.length,
+      totalCandidatesEvaluated: totalStudentCount,
+      averageCandidateCompatibility,
+      mostDemandedSkills: mostDemandedSkills.slice(0, 10),
+      commonSkillGaps,
+      skillAvailability: skillAvailability.slice(0, 10),
+      recruitmentOutcomes: outcomeCounts
+    });
+  } catch (error) {
+    console.error('Get Skill Insights Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error generating skill insights: ' + error.message });
+  }
+};
+
 

@@ -1,13 +1,10 @@
-import Opportunity from '../models/Opportunity.js';
+import Opportunity, { normalizeRequiredSkills } from '../models/Opportunity.js';
 import Company from '../models/Company.js';
 import StudentProfile from '../models/StudentProfile.js';
 import Application from '../models/Application.js';
 import { matchSkills, calculateCompatibility } from '../utils/matchingEngine.js';
 
-const parseSkills = (requiredSkills) =>
-  typeof requiredSkills === 'string'
-    ? requiredSkills.split(',').map(s => s.trim()).filter(Boolean)
-    : requiredSkills;
+const parseSkills = (requiredSkills) => normalizeRequiredSkills(requiredSkills);
 
 const companyOfUser = async (userId, res) => {
   const company = await Company.findOne({ userId });
@@ -110,7 +107,11 @@ export const getOpportunities = async (req, res) => {
     if (req.query.skills) {
       const skillsQuery = req.query.skills.split(',').map(s => s.trim()).filter(Boolean);
       if (skillsQuery.length) {
-        query.requiredSkills = { $in: skillsQuery.map(s => new RegExp(`^${s}$`, 'i')) };
+        const regexes = skillsQuery.map(s => new RegExp(`^${s}$`, 'i'));
+        query.$or = [
+          { 'requiredSkills.name': { $in: regexes } },
+          { requiredSkills: { $in: regexes } }
+        ];
       }
     }
 

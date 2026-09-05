@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Cpu, Target, Briefcase,
   User, LogOut, Sun, Moon, Sparkles, X, Menu,
   Building2, GraduationCap, School, Settings,
-  FileText, Award, Bell, Video, Users, Search, BarChart3,
+  FileText, Award, Bell, Video, Users, Search, BarChart3, BrainCircuit,
   ChevronDown, Calendar, TrendingUp, RefreshCw, Network,
   Layers, ChevronRight
 } from 'lucide-react';
@@ -51,10 +51,9 @@ export function DashboardLayout({ children }) {
 
   const facultyNav = [
     { label: 'Dashboard',          path: '/faculty',                icon: LayoutDashboard },
-    { label: 'Students',           path: '/faculty/students',       icon: Users },
-    { label: 'Skill Intelligence', path: '/faculty/skills',         icon: BarChart3 },
-    { label: 'Skill Gap Analysis', path: '/faculty/skill-gap',      icon: Target },
-    { label: 'Opportunities',      path: '/faculty/opportunities',  icon: Briefcase },
+    { label: 'Student Directory',  path: '/faculty/students',       icon: Users },
+    { label: 'Skill Analytics',    path: '/faculty/skills',         icon: BarChart3 },
+    { label: 'Skill Gap Matrix',   path: '/faculty/skill-gap',      icon: Layers },
     { label: 'Internships',        path: '/faculty/opportunities',  icon: GraduationCap },
     { label: 'Placements',         path: '/faculty/placement',      icon: Award },
     { label: 'Faculty Network',    path: '/faculty/network',        icon: Network },
@@ -64,14 +63,42 @@ export function DashboardLayout({ children }) {
   ];
 
   const companyNav = [
-    { label: 'Dashboard',       path: '/company',               icon: LayoutDashboard },
-    { label: 'Company Profile', path: '/company/profile',       icon: Building2 },
-    { label: 'Opportunities',   path: '/company/opportunities',  icon: Briefcase },
-    { label: 'Applicants',      path: '/company/applicants',    icon: Users },
-    { label: 'Student Search',  path: '/company/students',      icon: Search },
-    { label: 'Shortlisted',     path: '/company/shortlisted',   icon: Award },
-    { label: 'Interviews',      path: '/company/interviews',    icon: Video },
-    { label: 'Notifications',   path: '/company/notifications', icon: Bell },
+    { label: 'Dashboard',               path: '/company',                          icon: LayoutDashboard },
+
+    {
+      isSection: true,
+      sectionTitle: 'Company',
+      items: [
+        { label: 'Company Profile',          path: '/company/profile',                  icon: Building2 },
+      ]
+    },
+    {
+      isSection: true,
+      sectionTitle: 'Talent',
+      items: [
+        { label: 'Recommended Candidates',  path: '/company/recommended-candidates',   icon: Sparkles },
+        { label: 'Student Search',          path: '/company/students',                 icon: Search },
+        { label: 'Skill Insights',          path: '/company/skill-insights',           icon: BrainCircuit },
+      ]
+    },
+    {
+      isSection: true,
+      sectionTitle: 'Recruitment',
+      items: [
+        { label: 'Opportunities',           path: '/company/opportunities',            icon: Briefcase },
+        { label: 'Applicants',              path: '/company/applicants',               icon: Users },
+        { label: 'Shortlisted',             path: '/company/shortlisted',              icon: Award },
+        { label: 'Interviews',              path: '/company/interviews',               icon: Video },
+      ]
+    },
+    {
+      isSection: true,
+      sectionTitle: 'Preferences',
+      items: [
+        { label: 'Notifications',           path: '/company/notifications',            icon: Bell },
+        { label: 'Settings',                path: '/settings',                         icon: Settings },
+      ]
+    }
   ];
 
   const adminNav = [
