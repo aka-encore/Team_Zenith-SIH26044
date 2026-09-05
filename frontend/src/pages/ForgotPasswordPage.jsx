@@ -13,6 +13,7 @@ export default function ForgotPasswordPage() {
   const [step, setStep] = useState(1);
 
   // Form State
+  const [selectedRole, setSelectedRole] = useState('student');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -71,7 +72,7 @@ export default function ForgotPasswordPage() {
       const res = await fetch('/api/auth/send-forgot-password-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase() })
+        body: JSON.stringify({ email: email.trim().toLowerCase(), role: selectedRole })
       });
 
       const data = await res.json();
@@ -103,7 +104,7 @@ export default function ForgotPasswordPage() {
       const res = await fetch('/api/auth/send-forgot-password-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase() })
+        body: JSON.stringify({ email: email.trim().toLowerCase(), role: selectedRole })
       });
 
       const data = await res.json();
@@ -169,7 +170,8 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
           otp: otp.trim(),
-          newPassword
+          newPassword,
+          role: selectedRole
         })
       });
 
@@ -316,6 +318,32 @@ export default function ForgotPasswordPage() {
           {/* ══════════════ STEP 1: ENTER EMAIL ══════════════ */}
           {step === 1 && (
             <form onSubmit={handleSendOtp} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-300 block">
+                  Select Account Role
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'student', label: 'Student' },
+                    { id: 'company', label: 'Company' },
+                    { id: 'faculty', label: 'Faculty' }
+                  ].map(r => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setSelectedRole(r.id)}
+                      className={`py-2 rounded-xl text-xs font-bold transition border cursor-pointer ${
+                        selectedRole === r.id
+                          ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20'
+                          : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-300 block">
                   Registered Email Address

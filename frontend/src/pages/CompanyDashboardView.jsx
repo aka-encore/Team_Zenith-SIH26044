@@ -6,8 +6,9 @@ import {
   CheckCircle2, ChevronRight, Award, Target, FileText, ArrowRight,
   Clock, MapPin, DollarSign, Calendar, ExternalLink, RefreshCw,
   AlertCircle, Check, X, ShieldCheck, TrendingUp, BarChart3,
-  GraduationCap, Mail, Video, UserCheck, Layers, Eye
+  GraduationCap, Mail, Video, UserCheck, Layers, Eye, BookOpen, Star, AlertTriangle
 } from 'lucide-react';
+import CandidateProfileModal from '../components/CandidateProfileModal';
 
 export default function CompanyDashboardView() {
   const { token, user } = useAuth();
@@ -34,6 +35,16 @@ export default function CompanyDashboardView() {
 
   // Opportunities tab filter
   const [oppFilter, setOppFilter] = useState('all'); // 'all' | 'job' | 'internship'
+
+  // Recommended Candidates State
+  const [recommendedCandidates, setRecommendedCandidates] = useState([]);
+  const [recOpportunities, setRecOpportunities] = useState([]);
+  const [activeRecOpportunity, setActiveRecOpportunity] = useState(null);
+  const [selectedRecOppId, setSelectedRecOppId] = useState('');
+  const [recLoading, setRecLoading] = useState(true);
+  const [recActionLoadingId, setRecActionLoadingId] = useState(null);
+  const [toastMsg, setToastMsg] = useState('');
+  const [selectedCandidateModal, setSelectedCandidateModal] = useState(null);
 
   // Fetch live company dashboard statistics from MongoDB
   const fetchDashboardData = async (isManualRefresh = false) => {
@@ -63,11 +74,128 @@ export default function CompanyDashboardView() {
     }
   };
 
+  // Fetch candidates recommended by the transparent skill matching engine
+  const fetchRecommendedCandidates = async (oppId = '') => {
+    setRecLoading(true);
+    try {
+      const queryParam = oppId ? `?opportunityId=${encodeURIComponent(oppId)}` : '';
+      const response = await fetch(`/api/companies/recommended-candidates${queryParam}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const resData = await response.json();
+      if (response.ok && resData.success) {
+        setRecommendedCandidates(resData.candidates || []);
+        setRecOpportunities(resData.opportunities || []);
+        setActiveRecOpportunity(resData.activeOpportunity || null);
+        if (resData.activeOpportunity && !oppId) {
+          setSelectedRecOppId(resData.activeOpportunity._id);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching recommended candidates:', err);
+    } finally {
+      setRecLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       fetchDashboardData();
+      fetchRecommendedCandidates();
     }
   }, [token]);
+
+  // Handle switching target opportunity for candidate recommendations
+  const handleRecOppChange = (oppId) => {
+    setSelectedRecOppId(oppId);
+    fetchRecommendedCandidates(oppId);
+  };
+
+  // Handle Shortlist Candidate Action
+  const handleShortlistCandidate = async (candidate, targetOppId = null) => {
+    const oppId = targetOppId || activeRecOpportunity?._id;
+    if (!oppId) return;
+
+    const candId = candidate.studentId || candidate._id;
+    setRecActionLoadingId(candId + '_shortlist');
+
+    try {
+      const response = await fetch(`/api/companies/students/${candId}/shortlist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          opportunityId: oppId,
+          notes: 'Shortlisted from Recommended Candidates'
+        })
+      });
+
+      const resData = await response.json();
+      if (response.ok && resData.success) {
+        setRecommendedCandidates(prev => prev.map(c => 
+          (c._id === candId || c.studentId === candId)
+            ? { ...c, applicationStatus: 'shortlisted' }
+            : c
+        ));
+        if (selectedCandidateModal && (selectedCandidateModal._id === candId || selectedCandidateModal.studentId === candId)) {
+          setSelectedCandidateModal(prev => ({ ...prev, applicationStatus: 'shortlisted' }));
+        }
+        setToastMsg(`Candidate ${candidate.name} shortlisted for ${activeRecOpportunity?.title || 'this role'}!`);
+        setTimeout(() => setToastMsg(''), 3500);
+        fetchDashboardData(true);
+      } else {
+        alert(resData.message || 'Failed to shortlist candidate.');
+      }
+    } catch (err) {
+      console.error('Error shortlisting candidate:', err);
+    } finally {
+      setRecActionLoadingId(null);
+    }
+  };
+
+  // Handle Reject Candidate Action
+  const handleRejectCandidate = async (candidate, targetOppId = null) => {
+    const oppId = targetOppId || activeRecOpportunity?._id;
+    if (!oppId) return;
+
+    const candId = candidate.studentId || candidate._id;
+    setRecActionLoadingId(candId + '_reject');
+
+    try {
+      const response = await fetch(`/api/companies/students/${candId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          opportunityId: oppId,
+          reason: 'Candidate did not meet required skill threshold'
+        })
+      });
+
+      const resData = await response.json();
+      if (response.ok && resData.success) {
+        setRecommendedCandidates(prev => prev.filter(c => c._id !== candId && c.studentId !== candId));
+        if (selectedCandidateModal && (selectedCandidateModal._id === candId || selectedCandidateModal.studentId === candId)) {
+          setSelectedCandidateModal(null);
+        }
+        setToastMsg(`Candidate ${candidate.name} marked as rejected.`);
+        setTimeout(() => setToastMsg(''), 3500);
+      } else {
+        alert(resData.message || 'Failed to reject candidate.');
+      }
+    } catch (err) {
+      console.error('Error rejecting candidate:', err);
+    } finally {
+      setRecActionLoadingId(null);
+    }
+  };
 
   // Handle Quick Action: Create New Opportunity
   const handleCreateOpportunity = async (e) => {
@@ -377,6 +505,338 @@ export default function CompanyDashboardView() {
             <p className="text-[10px] text-slate-400">{stats.totalApplicants} received</p>
           </button>
         </div>
+      </section>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ RECOMMENDED CANDIDATES (SRS COMPLIANT) ━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] font-mono font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center space-x-1">
+                <Sparkles className="h-3 w-3" />
+                <span>Skill Compatibility Engine</span>
+              </span>
+              <span className="text-xs font-mono text-slate-400">
+                {recommendedCandidates.length} {recommendedCandidates.length === 1 ? 'Candidate' : 'Candidates'} Ranked
+              </span>
+            </div>
+            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center space-x-2 mt-1">
+              <Target className="h-5 w-5 text-emerald-500" />
+              <span>Recommended Candidates</span>
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-2xl">
+              Candidates matched automatically against active requirements using transparent weighted skill scoring, proficiency evaluation, academic eligibility, and career interests.
+            </p>
+          </div>
+
+          {/* Role Filter / Selector */}
+          {recOpportunities.length > 0 && (
+            <div className="flex items-center space-x-2 shrink-0">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                Matching for:
+              </span>
+              <select
+                value={selectedRecOppId}
+                onChange={(e) => handleRecOppChange(e.target.value)}
+                className="px-3.5 py-2 bg-white dark:bg-slate-900 border-2 border-emerald-500/30 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none focus:border-emerald-500 cursor-pointer shadow-xs max-w-xs truncate"
+              >
+                {recOpportunities.map(opp => (
+                  <option key={opp._id} value={opp._id}>
+                    {opp.title} ({opp.type === 'internship' ? 'Internship' : 'Job'})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* Active Target Opportunity Skills Bar */}
+        {activeRecOpportunity && (
+          <div className="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-500/20 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center space-x-1">
+                <Briefcase className="h-3.5 w-3.5" />
+                <span>Required Skills ({activeRecOpportunity.title}):</span>
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {(activeRecOpportunity.requiredSkills || []).map((sk, idx) => (
+                  <span 
+                    key={idx}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30"
+                  >
+                    {sk}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+              {activeRecOpportunity.minCgpa && (
+                <span>Min CGPA: <strong>{activeRecOpportunity.minCgpa}</strong></span>
+              )}
+              {activeRecOpportunity.eligibleBranches?.length > 0 && (
+                <span>Branches: <strong>{activeRecOpportunity.eligibleBranches.slice(0, 2).join(', ')}</strong></span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Candidates List / Grid */}
+        {recLoading ? (
+          <div className="p-12 glass-card rounded-3xl border border-slate-200 dark:border-slate-800 text-center space-y-3">
+            <RefreshCw className="h-7 w-7 animate-spin text-emerald-500 mx-auto" />
+            <p className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
+              Evaluating candidate skill DNA against active requirements...
+            </p>
+          </div>
+        ) : !activeRecOpportunity ? (
+          <div className="glass-card p-10 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+              <Target className="h-6 w-6" />
+            </div>
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+              No Active Job or Internship Openings
+            </h3>
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
+              Post your first opening to activate automatic candidate recommendations evaluated by the transparent Skill Matching Engine.
+            </p>
+            <button
+              onClick={() => openPostModal('job')}
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-md shadow-emerald-600/20"
+            >
+              Post Role to Get Recommendations
+            </button>
+          </div>
+        ) : recommendedCandidates.length === 0 ? (
+          <div className="glass-card p-10 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-3">
+            <Users className="h-8 w-8 text-slate-400 mx-auto" />
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+              No Candidates Found Matching This Opening
+            </h3>
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
+              All candidates may have already been reviewed, or skill criteria can be broadened. Explore student talent directly via Student Search.
+            </p>
+            <button
+              onClick={() => navigate('/company/students')}
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
+            >
+              Browse All Students
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {recommendedCandidates.map(candidate => (
+              <div
+                key={candidate._id}
+                className="glass-card p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/70 hover:border-emerald-400/50 dark:hover:border-emerald-500/40 transition shadow-sm flex flex-col justify-between space-y-4 text-left"
+              >
+                <div className="space-y-3.5">
+                  {/* Top Bar: Avatar, Name, Education & Compatibility Badge */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center justify-center text-lg shrink-0 overflow-hidden border border-emerald-500/20">
+                        {candidate.avatarUrl ? (
+                          <img src={candidate.avatarUrl} alt={candidate.name} className="w-full h-full object-cover" />
+                        ) : (
+                          candidate.name?.charAt(0) || 'C'
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center space-x-1.5">
+                          <h3 className="text-base font-extrabold text-slate-900 dark:text-white truncate">
+                            {candidate.name}
+                          </h3>
+                          {candidate.applicationStatus === 'shortlisted' && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 shrink-0">
+                              Shortlisted
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5" title={candidate.education}>
+                          {candidate.education}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Compatibility Badge */}
+                    <div className="text-right shrink-0">
+                      <div className={`px-2.5 py-1 rounded-xl text-xs font-black font-mono border inline-flex items-center space-x-1 ${
+                        candidate.compatibilityPercentage >= 75
+                          ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                          : candidate.compatibilityPercentage >= 50
+                          ? 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-400'
+                          : 'bg-slate-500/15 border-slate-500/30 text-slate-700 dark:text-slate-300'
+                      }`}>
+                        <Sparkles className="h-3 w-3 shrink-0" />
+                        <span>{candidate.compatibilityPercentage}% Match</span>
+                      </div>
+                      {candidate.cgpa !== null && (
+                        <span className="text-[10px] text-slate-400 font-mono font-bold block mt-0.5">
+                          CGPA: {candidate.cgpa}/10
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Compatibility Progress Bar */}
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        candidate.compatibilityPercentage >= 75
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                          : candidate.compatibilityPercentage >= 50
+                          ? 'bg-gradient-to-r from-amber-500 to-emerald-400'
+                          : 'bg-slate-400'
+                      }`}
+                      style={{ width: `${candidate.compatibilityPercentage}%` }}
+                    />
+                  </div>
+
+                  {/* Matching & Missing Skills Block */}
+                  <div className="p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 space-y-2 text-xs">
+                    {/* Matching Skills */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                        <span className="flex items-center space-x-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          <span>Matching Skills ({candidate.matchedSkills?.length || 0})</span>
+                        </span>
+                      </div>
+                      {candidate.matchedSkills && candidate.matchedSkills.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {candidate.matchedSkills.map((sk, idx) => (
+                            <span 
+                              key={idx} 
+                              className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 font-bold"
+                            >
+                              ✓ {sk}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 italic">No exact matches yet</span>
+                      )}
+                    </div>
+
+                    {/* Missing Skills */}
+                    <div className="space-y-1 pt-1.5 border-t border-slate-200/60 dark:border-slate-800/60">
+                      <div className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                        <span className="flex items-center space-x-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span>Missing Skills ({candidate.missingSkills?.length || 0})</span>
+                        </span>
+                        {candidate.isEligible !== undefined && (
+                          <span className={`text-[9px] font-bold ${candidate.isEligible ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
+                            {candidate.isEligible ? 'Eligible ✓' : 'Criteria Gap'}
+                          </span>
+                        )}
+                      </div>
+                      {candidate.missingSkills && candidate.missingSkills.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {candidate.missingSkills.map((sk, idx) => (
+                            <span 
+                              key={idx} 
+                              className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-bold"
+                            >
+                              ⚠ {sk}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                          All required role skills satisfied!
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Key Skills with Proficiency */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                      Key Candidate Skills:
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {candidate.skillsList?.slice(0, 5).map((sk, idx) => (
+                        <span 
+                          key={idx} 
+                          className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center space-x-1"
+                        >
+                          <span>{sk.name}</span>
+                          {sk.proficiency && (
+                            <span className="text-[8px] text-emerald-600 dark:text-emerald-400 font-extrabold uppercase">
+                              ({sk.proficiency.slice(0, 3)})
+                            </span>
+                          )}
+                        </span>
+                      ))}
+                      {(candidate.skillsList?.length || 0) > 5 && (
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 text-slate-400">
+                          +{candidate.skillsList.length - 5} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Career Interests / Eligibility Alignment */}
+                  {candidate.breakdown?.careerInterestMatch && (
+                    <div className="flex items-center space-x-1.5 text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20">
+                      <Target className="h-3 w-3 shrink-0" />
+                      <span>Career Focus Aligned with Opening</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card Footer Actions: View Profile, Shortlist, Reject */}
+                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => setSelectedCandidateModal(candidate)}
+                    className="flex-1 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Eye className="h-3.5 w-3.5 text-indigo-500" />
+                    <span>View Profile</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleShortlistCandidate(candidate)}
+                    disabled={candidate.applicationStatus === 'shortlisted' || recActionLoadingId === candidate._id + '_shortlist'}
+                    className={`flex-1 py-2 rounded-xl text-xs font-extrabold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-md ${
+                      candidate.applicationStatus === 'shortlisted'
+                        ? 'bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 cursor-default'
+                        : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20 active:scale-95'
+                    }`}
+                  >
+                    {recActionLoadingId === candidate._id + '_shortlist' ? (
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    ) : candidate.applicationStatus === 'shortlisted' ? (
+                      <>
+                        <Check className="h-3.5 w-3.5" />
+                        <span>Shortlisted</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-3.5 w-3.5" />
+                        <span>Shortlist</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => handleRejectCandidate(candidate)}
+                    disabled={recActionLoadingId === candidate._id + '_reject'}
+                    title="Reject candidate for this opening"
+                    className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-rose-600 hover:bg-rose-500/10 hover:border-rose-500/30 transition cursor-pointer"
+                  >
+                    {recActionLoadingId === candidate._id + '_reject' ? (
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin text-rose-500" />
+                    ) : (
+                      <X className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ━━━━━━━━━━━━━━━━━━━━ 2. MY OPPORTUNITIES ━━━━━━━━━━━━━━━━━━━━ */}
@@ -957,6 +1417,27 @@ export default function CompanyDashboardView() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ TOAST FEEDBACK NOTIFICATION ━━━━━━━━━━━━━━━━━━━━ */}
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-slate-900 text-white border border-emerald-500/40 shadow-2xl flex items-center space-x-3 text-xs font-bold animate-in fade-in slide-in-from-bottom-3">
+          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
+      {/* ━━━━━━━━━━━━━━━━━━━━ DETAILED CANDIDATE PROFILE MODAL (SRS COMPLIANT) ━━━━━━━━━━━━━━━━━━━━ */}
+      {selectedCandidateModal && (
+        <CandidateProfileModal
+          isOpen={Boolean(selectedCandidateModal)}
+          onClose={() => setSelectedCandidateModal(null)}
+          studentId={selectedCandidateModal._id || selectedCandidateModal.studentId}
+          initialCandidate={selectedCandidateModal}
+          opportunityId={selectedRecOppId || activeRecOpportunity?._id || ''}
+          onShortlist={handleShortlistCandidate}
+          onReject={handleRejectCandidate}
+        />
       )}
 
     </div>

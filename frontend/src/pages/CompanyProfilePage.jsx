@@ -20,7 +20,7 @@ export default function CompanyProfilePage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Form Fields (11 required items)
+  // Form Fields (11 required items + tech & hiring areas)
   const [companyName, setCompanyName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [industry, setIndustry] = useState('');
@@ -32,6 +32,8 @@ export default function CompanyProfilePage() {
   const [contactPhone, setContactPhone] = useState('');
   const [companySize, setCompanySize] = useState('');
   const [foundedYear, setFoundedYear] = useState('');
+  const [technologiesUsed, setTechnologiesUsed] = useState('');
+  const [hiringAreas, setHiringAreas] = useState('');
 
   // Form Validation Errors
   const [formErrors, setFormErrors] = useState({});
@@ -69,6 +71,8 @@ export default function CompanyProfilePage() {
       setContactPhone(p.contactPhone || '');
       setCompanySize(p.companySize || '11-50 employees');
       setFoundedYear(p.foundedYear || '');
+      setTechnologiesUsed(Array.isArray(p.technologiesUsed) ? p.technologiesUsed.join(', ') : (p.technologiesUsed || ''));
+      setHiringAreas(Array.isArray(p.hiringAreas) ? p.hiringAreas.join(', ') : (p.hiringAreas || ''));
     } catch (err) {
       console.error('Error fetching company profile:', err);
       setErrorMsg(err.message || 'Unable to load company profile.');
@@ -156,7 +160,9 @@ export default function CompanyProfilePage() {
       contactEmail: contactEmail.trim(),
       contactPhone: contactPhone.trim(),
       companySize: companySize.trim(),
-      foundedYear: foundedYear.trim()
+      foundedYear: foundedYear.trim(),
+      technologiesUsed: technologiesUsed.split(',').map(s => s.trim()).filter(Boolean),
+      hiringAreas: hiringAreas.split(',').map(s => s.trim()).filter(Boolean)
     };
 
     try {
@@ -248,6 +254,8 @@ export default function CompanyProfilePage() {
       setContactPhone(profile.contactPhone || '');
       setCompanySize(profile.companySize || '11-50 employees');
       setFoundedYear(profile.foundedYear || '');
+      setTechnologiesUsed(Array.isArray(profile.technologiesUsed) ? profile.technologiesUsed.join(', ') : (profile.technologiesUsed || ''));
+      setHiringAreas(Array.isArray(profile.hiringAreas) ? profile.hiringAreas.join(', ') : (profile.hiringAreas || ''));
     }
     setFormErrors({});
     setErrorMsg('');
@@ -357,18 +365,18 @@ export default function CompanyProfilePage() {
                   : 'bg-rose-500/15 border-rose-500/30 text-rose-700 dark:text-rose-400'
               }`}>
                 {verificationStatus === 'verified'
-                  ? 'Verified Partner'
+                  ? 'Verified'
                   : verificationStatus === 'pending'
                   ? 'Pending Verification'
-                  : 'Not Verified / Inactive'}
+                  : 'Rejected'}
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
               {verificationStatus === 'verified'
-                ? 'Your corporate account has been verified by the platform administrators. All postings and candidate evaluations carry verified recruiter credentials.'
+                ? 'Your corporate account has been verified by the platform administrators. All job and internship postings carry verified recruiter credentials.'
                 : verificationStatus === 'pending'
                 ? 'Your company profile is under administrative review. Once verified, your opportunities will be highlighted in student discovery catalogs.'
-                : 'Verification has not been granted. Please update your official corporate details and reach out to administrator support.'}
+                : 'Your corporate verification was rejected by platform administrators. Please review your organization details and contact info, update them, and reach out to administrator support.'}
             </p>
           </div>
         </div>
@@ -509,6 +517,47 @@ export default function CompanyProfilePage() {
               </div>
             </div>
 
+          </div>
+
+          {/* Tech Stack & Hiring Areas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Tech Stack */}
+            <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 space-y-3 shadow-sm">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center space-x-2">
+                <Sparkles className="h-4 w-4 text-emerald-500" />
+                <span>Technologies & Tools Used</span>
+              </h3>
+              {profile?.technologiesUsed && profile.technologiesUsed.length > 0 ? (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {profile.technologiesUsed.map((tech, idx) => (
+                    <span key={idx} className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold font-mono">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">No specific technologies listed yet.</p>
+              )}
+            </div>
+
+            {/* Hiring Areas */}
+            <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 space-y-3 shadow-sm">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center space-x-2">
+                <Briefcase className="h-4 w-4 text-emerald-500" />
+                <span>Active Hiring Domains & Roles</span>
+              </h3>
+              {profile?.hiringAreas && profile.hiringAreas.length > 0 ? (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {profile.hiringAreas.map((area, idx) => (
+                    <span key={idx} className="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
+                      {area}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">No hiring areas specified yet.</p>
+              )}
+            </div>
           </div>
 
         </div>
@@ -734,6 +783,34 @@ export default function CompanyProfilePage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500"
+              />
+            </div>
+
+            {/* 11. Technologies Used */}
+            <div className="sm:col-span-2 space-y-1">
+              <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">
+                Technologies & Tools Used (Comma-separated)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. React, Node.js, Python, AWS, Docker, Kubernetes, MongoDB"
+                value={technologiesUsed}
+                onChange={(e) => setTechnologiesUsed(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 text-xs"
+              />
+            </div>
+
+            {/* 12. Hiring Areas */}
+            <div className="sm:col-span-2 space-y-1">
+              <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">
+                Hiring Areas & Domains (Comma-separated)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Full Stack Engineering, Cloud Architecture, DevOps, AI/ML, Data Engineering"
+                value={hiringAreas}
+                onChange={(e) => setHiringAreas(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 text-xs"
               />
             </div>
 

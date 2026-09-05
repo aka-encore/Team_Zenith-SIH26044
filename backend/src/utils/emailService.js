@@ -3,30 +3,38 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const getTransporter = () => {
-  const SMTP_USER = process.env.SMTP_USER || 'sih096880@gmail.com';
+  const SMTP_USER = process.env.SMTP_USER || 'ahadshaikh078600@gmail.com';
   const rawPass = process.env.SMTP_PASS || process.env.EMAIL_PASS || '';
   const SMTP_PASS = rawPass.replace(/\s+/g, '');
   const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
   const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
 
-  if (SMTP_USER && SMTP_PASS) {
-    return {
-      transporter: nodemailer.createTransport({
-        service: 'gmail',
+  if (SMTP_USER && SMTP_PASS && SMTP_PASS !== 'your_gmail_app_password_here') {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: SMTP_HOST,
+        port: SMTP_PORT,
+        secure: SMTP_PORT === 465,
         auth: {
           user: SMTP_USER,
           pass: SMTP_PASS,
         },
-      }),
-      user: SMTP_USER
-    };
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+      return { transporter, user: SMTP_USER };
+    } catch (e) {
+      console.error('[Email Service] Failed to initialize transporter:', e.message);
+      return { transporter: null, user: SMTP_USER };
+    }
   }
   return { transporter: null, user: SMTP_USER };
 };
 
 
 /**
- * Send OTP Verification Email via SMTP
+ * Send OTP Verification Email via SMTP directly to user's inbox
  * @param {string} toEmail - Recipient email address
  * @param {string} otp - 6-digit verification code
  * @param {string} purpose - 'login' | 'register' | 'forgot_password'
@@ -83,7 +91,7 @@ export const sendOtpEmail = async (toEmail, otp, purpose = 'login') => {
         <div class="expiry">⏱️ This code is valid for <strong>10 minutes</strong>. Do not share it with anyone.</div>
         
         <div class="footer">
-          Sent by <strong>${process.env.SMTP_USER || 'sih096880@gmail.com'}</strong> for SkillNexus AI Platform.<br/>
+          Sent by <strong>SkillNexus AI</strong> (${process.env.SMTP_USER || 'SkillNexus AI'}).<br/>
           If you did not request this verification, please ignore this email.
         </div>
       </div>
@@ -93,13 +101,12 @@ export const sendOtpEmail = async (toEmail, otp, purpose = 'login') => {
 
   const { transporter, user: SMTP_USER } = getTransporter();
 
-  // Always log OTP to server console for testing & auditing
+  // Log dispatch attempt for server auditing
   console.log(`\n======================================================`);
   console.log(`[SMTP EMAIL DISPATCH]`);
   console.log(`From:    ${SMTP_USER}`);
   console.log(`To:      ${toEmail}`);
   console.log(`Purpose: ${purpose}`);
-  console.log(`OTP:     ${otp}`);
   console.log(`======================================================\n`);
 
   if (transporter) {
@@ -110,17 +117,17 @@ export const sendOtpEmail = async (toEmail, otp, purpose = 'login') => {
         subject,
         html: htmlContent,
       });
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('SMTP Connection Timeout')), 6000));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('SMTP Connection Timeout (10s)')), 10000));
       const info = await Promise.race([sendPromise, timeoutPromise]);
-      console.log(`[Email Service] Email sent successfully to ${toEmail} (Message ID: ${info?.messageId})`);
-      return { success: true, messageId: info?.messageId };
+      console.log(`[Email Service] Email dispatched successfully to ${toEmail} (Message ID: ${info?.messageId})`);
+      return { success: true, emailSent: true, messageId: info?.messageId };
     } catch (err) {
-      console.error(`[Email Service] SMTP send notice:`, err.message);
-      return { success: true, warning: 'SMTP delivery notice: ' + err.message };
+      console.error(`[Email Service] SMTP send error:`, err.message);
+      return { success: true, emailSent: false, warning: 'SMTP delivery notice: ' + err.message };
     }
   }
 
-  return { success: true, warning: 'Mock email dispatched to console' };
+  return { success: true, emailSent: false, warning: 'SMTP_PASS not configured in backend/.env' };
 };
 
 

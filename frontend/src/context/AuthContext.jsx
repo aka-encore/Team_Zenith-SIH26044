@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
 
 
   // Login handler - Sends credentials to backend /api/auth/login
-  const login = async (email, password) => {
+  const login = async (email, password, role) => {
     setLoading(true);
 
     try {
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, role }),
       });
 
       const data = await response.json();

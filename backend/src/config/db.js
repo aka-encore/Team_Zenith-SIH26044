@@ -23,7 +23,7 @@ export async function seedDefaultUsersIfEmpty() {
     ];
 
     for (const acc of seedAccounts) {
-      let user = await User.findOne({ email: acc.email });
+      let user = await User.findOne({ email: acc.email, role: acc.role });
       if (!user) {
         user = new User({
           name: acc.name,
@@ -54,6 +54,23 @@ export async function seedDefaultUsersIfEmpty() {
   }
 }
 
+// Function to drop legacy single-field email index and ensure compound index (email, role)
+export async function syncUserIndexes() {
+  try {
+    const collection = mongoose.connection.db.collection('users');
+    const indexes = await collection.indexes();
+    const hasEmailUnique = indexes.some(idx => idx.name === 'email_1' && idx.unique);
+    if (hasEmailUnique) {
+      console.log('Migrating User indexes: dropping legacy email_1 unique index...');
+      await collection.dropIndex('email_1');
+    }
+    await User.syncIndexes();
+    console.log('User indexes synchronized: compound (email, role) active.');
+  } catch (err) {
+    console.log('Index sync notice:', err.message);
+  }
+}
+
 const connectDB = async () => {
   const atlasUri = process.env.MONGO_URL || process.env.MONGODB_URI;
   const localUri = "mongodb://127.0.0.1:27017/skillnexus_ai";
@@ -65,6 +82,7 @@ const connectDB = async () => {
     try {
       await mongoose.connect(atlasUri, { serverSelectionTimeoutMS: 3000 });
       console.log(" MongoDB Connected !! ");
+      await syncUserIndexes();
       await seedDefaultUsersIfEmpty();
       return;
     } catch (error) {
@@ -76,6 +94,7 @@ const connectDB = async () => {
   try {
     await mongoose.connect(localUri, { serverSelectionTimeoutMS: 2000 });
     console.log("MongoDB Connected !! ");
+    await syncUserIndexes();
     await seedDefaultUsersIfEmpty();
     return;
   } catch (fallbackError) {
@@ -89,6 +108,7 @@ const connectDB = async () => {
     const memoryUri = mongoServer.getUri();
     await mongoose.connect(memoryUri);
     console.log("MongoDB Connected !! ");
+    await syncUserIndexes();
     await seedDefaultUsersIfEmpty();
   } catch (memErr) {
     console.error("MongoDB connection error:", memErr.message);

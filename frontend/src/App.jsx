@@ -28,6 +28,8 @@ import CompanyApplicantsPage from './pages/CompanyApplicantsPage';
 import CompanyStudentSearchPage from './pages/CompanyStudentSearchPage';
 import CompanyShortlistedPage from './pages/CompanyShortlistedPage';
 import CompanyInterviewsPage from './pages/CompanyInterviewsPage';
+import CompanyRecommendedCandidatesPage from './pages/CompanyRecommendedCandidatesPage';
+import CompanySkillInsightsPage from './pages/CompanySkillInsightsPage';
 import CompanyNotificationsPage from './pages/CompanyNotificationsPage';
 import CollegeDashboardView from './pages/CollegeDashboardView';
 import FacultyStudentsPage from './pages/FacultyStudentsPage';
@@ -380,10 +382,26 @@ function AppContent() {
           } 
         />
         <Route 
+          path="/company/recommended-candidates" 
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <CompanyRecommendedCandidatesPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
           path="/company/students" 
           element={
             <ProtectedRoute allowedRoles={['company']}>
               <CompanyStudentSearchPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/company/skill-insights" 
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <CompanySkillInsightsPage />
             </ProtectedRoute>
           } 
         />

@@ -1,8 +1,8 @@
 import express from 'express';
 import {
   getProfile, updateProfile, uploadLogo, getDashboardStats, getAllCompaniesAdmin, verifyCompanyAdmin,
-  searchStudents, shortlistStudent, getShortlistedStudents, scheduleInterview,
-  getCompanyInterviews, cancelInterview,
+  searchStudents, getCandidateProfile, shortlistStudent, rejectCandidate, getRecommendedCandidates, getShortlistedStudents, scheduleInterview,
+  getCompanyInterviews, cancelInterview, getSkillInsights,
   getCompanyNotifications, markNotificationAsRead, markAllNotificationsAsRead
 } from '../controllers/companyController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
@@ -13,8 +13,12 @@ router.get('/profile', protect, authorize('company'), getProfile);
 router.put('/profile', protect, authorize('company'), updateProfile);
 router.post('/logo', protect, authorize('company'), uploadProfilePhoto.single('logo'), uploadLogo);
 router.get('/dashboard-stats', protect, authorize('company'), getDashboardStats);
+router.get('/recommended-candidates', protect, authorize('company'), getRecommendedCandidates);
+router.get('/skill-insights', protect, authorize('company'), getSkillInsights);
 router.get('/students', protect, authorize('company'), searchStudents);
+router.get('/students/:studentId', protect, authorize('company'), getCandidateProfile);
 router.post('/students/:studentId/shortlist', protect, authorize('company'), shortlistStudent);
+router.post('/students/:studentId/reject', protect, authorize('company'), rejectCandidate);
 router.get('/shortlisted', protect, authorize('company'), getShortlistedStudents);
 router.get('/interviews', protect, authorize('company'), getCompanyInterviews);
 router.put('/applications/:id/interview', protect, authorize('company'), scheduleInterview);

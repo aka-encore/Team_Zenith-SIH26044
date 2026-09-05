@@ -264,11 +264,14 @@ export const getCompanyApplications = async (req, res) => {
 
 export const updateApplicationStatus = async (req, res) => {
   try {
-    const { status } = req.body;
-    if (!['applied', 'reviewed', 'shortlisted', 'accepted', 'rejected'].includes(status)) {
+    const { status, notes, interviewDate, interviewTime, meetingLink } = req.body;
+    const normalizedStatus = (status || '').toLowerCase().trim();
+    const allowedStatuses = ['applied', 'screening', 'reviewed', 'shortlisted', 'interview', 'interviewing', 'selected', 'accepted', 'rejected'];
+
+    if (!allowedStatuses.includes(normalizedStatus)) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide a valid application status (applied, reviewed, shortlisted, accepted, rejected)'
+        message: `Please provide a valid application status (${allowedStatuses.join(', ')})`
       });
     }
 
@@ -288,12 +291,48 @@ export const updateApplicationStatus = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Not authorized to modify applicants for this posting' });
     }
 
-    application.status = status;
+    application.status = normalizedStatus;
+
+    // Handle placement status synchronization
+    if (['selected', 'accepted'].includes(normalizedStatus)) {
+      application.placementDetails = application.placementDetails || {};
+      application.placementDetails.isPlaced = true;
+      application.placementDetails.placedAt = new Date();
+      if (application.opportunityId?.stipend) {
+        application.placementDetails.package = application.opportunityId.stipend;
+      }
+    }
+
+    // Handle interview state if marked as interview or cancelled
+    if (normalizedStatus === 'interview') {
+      if (!application.interviewDetails) {
+        application.interviewDetails = {
+          round: 'Technical Evaluation Round 1',
+          interviewType: 'Technical Interview',
+          interviewer: 'Technical Hiring Panel',
+          mode: 'video',
+          meetingLink: meetingLink || 'https://meet.google.com',
+          status: 'scheduled'
+        };
+      } else {
+        application.interviewDetails.status = 'scheduled';
+        if (meetingLink) application.interviewDetails.meetingLink = meetingLink;
+      }
+    } else if (normalizedStatus === 'rejected') {
+      if (application.interviewDetails && application.interviewDetails.status === 'scheduled') {
+        application.interviewDetails.status = 'cancelled';
+      }
+    }
+
+    if (notes && typeof notes === 'string' && notes.trim()) {
+      application.coverLetter = (application.coverLetter ? application.coverLetter + ' | Note: ' : 'Note: ') + notes.trim();
+    }
+
     await application.save();
 
     res.status(200).json({ 
       success: true, 
-      message: `Candidate status successfully updated to: ${status}`, 
+      message: `Candidate status successfully updated to: ${normalizedStatus}`, 
       application 
     });
   } catch (error) {

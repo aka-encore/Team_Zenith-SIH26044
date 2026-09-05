@@ -8,6 +8,7 @@ import {
   Phone, Mail, Briefcase, UserX, Link as LinkIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import CandidateProfileModal from '../components/CandidateProfileModal';
 
 export default function CompanyShortlistedPage() {
   const { token, user } = useAuth();
@@ -24,7 +25,7 @@ export default function CompanyShortlistedPage() {
   const [opportunityFilter, setOpportunityFilter] = useState('all');
 
   // Modals
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [candidateModalStudent, setCandidateModalStudent] = useState(null);
   const [scheduleModalApp, setScheduleModalApp] = useState(null);
   const [removeConfirmId, setRemoveConfirmId] = useState(null);
 
@@ -33,6 +34,8 @@ export default function CompanyShortlistedPage() {
   const [interviewTime, setInterviewTime] = useState('11:00');
   const [interviewMode, setInterviewMode] = useState('video');
   const [interviewRound, setInterviewRound] = useState('Technical Evaluation Round 1');
+  const [interviewType, setInterviewType] = useState('Technical Interview');
+  const [interviewer, setInterviewer] = useState('Technical Hiring Panel');
   const [meetingLink, setMeetingLink] = useState('https://meet.google.com');
   const [interviewNotes, setInterviewNotes] = useState('');
   const [scheduling, setScheduling] = useState(false);
@@ -109,6 +112,8 @@ export default function CompanyShortlistedPage() {
     setInterviewTime('11:00');
     setInterviewMode(app.interviewDetails?.mode || 'video');
     setInterviewRound(app.interviewDetails?.round || 'Technical Evaluation Round 1');
+    setInterviewType(app.interviewDetails?.interviewType || 'Technical Interview');
+    setInterviewer(app.interviewDetails?.interviewer || 'Technical Hiring Panel');
     setMeetingLink(app.interviewDetails?.meetingLink || 'https://meet.google.com/new');
     setInterviewNotes(app.interviewDetails?.notes || '');
     setScheduleError('');
@@ -137,6 +142,8 @@ export default function CompanyShortlistedPage() {
           time: interviewTime,
           mode: interviewMode,
           round: interviewRound,
+          interviewType,
+          interviewer,
           meetingLink,
           notes: interviewNotes
         })
@@ -410,7 +417,10 @@ export default function CompanyShortlistedPage() {
                 <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <button
-                      onClick={() => setSelectedStudent(item)}
+                      onClick={() => setCandidateModalStudent({
+                        studentId: item.studentId,
+                        opportunityId: item.opportunity?._id
+                      })}
                       className="flex-1 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs"
                     >
                       <Eye className="h-3.5 w-3.5 text-emerald-500" />
@@ -441,143 +451,15 @@ export default function CompanyShortlistedPage() {
         </div>
       )}
 
-      {/* ━━━━━━━━━━━━━━━━━━━━ VIEW STUDENT PROFILE MODAL ━━━━━━━━━━━━━━━━━━━━ */}
-      {selectedStudent && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="glass-card max-w-2xl w-full p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-extrabold flex items-center justify-center text-lg">
-                  {selectedStudent.name?.charAt(0) || 'S'}
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                    {selectedStudent.name}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {selectedStudent.department} • {selectedStudent.college}
-                  </p>
-                </div>
-              </div>
-
-              <button 
-                onClick={() => setSelectedStudent(null)}
-                className="text-slate-400 hover:text-slate-200 cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Academic Information */}
-            <div className="glass-card p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Academic Background</h4>
-              <div className="grid grid-cols-2 gap-3 text-slate-700 dark:text-slate-300">
-                <div>
-                  <span className="text-slate-500 block text-[10px]">Institution / College</span>
-                  <span className="font-bold">{selectedStudent.college}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[10px]">Academic CGPA</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">{selectedStudent.cgpa} / 10</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[10px]">Department</span>
-                  <span className="font-bold">{selectedStudent.department}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[10px]">Shortlisted Position</span>
-                  <span className="font-bold text-indigo-500">{selectedStudent.opportunity?.title}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Bio */}
-            {selectedStudent.bio && (
-              <div className="space-y-1.5">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Candidate Bio</h4>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {selectedStudent.bio}
-                </p>
-              </div>
-            )}
-
-            {/* Verified Skills */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Verified Technical Skills</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {selectedStudent.skills.map((sk, idx) => (
-                  <div key={idx} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{sk.name}</span>
-                    <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
-                      {sk.proficiencyLevel}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Projects */}
-            {selectedStudent.projects && selectedStudent.projects.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Featured Projects</h4>
-                <div className="space-y-2">
-                  {selectedStudent.projects.map((proj, pIdx) => (
-                    <div key={pIdx} className="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-900 dark:text-white">{proj.title}</span>
-                        {proj.link && (
-                          <a href={proj.link} target="_blank" rel="noreferrer" className="text-indigo-500 hover:underline flex items-center space-x-1 text-[11px]">
-                            <span>Project Link</span>
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        )}
-                      </div>
-                      <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">{proj.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Resume Link */}
-            {selectedStudent.resumeUrl && (
-              <div className="p-3.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-700 dark:text-slate-300">Resume Document</span>
-                <a
-                  href={selectedStudent.resumeUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold"
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  <span>View PDF Resume</span>
-                </a>
-              </div>
-            )}
-
-            {/* Modal Actions */}
-            <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end space-x-3 text-xs">
-              <button
-                onClick={() => setSelectedStudent(null)}
-                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-bold transition cursor-pointer"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  handleOpenSchedule(selectedStudent);
-                  setSelectedStudent(null);
-                }}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-extrabold transition shadow-md shadow-indigo-600/20 cursor-pointer flex items-center space-x-1.5"
-              >
-                <Calendar className="h-4 w-4" />
-                <span>Schedule Interview</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
+      {/* ━━━━━━━━━━━━━━━━━━━━ VIEW DETAILED STUDENT PROFILE MODAL ━━━━━━━━━━━━━━━━━━━━ */}
+      {candidateModalStudent && (
+        <CandidateProfileModal
+          studentId={candidateModalStudent.studentId}
+          opportunityId={candidateModalStudent.opportunityId}
+          token={token}
+          onClose={() => setCandidateModalStudent(null)}
+          onShortlistSuccess={() => fetchShortlisted(true)}
+        />
       )}
 
       {/* ━━━━━━━━━━━━━━━━━━━━ SCHEDULE INTERVIEW MODAL ━━━━━━━━━━━━━━━━━━━━ */}
@@ -676,6 +558,35 @@ export default function CompanyShortlistedPage() {
                     <option value="HR & Culture Fit Round">HR & Culture Fit Round</option>
                     <option value="Executive Partner Discussion">Executive Partner Discussion</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Interview Type & Interviewer Panel */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                    Interview Type
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Technical Interview"
+                    value={interviewType}
+                    onChange={(e) => setInterviewType(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl outline-none focus:border-indigo-500 font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1 uppercase tracking-wider text-[10px]">
+                    Interviewer / Panel
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Rahul Sharma - Staff Architect"
+                    value={interviewer}
+                    onChange={(e) => setInterviewer(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 p-2.5 rounded-xl outline-none focus:border-indigo-500 font-bold"
+                  />
                 </div>
               </div>
 

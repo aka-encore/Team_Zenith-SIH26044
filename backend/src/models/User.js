@@ -12,7 +12,6 @@ const UserSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Please add an email'],
-    unique: true,
     trim: true,
     lowercase: true,
     match: [
@@ -114,6 +113,9 @@ const UserSchema = new mongoose.Schema({
   }
 });
 
+// Allow 1 account per role for any email (e.g. 1 student, 1 company, 1 faculty)
+UserSchema.index({ email: 1, role: 1 }, { unique: true });
+
 
 // Encrypt password using bcrypt before saving user
 UserSchema.pre('save', async function(next) {
@@ -147,32 +149,31 @@ UserSchema.methods.matchPassword = async function(enteredPassword) {
 
 // Post-save hook to auto-initialize student or company profiles
 UserSchema.post('save', async function(doc) {
-
   if (doc.role === 'student') {
     try {
-      const StudentProfile = mongoose.model('StudentProfile');
-      const profileExists = await StudentProfile.findOne({ userId: doc._id });
-
-      if (!profileExists) {
-        await StudentProfile.create({ userId: doc._id });
-        console.log(`Auto-created StudentProfile for user: ${doc._id}`);
+      if (mongoose.models.StudentProfile) {
+        const StudentProfile = mongoose.model('StudentProfile');
+        const profileExists = await StudentProfile.findOne({ userId: doc._id });
+        if (!profileExists) {
+          await StudentProfile.create({ userId: doc._id });
+          console.log(`Auto-created StudentProfile for user: ${doc._id}`);
+        }
       }
     } catch (error) {
       console.error('Error auto-creating student profile in post-save hook:', error.message);
     }
-
-
   } else if (doc.role === 'company') {
     try {
-      const Company = mongoose.model('Company');
-      const profileExists = await Company.findOne({ userId: doc._id });
-
-      if (!profileExists) {
-        await Company.create({ 
-          userId: doc._id,
-          companyName: doc.name // Use the user's name initially
-        });
-        console.log(`Auto-created Company Profile for user: ${doc._id}`);
+      if (mongoose.models.Company) {
+        const Company = mongoose.model('Company');
+        const profileExists = await Company.findOne({ userId: doc._id });
+        if (!profileExists) {
+          await Company.create({ 
+            userId: doc._id,
+            companyName: doc.name
+          });
+          console.log(`Auto-created Company Profile for user: ${doc._id}`);
+        }
       }
     } catch (error) {
       console.error('Error auto-creating company profile in post-save hook:', error.message);

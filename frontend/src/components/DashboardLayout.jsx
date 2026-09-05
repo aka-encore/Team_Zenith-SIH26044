@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Cpu, Target, Briefcase,
   User, LogOut, Sun, Moon, Sparkles, X, Menu,
   Building2, GraduationCap, School, Settings,
-  FileText, Award, Bell, Video, Users, Search, BarChart3,
+  FileText, Award, Bell, Video, Users, Search, BarChart3, BrainCircuit,
   ChevronDown, Calendar, TrendingUp, RefreshCw, Network,
   Layers, ChevronRight
 } from 'lucide-react';
@@ -29,24 +29,23 @@ export function DashboardLayout({ children }) {
 
   /* ── Navigation Definitions ── */
   const studentNav = [
-    { label: 'Dashboard',            path: '/student',       icon: LayoutDashboard },
-    { label: 'My Profile',           path: '/profile',       icon: User },
-    { label: 'Skills & Assessment',  path: '/skills',        icon: Target },
-    { label: 'Skill Gap',            path: '/skill-gap',     icon: Cpu },
-    { label: 'Company Preparation',  path: '/company-prep',  icon: Building2 },
-    { label: 'Opportunities',        path: '/opportunities', icon: Briefcase },
-    { label: 'Applications',         path: '/applications',  icon: FileText },
-    { label: 'Interviews & Placement', path: '/interviews',  icon: Award },
-    { label: 'Notifications',        path: '/notifications', icon: Bell },
-    { label: 'Settings',             path: '/settings',      icon: Settings },
+    { label: 'Overview',           path: '/student',               icon: LayoutDashboard },
+    { label: 'Skills & Readiness', path: '/skills',                icon: Cpu },
+    { label: 'Skill Passport',     path: '/student/skill-passport',icon: Award },
+    { label: 'Opportunities',      path: '/opportunities',         icon: Briefcase },
+    { label: 'Applications',       path: '/applications',          icon: FileText },
+    { label: 'Career Paths',       path: '/career-paths',          icon: Target },
+    { label: 'Assessment Prep',    path: '/company-prep',          icon: Building2 },
+    { label: 'Interviews & Placement', path: '/interviews',        icon: Video },
+    { label: 'Notifications',      path: '/notifications',         icon: Bell },
+    { label: 'Profile',            path: '/profile',               icon: User },
   ];
 
   const facultyNav = [
     { label: 'Dashboard',          path: '/faculty',                icon: LayoutDashboard },
-    { label: 'Students',           path: '/faculty/students',       icon: Users },
-    { label: 'Skill Intelligence', path: '/faculty/skills',         icon: BarChart3 },
-    { label: 'Skill Gap Analysis', path: '/faculty/skill-gap',      icon: Target },
-    { label: 'Opportunities',      path: '/faculty/opportunities',  icon: Briefcase },
+    { label: 'Student Directory',  path: '/faculty/students',       icon: Users },
+    { label: 'Skill Analytics',    path: '/faculty/skills',         icon: BarChart3 },
+    { label: 'Skill Gap Matrix',   path: '/faculty/skill-gap',      icon: Layers },
     { label: 'Internships',        path: '/faculty/opportunities',  icon: GraduationCap },
     { label: 'Placements',         path: '/faculty/placement',      icon: Award },
     { label: 'Faculty Network',    path: '/faculty/network',        icon: Network },
@@ -56,14 +55,25 @@ export function DashboardLayout({ children }) {
   ];
 
   const companyNav = [
-    { label: 'Dashboard',       path: '/company',               icon: LayoutDashboard },
-    { label: 'Company Profile', path: '/company/profile',       icon: Building2 },
-    { label: 'Opportunities',   path: '/company/opportunities',  icon: Briefcase },
-    { label: 'Applicants',      path: '/company/applicants',    icon: Users },
-    { label: 'Student Search',  path: '/company/students',      icon: Search },
-    { label: 'Shortlisted',     path: '/company/shortlisted',   icon: Award },
-    { label: 'Interviews',      path: '/company/interviews',    icon: Video },
-    { label: 'Notifications',   path: '/company/notifications', icon: Bell },
+    { label: 'Dashboard',               path: '/company',                          icon: LayoutDashboard },
+
+    { section: 'COMPANY' },
+    { label: 'Company Profile',          path: '/company/profile',                  icon: Building2 },
+
+    { section: 'TALENT' },
+    { label: 'Recommended Candidates',  path: '/company/recommended-candidates',   icon: Sparkles },
+    { label: 'Student Search',          path: '/company/students',                 icon: Search },
+    { label: 'Skill Insights',          path: '/company/skill-insights',           icon: BrainCircuit },
+
+    { section: 'RECRUITMENT' },
+    { label: 'Opportunities',           path: '/company/opportunities',            icon: Briefcase },
+    { label: 'Applicants',              path: '/company/applicants',               icon: Users },
+    { label: 'Shortlisted',             path: '/company/shortlisted',              icon: Award },
+    { label: 'Interviews',              path: '/company/interviews',               icon: Video },
+
+    { section: 'PREFERENCES' },
+    { label: 'Notifications',           path: '/company/notifications',            icon: Bell },
+    { label: 'Settings',                path: '/settings',                         icon: Settings },
   ];
 
   const adminNav = [
@@ -542,15 +552,31 @@ export function DashboardLayout({ children }) {
               </div>
 
               <div className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-160px)] text-left">
-                <div className="px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">Navigation Menu</div>
                 {navItems.map((item, idx) => {
+                  if (item.section) {
+                    return (
+                      <div key={idx} className="pt-3.5 pb-1 px-3.5 text-[9.5px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 select-none">
+                        {item.section}
+                      </div>
+                    );
+                  }
+
                   const isActive = location.pathname === item.path;
                   const ItemIcon = item.icon;
                   return (
                     <Link key={idx} to={item.path} onClick={() => { if (window.innerWidth < 1024) setSidebarOpen(false); }}
-                      className={`flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${isActive ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'}`}>
-                      <ItemIcon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
-                      <span>{item.label}</span>
+                      className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${isActive ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'}`}>
+                      <div className="flex items-center space-x-3">
+                        <ItemIcon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.badge && (
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-extrabold uppercase ${
+                          isActive ? 'bg-white/20 text-white' : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                        }`}>
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}

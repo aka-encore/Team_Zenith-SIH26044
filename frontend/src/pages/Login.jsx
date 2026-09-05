@@ -104,7 +104,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const result = await login(email.trim(), password);
+      const result = await login(email.trim(), password, selectedRole);
 
       if (!result.success) {
         throw new Error(result.message || 'Invalid email or password credentials.');
@@ -136,7 +136,7 @@ export default function Login() {
       const res = await fetch('/api/auth/send-login-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase() })
+        body: JSON.stringify({ email: email.trim().toLowerCase(), role: selectedRole })
       });
 
       const data = await res.json();
@@ -187,7 +187,8 @@ export default function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
-          otp: otpCode.trim()
+          otp: otpCode.trim(),
+          role: selectedRole
         })
       });
 
@@ -229,7 +230,7 @@ export default function Login() {
       const res = await fetch('/api/auth/send-forgot-password-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: forgotEmail.trim().toLowerCase() })
+        body: JSON.stringify({ email: forgotEmail.trim().toLowerCase(), role: selectedRole })
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -264,7 +265,8 @@ export default function Login() {
         body: JSON.stringify({
           email: forgotEmail.trim().toLowerCase(),
           otp: forgotOtp.trim(),
-          newPassword
+          newPassword,
+          role: selectedRole
         })
       });
       const data = await res.json();

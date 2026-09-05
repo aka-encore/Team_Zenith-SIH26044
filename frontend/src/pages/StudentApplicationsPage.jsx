@@ -8,11 +8,14 @@ import {
 
 const STATUS_BADGES = {
   applied: { label: 'Applied', bg: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20' },
-  reviewed: { label: 'In Review', bg: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20' },
+  screening: { label: 'Screening', bg: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20' },
+  reviewed: { label: 'Screening', bg: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20' },
   shortlisted: { label: 'Shortlisted', bg: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' },
   interview: { label: 'Interview Scheduled', bg: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 border-indigo-500/30' },
-  accepted: { label: 'Offer Extended', bg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' },
-  rejected: { label: 'Not Selected', bg: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20' }
+  interviewing: { label: 'Interview Scheduled', bg: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 border-indigo-500/30' },
+  selected: { label: 'Selected / Offer Extended', bg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' },
+  accepted: { label: 'Selected / Offer Extended', bg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' },
+  rejected: { label: 'Rejected', bg: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20' }
 };
 
 export default function StudentApplicationsPage() {
@@ -51,10 +54,15 @@ export default function StudentApplicationsPage() {
     const status = (app.status || 'applied').toLowerCase();
     let matchesStatus = true;
     if (statusFilter !== 'All') {
-      if (statusFilter.toLowerCase() === 'interview') {
-        matchesStatus = status === 'interview' || (app.interviewDetails && app.interviewDetails.scheduledAt && app.interviewDetails.status !== 'cancelled');
+      const sf = statusFilter.toLowerCase();
+      if (sf === 'interview') {
+        matchesStatus = status === 'interview' || status === 'interviewing' || (app.interviewDetails && app.interviewDetails.scheduledAt && app.interviewDetails.status !== 'cancelled');
+      } else if (sf === 'screening') {
+        matchesStatus = status === 'screening' || status === 'reviewed';
+      } else if (sf === 'selected') {
+        matchesStatus = status === 'selected' || status === 'accepted';
       } else {
-        matchesStatus = status === statusFilter.toLowerCase();
+        matchesStatus = status === sf;
       }
     }
 
@@ -116,7 +124,7 @@ export default function StudentApplicationsPage() {
         </div>
 
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-bold">
-          {['All', 'Applied', 'Reviewed', 'Shortlisted', 'Interview', 'Accepted'].map((st) => (
+          {['All', 'Applied', 'Screening', 'Shortlisted', 'Interview', 'Selected', 'Rejected'].map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
@@ -209,7 +217,7 @@ export default function StudentApplicationsPage() {
                       <div className="flex items-center space-x-2">
                         <Video className="h-4 w-4 text-indigo-500" />
                         <span className="font-extrabold text-slate-900 dark:text-white">
-                          {interview.round || 'Interview Evaluation Round'}
+                          {interview.interviewType || interview.round || 'Interview Evaluation Round'}
                         </span>
                       </div>
 
@@ -224,7 +232,7 @@ export default function StudentApplicationsPage() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] font-mono text-slate-600 dark:text-slate-300">
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-[11px] font-mono text-slate-600 dark:text-slate-300">
                       <div>
                         <span className="text-slate-400 block text-[9px] uppercase">Scheduled Date</span>
                         <span className="font-bold">
@@ -243,6 +251,13 @@ export default function StudentApplicationsPage() {
                         <span className="text-slate-400 block text-[9px] uppercase">Interview Mode</span>
                         <span className="font-bold capitalize">{interview.mode || 'Virtual Video'}</span>
                       </div>
+
+                      {interview.interviewer && (
+                        <div>
+                          <span className="text-slate-400 block text-[9px] uppercase">Interviewer</span>
+                          <span className="font-bold truncate block">{interview.interviewer}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Meeting URL Button */}

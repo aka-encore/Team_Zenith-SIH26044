@@ -48,9 +48,9 @@ export default function StudentInterviewsPage() {
             time: int.scheduledAt 
               ? scheduledDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
               : (int.time || '11:00 AM IST'),
-            round: int.round || 'Technical Round 1 (System & Domain Evaluation)',
+            round: int.interviewType || int.round || 'Technical Round 1 (System & Domain Evaluation)',
             platform: int.mode === 'onsite' ? 'On-Premises Office' : int.mode === 'phone' ? 'Telephonic Interview' : 'Virtual Video (Google Meet / Zoom)',
-            interviewer: 'Technical Hiring Panel',
+            interviewer: int.interviewer || 'Technical Hiring Panel',
             status: ['accepted', 'selected'].includes((a.status || '').toLowerCase()) 
               ? 'Offer Extended' 
               : (int.status === 'cancelled' ? 'Cancelled' : int.status === 'completed' ? 'Completed' : 'Interview Scheduled'),

@@ -67,6 +67,14 @@ const CompanySchema = new mongoose.Schema({
     default: '',
     trim: true
   },
+  technologiesUsed: {
+    type: [String],
+    default: []
+  },
+  hiringAreas: {
+    type: [String],
+    default: []
+  },
   readNotifications: [{
     type: String
   }]
