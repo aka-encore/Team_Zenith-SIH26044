@@ -10,7 +10,7 @@ import {
   ChevronDown, Calendar, TrendingUp, RefreshCw, Network,
   Layers, ChevronRight
 } from 'lucide-react';
-import { UserProfileModal } from './UserProfileModal';
+import UserAvatar from './UserAvatar';
 
 export function DashboardLayout({ children }) {
   const { user, logout } = useAuth();
@@ -19,7 +19,6 @@ export function DashboardLayout({ children }) {
   const navigate = useNavigate();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   const rawRole = (user?.role || 'student').toLowerCase();
   const isFaculty = ['faculty', 'institution', 'academician'].includes(rawRole);
@@ -27,6 +26,14 @@ export function DashboardLayout({ children }) {
   const isAdmin = ['admin', 'superadmin'].includes(rawRole);
   const role = isFaculty ? 'faculty' : isCompany ? 'company' : isAdmin ? 'admin' : 'student';
   const isLight = theme === 'light';
+
+  // Dedicated role-based profile paths
+  const getProfilePath = () => {
+    if (role === 'company') return '/company/profile';
+    if (role === 'faculty') return '/faculty/profile';
+    if (role === 'admin') return '/admin/profile';
+    return '/profile';
+  };
 
   /* ── Navigation Definitions ── */
   const studentNav = [
@@ -51,6 +58,7 @@ export function DashboardLayout({ children }) {
 
   const facultyNav = [
     { label: 'Dashboard',          path: '/faculty',                icon: LayoutDashboard },
+    { label: 'Faculty Profile',    path: '/faculty/profile',        icon: User },
     { label: 'Student Directory',  path: '/faculty/students',       icon: Users },
     { label: 'Skill Analytics',    path: '/faculty/skills',         icon: BarChart3 },
     { label: 'Skill Gap Matrix',   path: '/faculty/skill-gap',      icon: Layers },
@@ -103,6 +111,7 @@ export function DashboardLayout({ children }) {
 
   const adminNav = [
     { label: 'Dashboard',     path: '/admin',                icon: LayoutDashboard },
+    { label: 'Admin Profile', path: '/admin/profile',        icon: User },
     { label: 'Users',         path: '/admin/users',          icon: Users },
     { label: 'Companies',     path: '/admin/companies',      icon: Building2 },
     { label: 'Opportunities', path: '/admin/opportunities',  icon: Briefcase },
@@ -430,7 +439,7 @@ export function DashboardLayout({ children }) {
             }}>
               {/* Profile Card */}
               <button
-                onClick={() => setProfileModalOpen(true)}
+                onClick={() => navigate(getProfilePath())}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
                   padding: '8px 10px', borderRadius: '10px',
@@ -445,18 +454,9 @@ export function DashboardLayout({ children }) {
                 onMouseLeave={e => {
                   e.currentTarget.style.background = isLight ? 'rgba(255,255,255,0.06)' : 'var(--fac-bg-card)';
                 }}
+                title="View & Edit Profile"
               >
-                <div style={{
-                  width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
-                  background: 'linear-gradient(135deg, #16A36A 0%, #0F8F60 100%)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '12px', fontWeight: 800, color: '#FFFFFF', overflow: 'hidden',
-                }}>
-                  {user?.avatarUrl || user?.profilePhoto
-                    ? <img src={user.avatarUrl || user.profilePhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : (user?.name?.charAt(0) || user?.email?.charAt(0) || roleMeta.defaultAvatarLetter).toUpperCase()
-                  }
-                </div>
+                <UserAvatar user={user} size={32} role={role} fallbackLetter={roleMeta.defaultAvatarLetter} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '12px', fontWeight: 700, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {user?.name || user?.email || 'User'}
@@ -465,7 +465,7 @@ export function DashboardLayout({ children }) {
                     {roleMeta.subtitle}
                   </div>
                 </div>
-                <ChevronDown style={{ width: '12px', height: '12px', color: isLight ? 'rgba(255,255,255,0.6)' : '#69736F', flexShrink: 0 }} />
+                <ChevronRight style={{ width: '12px', height: '12px', color: isLight ? 'rgba(255,255,255,0.6)' : '#69736F', flexShrink: 0 }} />
               </button>
 
               {/* Sign Out Button in Gold */}
@@ -603,7 +603,7 @@ export function DashboardLayout({ children }) {
 
             {/* Profile Avatar Button */}
             <button
-              onClick={() => setProfileModalOpen(true)}
+              onClick={() => navigate(getProfilePath())}
               style={{
                 display: 'flex', alignItems: 'center', gap: '8px',
                 padding: '4px 10px 4px 4px', borderRadius: '8px',
@@ -621,17 +621,7 @@ export function DashboardLayout({ children }) {
                   {roleMeta.subtitle}
                 </div>
               </div>
-              <div style={{
-                width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
-                background: 'linear-gradient(135deg, #16A36A 0%, #0F8F60 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '11px', fontWeight: 800, color: '#FFFFFF', overflow: 'hidden',
-              }}>
-                {user?.avatarUrl || user?.profilePhoto
-                  ? <img src={user.avatarUrl || user.profilePhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : (user?.name?.charAt(0) || user?.email?.charAt(0) || roleMeta.defaultAvatarLetter).toUpperCase()
-                }
-              </div>
+              <UserAvatar user={user} size={28} role={role} fallbackLetter={roleMeta.defaultAvatarLetter} />
             </button>
           </div>
         </header>
@@ -647,8 +637,6 @@ export function DashboardLayout({ children }) {
           </div>
         </main>
       </div>
-
-      <UserProfileModal isOpen={profileModalOpen} onClose={() => setProfileModalOpen(false)} />
     </div>
   );
 }

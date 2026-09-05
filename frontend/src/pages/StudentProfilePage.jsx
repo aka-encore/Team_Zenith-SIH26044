@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import UserAvatar from '../components/UserAvatar';
 import {
   User, Mail, Phone, Calendar, School, BookOpen, GraduationCap, Award,
   Briefcase, Globe, FileText, ExternalLink, Edit3,
@@ -644,23 +645,21 @@ export default function StudentProfilePage() {
           
           {/* Avatar with Camera Overlay */}
           <div className="relative group shrink-0">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl border-4 border-white dark:border-slate-800 shadow-xl overflow-hidden bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white text-3xl font-black relative">
+            <div className="relative">
+              <UserAvatar
+                src={currentPhoto}
+                name={displayName}
+                size={100}
+                role="student"
+                fallbackLetter="S"
+                style={{ borderRadius: '24px', boxShadow: '0 8px 24px rgba(22, 163, 106, 0.25)' }}
+              />
+
               {uploadingPhoto && (
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center space-y-1 z-20">
+                <div className="absolute inset-0 rounded-3xl bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center space-y-1 z-20 text-white">
                   <Loader2 className="h-6 w-6 text-white animate-spin" />
                   <span className="text-[9px] font-bold text-white uppercase tracking-wider">Saving...</span>
                 </div>
-              )}
-
-              {currentPhoto && !avatarLoadFailed ? (
-                <img 
-                  src={currentPhoto} 
-                  alt={displayName} 
-                  onError={() => setAvatarLoadFailed(true)}
-                  className="w-full h-full object-cover" 
-                />
-              ) : (
-                <span className="select-none tracking-tight">{displayName?.charAt(0)?.toUpperCase() || 'S'}</span>
               )}
             </div>
 

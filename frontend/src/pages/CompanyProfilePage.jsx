@@ -231,6 +231,9 @@ export default function CompanyProfilePage() {
       if (profile) {
         setProfile({ ...profile, logoUrl: resData.logoUrl });
       }
+      if (updateUser) {
+        updateUser({ avatarUrl: resData.logoUrl, logoUrl: resData.logoUrl });
+      }
       setSuccessMsg('Logo uploaded successfully!');
       setTimeout(() => setSuccessMsg(''), 3000);
     } catch (err) {

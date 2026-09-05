@@ -33,6 +33,7 @@ import CompanySkillInsightsPage from './pages/CompanySkillInsightsPage';
 import CompanyNotificationsPage from './pages/CompanyNotificationsPage';
 import CollegeDashboardView from './pages/CollegeDashboardView';
 import FacultyStudentsPage from './pages/FacultyStudentsPage';
+import FacultyProfilePage from './pages/FacultyProfilePage';
 import FacultySkillAnalyticsPage from './pages/FacultySkillAnalyticsPage';
 import FacultySkillGapPage from './pages/FacultySkillGapPage';
 import FacultyOpportunitiesPage from './pages/FacultyOpportunitiesPage';
@@ -40,6 +41,7 @@ import FacultyPlacementPage from './pages/FacultyPlacementPage';
 import FacultyNotificationsPage from './pages/FacultyNotificationsPage';
 import FacultySettingsPage from './pages/FacultySettingsPage';
 import AdminDashboardView from './pages/AdminDashboardView';
+import AdminProfilePage from './pages/AdminProfilePage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminCompaniesPage from './pages/AdminCompaniesPage';
 import AdminOpportunitiesPage from './pages/AdminOpportunitiesPage';
@@ -202,6 +204,7 @@ function AppContent() {
             </ProtectedRoute>
           } 
         />
+        <Route path="/student/profile" element={<Navigate to="/profile" replace />} />
         <Route 
           path="/skills" 
           element={
@@ -288,6 +291,14 @@ function AppContent() {
           element={
             <ProtectedRoute allowedRoles={['faculty', 'institution', 'academician']}>
               <CollegeDashboardView />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/faculty/profile" 
+          element={
+            <ProtectedRoute allowedRoles={['faculty', 'institution', 'academician']}>
+              <FacultyProfilePage />
             </ProtectedRoute>
           } 
         />
@@ -461,6 +472,14 @@ function AppContent() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminDashboardView />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/profile" 
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminProfilePage />
             </ProtectedRoute>
           } 
         />

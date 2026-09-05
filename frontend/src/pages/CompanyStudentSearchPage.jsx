@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import CandidateProfileModal from '../components/CandidateProfileModal';
+import UserAvatar from '../components/UserAvatar';
 
 export default function CompanyStudentSearchPage() {
   const { token, user } = useAuth();
@@ -503,13 +504,14 @@ export default function CompanyStudentSearchPage() {
                   {/* Top Bar: Avatar, Name & CGPA */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center space-x-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-sm shrink-0 overflow-hidden shadow-xs">
-                        {student.avatarUrl ? (
-                          <img src={student.avatarUrl} alt={student.name} className="w-full h-full object-cover" />
-                        ) : (
-                          student.name?.charAt(0) || 'C'
-                        )}
-                      </div>
+                      <UserAvatar
+                        src={student.avatarUrl}
+                        name={student.name}
+                        size={40}
+                        role="student"
+                        fallbackLetter="S"
+                        style={{ borderRadius: '12px' }}
+                      />
                       <div className="min-w-0">
                         <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
                           {student.name}

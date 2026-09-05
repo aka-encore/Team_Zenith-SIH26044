@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import UserAvatar from './UserAvatar';
 import { 
   X, User, Mail, Phone, School, BookOpen, GraduationCap, Award, 
   Briefcase, Globe, FileText, ExternalLink, CheckCircle2, AlertCircle, 
@@ -131,13 +132,14 @@ export default function CandidateProfileModal({
         {/* ── 1. MODAL HEADER ── */}
         <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-slate-50 via-white to-emerald-50/20 dark:from-slate-900/90 dark:via-slate-900 dark:to-emerald-950/20 flex items-start justify-between gap-4">
           <div className="flex items-start space-x-4 min-w-0">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 font-black flex items-center justify-center text-2xl shrink-0 overflow-hidden border-2 border-emerald-500/30 shadow-md">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
-              ) : (
-                name.charAt(0) || 'C'
-              )}
-            </div>
+            <UserAvatar
+              src={avatarUrl}
+              name={name}
+              size={64}
+              role="student"
+              fallbackLetter="S"
+              style={{ borderRadius: '16px' }}
+            />
 
             <div className="min-w-0 space-y-1">
               <div className="flex flex-wrap items-center gap-2">
